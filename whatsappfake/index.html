@@ -14,7 +14,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 33 33'%3E%3Cpath fill='%2325D366' d='M16.5 0C7.388 0 0 7.388 0 16.5c0 2.923.766 5.765 2.222 8.274L.234 32.22l7.63-2.001A16.425 16.425 0 0 0 16.5 33c9.112 0 16.5-7.388 16.5-16.5S25.612 0 16.5 0z'/%3E%3Cpath fill='%23FFFFFF' fill-rule='evenodd' clip-rule='evenodd' d='M9.82 7.747c-.368-.818-.755-.834-1.107-.849-.286-.012-.614-.012-.942-.012-.327 0-.859.123-1.309.614-.45.491-1.718 1.678-1.718 4.093 0 2.414 1.759 4.747 2.004 5.074.246.328 3.407 5.434 8.397 7.375 4.146 1.613 4.99 1.293 5.89 1.211.901-.082 2.906-1.187 3.315-2.333.41-1.146.41-2.128.286-2.333-.123-.205-.45-.328-.941-.573-.491-.246-2.906-1.433-3.356-1.596-.45-.164-.778-.246-1.105.246-.328.491-1.269 1.596-1.556 1.924-.286.327-.573.368-1.064.122-.491-.245-2.073-.764-3.948-2.436-1.46-1.302-2.445-2.91-2.732-3.402-.286-.491-.03-.757.215-1.001.22-.22.491-.573.737-.86.245-.286.327-.491.491-.818.164-.328.082-.614-.041-.86-.123-.245-1.077-2.651-1.51-3.643z'/%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2325D366' d='M12.004 2C6.48 2 2 6.48 2 12.004c0 1.947.56 3.765 1.532 5.305L2.2 21.8l4.634-1.303A9.957 9.957 0 0 0 12.004 22C17.525 22 22 17.524 22 12.004 22 6.48 17.525 2 12.004 2z'/%3E%3Cpath fill='%23FFFFFF' d='M17.472 14.382c-.301-.15-1.782-.88-2.058-.98-.276-.1-.476-.15-.677.15-.201.3-.778.98-.954 1.18-.175.2-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.895-.798-1.5-1.784-1.676-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.175.201-.3.301-.501.101-.2.05-.376-.025-.527-.075-.15-.677-1.631-.928-2.233-.245-.586-.494-.506-.677-.515-.175-.008-.376-.01-.577-.01-.201 0-.527.075-.803.376-.276.301-1.054 1.03-1.054 2.511s1.079 2.912 1.23 3.113c.15.2 2.124 3.243 5.146 4.549.719.311 1.28.497 1.718.636.722.23 1.379.197 1.898.12.579-.086 1.782-.728 2.033-1.431.251-.703.251-1.305.175-1.431-.075-.125-.276-.2-.577-.35z'/%3E%3C/svg%3E" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -62,20 +62,21 @@
               </div>
 
               <div class="wa-sidebar-actions">
-                <!-- Botón Crear Contacto / Grupo con Dropdown -->
+                
+                <!-- Botón Añadir (Nuevo Contacto / Nuevo Grupo) -->
                 <div class="dropdown-wrapper">
-                  <button class="wa-icon-btn" id="btn-add-menu-trigger" title="Nuevo chat o grupo">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <button class="wa-icon-btn" id="btn-add-menu-trigger" title="Nuevo chat o contacto">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                   </button>
-
+                  
                   <div class="wa-dropdown-menu" id="add-dropdown-menu">
                     <button class="dropdown-item" id="btn-menu-add-contact">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
-                      <span>Nuevo contacto</span>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                      <span>Añadir contacto</span>
                     </button>
                     <button class="dropdown-item" id="btn-menu-add-group">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      <span>Nuevo grupo</span>
+                      <span>Crear nuevo grupo</span>
                     </button>
                   </div>
                 </div>
@@ -98,33 +99,28 @@
                       <span id="theme-toggle-label">Cambiar a Tema Claro</span>
                     </button>
 
-                    <button class="dropdown-item" id="menu-btn-toggle-view">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg>
-                      <span id="view-toggle-label">Forzar Marco Móvil</span>
-                    </button>
-
                     <div class="dropdown-divider"></div>
 
                     <button class="dropdown-item" id="menu-btn-export-chats">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      <span>Guardar / Exportar Chats (JSON)</span>
+                      <span>Guardar / Exportar</span>
                     </button>
 
                     <button class="dropdown-item" id="menu-btn-import-chats">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      <span>Cargar / Importar Chats (JSON)</span>
+                      <span>Cargar / Importar</span>
                     </button>
 
                     <button class="dropdown-item" id="menu-btn-reset-chats">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                      <span>Restablecer chats por defecto</span>
+                      <span>Restablecer por defecto</span>
                     </button>
 
                     <div class="dropdown-divider"></div>
 
                     <a href="/" class="dropdown-item dropdown-exit-item">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                      <span>Salir al menú principal</span>
+                      <span>Salir al menú</span>
                     </a>
                   </div>
                 </div>
@@ -250,7 +246,7 @@
 
                   <!-- Llamada de Voz -->
                   <button class="wa-icon-btn" id="btn-trigger-voicecall" title="Llamada de voz">
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.43-3.9-6.8-6.72l1.97-1.61c.29-.26.37-.65.26-1.03A11.33 11.33 0 0 1 8.78 4c0-.55-.45-1-1-1H4.21c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.62c0-.55-.45-1-1-1z"/></svg>
                   </button>
 
                   <!-- Búsqueda en el chat (Desktop) -->

@@ -71,3 +71,9 @@ const pupilLeft = document.getElementById('yt-pupil-left');
         toast.classList.remove('show');
       }, 2500);
     }
+
+    const homeWaTime = document.getElementById('home-wa-time');
+    if (homeWaTime) {
+      const now = new Date();
+      homeWaTime.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }

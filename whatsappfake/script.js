@@ -1636,11 +1636,13 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllDropdowns();
   });
 
-  btnMenuToggleView.addEventListener('click', () => {
-    applyMode(state.mode === 'auto' ? 'forced-mobile' : 'auto');
-    saveState();
-    closeAllDropdowns();
-  });
+  if (btnMenuToggleView) {
+    btnMenuToggleView.addEventListener('click', () => {
+      applyMode(state.mode === 'auto' ? 'forced-mobile' : 'auto');
+      saveState();
+      closeAllDropdowns();
+    });
+  }
 
   btnMenuExportChats.addEventListener('click', () => {
     closeAllDropdowns();
