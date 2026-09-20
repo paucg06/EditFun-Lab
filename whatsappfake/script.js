@@ -1,9 +1,12 @@
 /**
  * WhatsApp Fake Simulator - Script Logic
+ * Multi-user Groups, Real Audio Notes, Step Builder & Pinning
  * Author: EditFun Suite
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+  const WA_COLORS = ['#e542a3', '#02a698', '#dfa62a', '#35cd96', '#6bcbef', '#e56456', '#a58cf0', '#ec78a9'];
 
   // ==========================================
   // ESTADO GLOBAL DE LA APLICACIÓN
@@ -12,29 +15,95 @@ document.addEventListener('DOMContentLoaded', () => {
     theme: 'dark', // 'dark' | 'light'
     mode: 'auto', // 'auto' | 'forced-mobile'
     mobileView: 'in-chat', // 'in-list' | 'in-chat'
-    sender: 'me', // 'me' | 'contact'
-    activeContactId: 'c1',
-    editingContactId: null, // id cuando se abre el modal de edición
-    autoReply: {
-      enabled: true,
-      delay: 2.0,
-      scriptLines: [
-        'Hola!',
-        'No',
-        'Llegaré a las 8',
-        'El finde que viene si quieres vemos',
-        'Vale venga va 👍'
-      ],
-      currentIndex: 0
-    },
-    contacts: [
+    sender: 'me', // 'me' | 'contact' | participantId
+    activeChatId: 'g1',
+    editingChatId: null,
+    tempGroupMembers: [],
+    
+    // Lista de Chats (Contactos y Grupos)
+    chats: [
+      {
+        id: 'g1',
+        name: 'Los Panas del Gym 🏋️‍♂️',
+        avatar: '',
+        type: 'group',
+        isPinned: true,
+        unreadCount: 0,
+        participants: [
+          { id: 'p_fede', name: 'Federico', color: '#e542a3' },
+          { id: 'p_pedro', name: 'Pedro', color: '#02a698' },
+          { id: 'p_jose', name: 'José', color: '#dfa62a' }
+        ],
+        messages: [
+          {
+            id: 'mg1',
+            sender: 'p_fede',
+            senderName: 'Federico',
+            senderColor: '#e542a3',
+            type: 'text',
+            content: 'Buenas chavales, quién va hoy a entrenar?',
+            time: '15:30',
+            ticks: 'none'
+          },
+          {
+            id: 'mg2',
+            sender: 'p_pedro',
+            senderName: 'Pedro',
+            senderColor: '#02a698',
+            type: 'text',
+            content: 'Yo voy a las 18:30 con José 💪',
+            time: '15:32',
+            ticks: 'none'
+          },
+          {
+            id: 'mg3',
+            sender: 'me',
+            type: 'text',
+            content: 'Me apunto, nos vemos en recepción!',
+            time: '15:34',
+            ticks: 'blue'
+          }
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            {
+              senderId: 'p_fede',
+              senderName: 'Federico',
+              senderColor: '#e542a3',
+              type: 'text',
+              content: 'Perfecto, traigo la rutina de espalda nueva!',
+              delaySec: 2
+            },
+            {
+              senderId: 'p_pedro',
+              senderName: 'Pedro',
+              senderColor: '#02a698',
+              type: 'audio',
+              duration: '0:12',
+              delaySec: 2.5
+            },
+            {
+              senderId: 'p_jose',
+              senderName: 'José',
+              senderColor: '#dfa62a',
+              type: 'text',
+              content: 'Llegaré puntual chavales 👊',
+              delaySec: 2
+            }
+          ],
+          currentStepIndex: 0
+        }
+      },
       {
         id: 'c1',
         name: 'Aanano 💎',
         avatar: '',
+        type: 'personal',
+        isPinned: true,
         status: 'en línea',
         unreadCount: 0,
-        type: 'personal',
+        participants: [],
         messages: [
           {
             id: 'm1',
@@ -68,21 +137,43 @@ document.addEventListener('DOMContentLoaded', () => {
             time: '15:41',
             ticks: 'blue'
           }
-        ]
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            {
+              senderId: 'contact',
+              senderName: 'Aanano 💎',
+              type: 'text',
+              content: 'Es un vídeo épico, te lo acabo de mandar jaja',
+              delaySec: 2
+            },
+            {
+              senderId: 'contact',
+              senderName: 'Aanano 💎',
+              type: 'audio',
+              duration: '0:09',
+              delaySec: 2.5
+            }
+          ],
+          currentStepIndex: 0
+        }
       },
       {
         id: 'c2',
         name: 'Mamá ❤️',
         avatar: '',
+        type: 'personal',
+        isPinned: false,
         status: 'últ. vez hoy a las 14:15',
         unreadCount: 2,
-        type: 'personal',
+        participants: [],
         messages: [
           {
             id: 'm21',
             sender: 'contact',
             type: 'text',
-            content: 'Hijo, acuérdate de comprar pan al volver a casa',
+            content: 'Hijo, acuérdate de comprar pan al volver',
             time: '14:10',
             ticks: 'none'
           },
@@ -94,43 +185,45 @@ document.addEventListener('DOMContentLoaded', () => {
             time: '14:15',
             ticks: 'none'
           }
-        ]
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderId: 'contact', senderName: 'Mamá ❤️', type: 'text', content: 'Vale hijo, un beso!', delaySec: 2 }
+          ],
+          currentStepIndex: 0
+        }
       },
       {
-        id: 'c3',
+        id: 'g2',
         name: 'Proyecto Trabajo 💼',
         avatar: '',
-        status: 'últ. vez hoy a las 11:20',
+        type: 'group',
+        isPinned: false,
         unreadCount: 0,
-        type: 'groups',
+        participants: [
+          { id: 'p_carlos', name: 'Carlos Lead', color: '#6bcbef' },
+          { id: 'p_laura', name: 'Laura UX', color: '#ec78a9' }
+        ],
         messages: [
           {
             id: 'm31',
-            sender: 'contact',
+            sender: 'p_carlos',
+            senderName: 'Carlos Lead',
+            senderColor: '#6bcbef',
             type: 'text',
             content: 'Por favor revisad los cambios de la v2.0 en GitHub',
             time: 'Ayer',
             ticks: 'none'
           }
-        ]
-      },
-      {
-        id: 'c4',
-        name: 'Carlos Gym 💪',
-        avatar: '',
-        status: 'en línea',
-        unreadCount: 0,
-        type: 'personal',
-        messages: [
-          {
-            id: 'm41',
-            sender: 'contact',
-            type: 'text',
-            content: 'Mañana toca pierna no te olvides 🏋️‍♂️',
-            time: '10/9/2026',
-            ticks: 'none'
-          }
-        ]
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderId: 'p_laura', senderName: 'Laura UX', senderColor: '#ec78a9', type: 'text', content: 'Revisado y todo aprobado 👍', delaySec: 2 }
+          ],
+          currentStepIndex: 0
+        }
       }
     ]
   };
@@ -156,9 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerAvatarImg = document.getElementById('header-avatar-img');
   const headerAvatarLetter = document.getElementById('header-avatar-letter');
   const btnBackToList = document.getElementById('btn-back-to-list');
-  const btnOpenContactModal = document.getElementById('btn-open-contact-modal');
+  const btnOpenChatInfoModal = document.getElementById('btn-open-chat-info-modal');
   
   // Dropdown Menús
+  const btnAddMenuTrigger = document.getElementById('btn-add-menu-trigger');
+  const addDropdown = document.getElementById('add-dropdown-menu');
   const btnSidebarMenu = document.getElementById('btn-sidebar-menu');
   const sidebarDropdown = document.getElementById('sidebar-dropdown-menu');
   const btnChatMenu = document.getElementById('btn-chat-menu');
@@ -166,7 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClipAttach = document.getElementById('btn-clip-attach');
   const clipDropdown = document.getElementById('clip-dropdown-menu');
   
-  // Opciones del Menú de Sidebar
+  // Sidebar Menú Actions
+  const btnMenuAddContact = document.getElementById('btn-menu-add-contact');
+  const btnMenuAddGroup = document.getElementById('btn-menu-add-group');
   const btnMenuToggleTheme = document.getElementById('menu-btn-toggle-theme');
   const themeToggleLabel = document.getElementById('theme-toggle-label');
   const btnMenuToggleView = document.getElementById('menu-btn-toggle-view');
@@ -175,9 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMenuImportChats = document.getElementById('menu-btn-import-chats');
   const fileImportJson = document.getElementById('chat-import-json-input');
   
-  // Opciones del Menú de Chat
+  // Chat Menú Actions
   const btnChatAutoReply = document.getElementById('chat-menu-btn-auto-reply');
-  const btnChatEditContact = document.getElementById('chat-menu-btn-edit-contact');
+  const btnChatEditChat = document.getElementById('chat-menu-btn-edit-chat');
+  const chatMenuEditLabel = document.getElementById('chat-menu-edit-label');
+  const btnChatTogglePin = document.getElementById('chat-menu-btn-toggle-pin');
+  const chatMenuPinLabel = document.getElementById('chat-menu-pin-label');
   const btnChatToggleSender = document.getElementById('chat-menu-btn-toggle-sender');
   const chatSenderToggleLabel = document.getElementById('chat-sender-toggle-label');
   const btnChatClearMsgs = document.getElementById('chat-menu-btn-clear-msgs');
@@ -185,11 +285,24 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Adjuntar
   const btnMenuAttachPhoto = document.getElementById('btn-menu-attach-photo');
+  const btnMenuAttachAudio = document.getElementById('btn-menu-attach-audio');
   const btnMenuAttachOneTime = document.getElementById('btn-menu-attach-onetime');
   const fileAttachInput = document.getElementById('chat-attach-file-input');
+  const fileAudioInput = document.getElementById('chat-audio-file-input');
   const btnInputCamera = document.getElementById('btn-input-camera');
   const btnSidebarCamera = document.getElementById('btn-sidebar-camera');
-  
+  const btnMobileFab = document.getElementById('btn-mobile-fab');
+
+  // Modal Audio
+  const audioModalOverlay = document.getElementById('audio-modal-overlay');
+  const btnCloseAudioModal = document.getElementById('btn-close-audio-modal');
+  const btnCancelAudioModal = document.getElementById('btn-cancel-audio-modal');
+  const btnConfirmAudioSend = document.getElementById('btn-confirm-audio-send');
+  const audioUploadBtnText = document.getElementById('audio-upload-btn-text');
+  const audioSimSeconds = document.getElementById('audio-sim-seconds');
+  let tempAudioUrl = '';
+  let tempAudioDuration = '0:14';
+
   // Modal Contacto
   const contactModalOverlay = document.getElementById('contact-modal-overlay');
   const contactModalTitle = document.getElementById('contact-modal-title');
@@ -203,19 +316,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalAvatarPreviewLetter = document.getElementById('modal-avatar-letter');
   const modalAvatarFileInput = document.getElementById('modal-avatar-file-input');
   const btnModalRemoveAvatar = document.getElementById('btn-modal-remove-avatar');
-  const btnAddContactTop = document.getElementById('btn-add-contact-top');
-  const btnMobileFab = document.getElementById('btn-mobile-fab');
   let tempAvatarBase64 = '';
-  
+
+  // Modal Grupo
+  const groupModalOverlay = document.getElementById('group-modal-overlay');
+  const groupModalTitle = document.getElementById('group-modal-title');
+  const btnCloseGroupModal = document.getElementById('btn-close-group-modal');
+  const btnCancelGroupModal = document.getElementById('btn-cancel-group-modal');
+  const btnSaveGroupModal = document.getElementById('btn-save-group-modal');
+  const groupNameInput = document.getElementById('group-name-input');
+  const groupMembersContainer = document.getElementById('group-members-container');
+  const groupNewMemberName = document.getElementById('group-new-member-name');
+  const btnAddMemberToGroup = document.getElementById('btn-add-member-to-group');
+  const groupAvatarPreviewImg = document.getElementById('group-avatar-img');
+  const groupAvatarPreviewLetter = document.getElementById('group-avatar-letter');
+  const groupAvatarFileInput = document.getElementById('group-avatar-file-input');
+  const btnGroupRemoveAvatar = document.getElementById('btn-group-remove-avatar');
+  let tempGroupAvatarBase64 = '';
+
   // Modal Automatización
   const autoModalOverlay = document.getElementById('automation-modal-overlay');
   const btnCloseAutoModal = document.getElementById('btn-close-automation-modal');
   const btnCancelAutoModal = document.getElementById('btn-cancel-automation-modal');
   const btnSaveAutoModal = document.getElementById('btn-save-automation-modal');
   const autoReplyCheckbox = document.getElementById('auto-reply-checkbox');
-  const autoReplyDelayInput = document.getElementById('auto-reply-delay-input');
-  const autoReplyScriptTextarea = document.getElementById('auto-reply-script-textarea');
-  
+  const autoStepsContainer = document.getElementById('auto-steps-container');
+  const stepSenderSelect = document.getElementById('step-sender-select');
+  const stepTypeSelect = document.getElementById('step-type-select');
+  const stepInputTextWrap = document.getElementById('step-input-text-wrap');
+  const stepInputImageWrap = document.getElementById('step-input-image-wrap');
+  const stepInputAudioWrap = document.getElementById('step-input-audio-wrap');
+  const stepTextInput = document.getElementById('step-text-input');
+  const stepImageFileInput = document.getElementById('step-image-file-input');
+  const stepImageBtnText = document.getElementById('step-image-btn-text');
+  const stepAudioFileInput = document.getElementById('step-audio-file-input');
+  const stepAudioBtnText = document.getElementById('step-audio-btn-text');
+  const stepAudioDurationInput = document.getElementById('step-audio-duration-input');
+  const stepDelayInput = document.getElementById('step-delay-input');
+  const btnAddStepToList = document.getElementById('btn-add-step-to-list');
+  let tempStepImageBase64 = '';
+  let tempStepAudioUrl = '';
+  let tempWorkingSteps = [];
+
   // Llamadas
   const btnVoiceCall = document.getElementById('btn-trigger-voicecall');
   const btnVideoCall = document.getElementById('btn-trigger-videocall');
@@ -227,13 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const callStatusText = document.getElementById('call-status-text');
   const videoNameDisplay = document.getElementById('videocall-name-display');
   const videoStatusText = document.getElementById('videocall-status-text');
-  
+
   // Búsqueda & Filtros
   const searchInput = document.getElementById('wa-search-input');
   const filterPills = document.querySelectorAll('.wa-pill');
   let currentFilter = 'all';
 
-  // Actualización del Reloj
+  // Reloj Móvil
   function updateClock() {
     const clockEl = document.getElementById('status-clock');
     if (clockEl) {
@@ -250,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // RESIZER DE LA BARRA LATERAL (DESKTOP)
   // ==========================================
   let isResizing = false;
-  sidebarResizer.addEventListener('mousedown', (e) => {
+  sidebarResizer.addEventListener('mousedown', () => {
     isResizing = true;
     sidebarResizer.classList.add('resizing');
     document.body.style.cursor = 'col-resize';
@@ -326,34 +468,43 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // GESTIÓN DE CONTACTOS Y SELECCIÓN
+  // GESTIÓN DE CHATS (ORDENACIÓN POR CHINCHETA)
   // ==========================================
-  function getActiveContact() {
-    return state.contacts.find(c => c.id === state.activeContactId) || state.contacts[0];
+  function getActiveChat() {
+    return state.chats.find(c => c.id === state.activeChatId) || state.chats[0];
+  }
+
+  function getSortedChats() {
+    return [...state.chats].sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
   }
 
   function renderChatList() {
     chatListContainer.innerHTML = '';
     const query = (searchInput.value || '').trim().toLowerCase();
+    const sorted = getSortedChats();
 
-    const filtered = state.contacts.filter(c => {
+    const filtered = sorted.filter(c => {
       const matchesQuery = c.name.toLowerCase().includes(query) ||
-        (c.messages.length && c.messages[c.messages.length - 1].content.toLowerCase().includes(query));
+        (c.messages.length && c.messages[c.messages.length - 1].content && c.messages[c.messages.length - 1].content.toLowerCase().includes(query));
       
       if (!matchesQuery) return false;
       if (currentFilter === 'all') return true;
       if (currentFilter === 'unread') return c.unreadCount > 0;
       if (currentFilter === 'favorites') return c.isFavorite;
-      if (currentFilter === 'groups') return c.type === 'groups';
+      if (currentFilter === 'groups') return c.type === 'group';
       return true;
     });
 
-    filtered.forEach(contact => {
+    filtered.forEach(chat => {
       const item = document.createElement('div');
-      item.className = `wa-chat-item ${contact.id === state.activeContactId ? 'active' : ''}`;
-      item.dataset.id = contact.id;
+      item.className = `wa-chat-item ${chat.id === state.activeChatId ? 'active' : ''}`;
+      item.dataset.id = chat.id;
 
-      const lastMsg = contact.messages.length ? contact.messages[contact.messages.length - 1] : null;
+      const lastMsg = chat.messages.length ? chat.messages[chat.messages.length - 1] : null;
       let lastText = 'Toca para chatear';
       let lastTime = '';
       if (lastMsg) {
@@ -361,12 +512,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lastMsg.type === 'audio') lastText = '🎤 Audio (' + (lastMsg.duration || '0:14') + ')';
         else if (lastMsg.type === 'onetime') lastText = '📷 Foto';
         else if (lastMsg.type === 'image') lastText = '📷 Foto';
-        else lastText = lastMsg.content;
+        else {
+          if (chat.type === 'group' && lastMsg.sender !== 'me' && lastMsg.senderName) {
+            lastText = `${lastMsg.senderName}: ${lastMsg.content}`;
+          } else {
+            lastText = lastMsg.content;
+          }
+        }
       }
 
-      const avatarMarkup = contact.avatar
-        ? `<img src="${contact.avatar}" alt="${contact.name}">`
-        : `<span>${contact.name.charAt(0).toUpperCase()}</span>`;
+      let avatarMarkup = '';
+      if (chat.avatar) {
+        avatarMarkup = `<img src="${chat.avatar}" alt="${chat.name}">`;
+      } else {
+        if (chat.type === 'group') {
+          avatarMarkup = `<span>👥</span>`;
+        } else {
+          avatarMarkup = `<span>${chat.name.charAt(0).toUpperCase()}</span>`;
+        }
+      }
+
+      // Icono Chincheta / Pin
+      const pinMarkup = chat.isPinned
+        ? `<span class="wa-chat-pin-icon" title="Chat fijado">
+             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+           </span>`
+        : '';
 
       item.innerHTML = `
         <div class="wa-chat-avatar">
@@ -374,31 +545,34 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="wa-chat-info">
           <div class="wa-chat-info-top">
-            <span class="wa-chat-title">${escapeHTML(contact.name)}</span>
-            <span class="wa-chat-time ${contact.unreadCount > 0 ? 'unread' : ''}">${lastTime}</span>
+            <span class="wa-chat-title">${escapeHTML(chat.name)}</span>
+            <div class="wa-chat-time-wrap">
+              <span class="wa-chat-time ${chat.unreadCount > 0 ? 'unread' : ''}">${lastTime}</span>
+              ${pinMarkup}
+            </div>
           </div>
           <div class="wa-chat-info-bottom">
-            <div class="wa-chat-snippet ${contact.status === 'escribiendo...' ? 'typing-text' : ''}">
-              ${contact.status === 'escribiendo...' ? '<em>escribiendo...</em>' : escapeHTML(lastText)}
+            <div class="wa-chat-snippet ${chat.typingStatus ? 'typing-text' : ''}">
+              ${chat.typingStatus ? `<em>${chat.typingStatus}</em>` : escapeHTML(lastText)}
             </div>
-            ${contact.unreadCount > 0 ? `<span class="wa-chat-badge">${contact.unreadCount}</span>` : ''}
+            ${chat.unreadCount > 0 ? `<span class="wa-chat-badge">${chat.unreadCount}</span>` : ''}
           </div>
         </div>
       `;
 
       item.addEventListener('click', () => {
-        selectContact(contact.id);
+        selectChat(chat.id);
       });
 
       chatListContainer.appendChild(item);
     });
   }
 
-  function selectContact(contactId) {
-    state.activeContactId = contactId;
-    const contact = getActiveContact();
-    if (contact) {
-      contact.unreadCount = 0;
+  function selectChat(chatId) {
+    state.activeChatId = chatId;
+    const chat = getActiveChat();
+    if (chat) {
+      chat.unreadCount = 0;
     }
     
     state.mobileView = 'in-chat';
@@ -410,21 +584,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderActiveHeader() {
-    const contact = getActiveContact();
-    if (!contact) return;
+    const chat = getActiveChat();
+    if (!chat) return;
 
-    headerContactName.textContent = contact.name;
-    headerContactStatus.textContent = contact.status;
+    headerContactName.textContent = chat.name;
 
-    if (contact.avatar) {
-      headerAvatarImg.src = contact.avatar;
+    if (chat.typingStatus) {
+      headerContactStatus.textContent = chat.typingStatus;
+    } else if (chat.type === 'group') {
+      const memberNames = chat.participants.map(p => p.name).join(', ');
+      headerContactStatus.textContent = `Tú, ${memberNames}`;
+    } else {
+      headerContactStatus.textContent = chat.status || 'en línea';
+    }
+
+    if (chat.avatar) {
+      headerAvatarImg.src = chat.avatar;
       headerAvatarImg.style.display = 'block';
       headerAvatarLetter.style.display = 'none';
     } else {
       headerAvatarImg.style.display = 'none';
       headerAvatarLetter.style.display = 'block';
-      headerAvatarLetter.textContent = contact.name.charAt(0).toUpperCase();
+      headerAvatarLetter.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
     }
+
+    // Actualizar etiquetas en menú del chat
+    chatMenuEditLabel.textContent = chat.type === 'group' ? 'Info / Editar Grupo' : 'Info / Editar Contacto';
+    chatMenuPinLabel.textContent = chat.isPinned ? 'Desfijar chat' : 'Fijar chat';
   }
 
   function updateMobileLayoutView() {
@@ -435,8 +621,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // RENDERIZADO DE MENSAJES
   // ==========================================
   function renderMessages() {
-    const contact = getActiveContact();
-    if (!contact) return;
+    const chat = getActiveChat();
+    if (!chat) return;
 
     const dateDivider = messagesContainer.querySelector('.wa-date-divider');
     const encryptionNotice = messagesContainer.querySelector('.wa-encryption-notice');
@@ -445,21 +631,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dateDivider) messagesContainer.appendChild(dateDivider);
     if (encryptionNotice) messagesContainer.appendChild(encryptionNotice);
 
-    contact.messages.forEach(msg => {
-      const msgRow = createMessageElement(msg);
+    chat.messages.forEach(msg => {
+      const msgRow = createMessageElement(msg, chat.type === 'group');
       messagesContainer.appendChild(msgRow);
     });
 
     scrollToBottom();
   }
 
-  function createMessageElement(msg) {
+  function createMessageElement(msg, isGroup = false) {
     const row = document.createElement('div');
     row.className = `wa-msg-row ${msg.sender === 'me' ? 'sent' : 'received'}`;
     row.id = `msg-${msg.id}`;
 
     const bubble = document.createElement('div');
     bubble.className = 'wa-bubble';
+
+    // Cabecera con Nombre del Autor en Grupos
+    let authorHtml = '';
+    if (isGroup && msg.sender !== 'me' && msg.senderName) {
+      authorHtml = `<div class="wa-msg-author" style="color: ${msg.senderColor || '#02a698'};">${escapeHTML(msg.senderName)}</div>`;
+    }
 
     let contentHtml = '';
 
@@ -488,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       contentHtml = `
-        <div class="wa-audio-player" data-duration="${msg.duration || '0:14'}">
+        <div class="wa-audio-player" data-audio-url="${msg.audioUrl || ''}" data-duration="${msg.duration || '0:14'}">
           <button class="audio-play-btn" title="Reproducir nota de voz">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           </button>
@@ -517,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     bubble.innerHTML = `
+      ${authorHtml}
       ${contentHtml}
       <div class="wa-msg-meta">
         <span class="wa-msg-time">${msg.time}</span>
@@ -525,47 +718,95 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     if (msg.type === 'audio') {
-      setupAudioPlayer(bubble);
+      setupAudioPlayer(bubble, msg.audioUrl, msg.duration);
     }
 
     row.appendChild(bubble);
     return row;
   }
 
-  function setupAudioPlayer(bubble) {
+  function setupAudioPlayer(bubble, audioUrl, durationText) {
     const playBtn = bubble.querySelector('.audio-play-btn');
     const bars = bubble.querySelectorAll('.audio-bar');
     const timer = bubble.querySelector('.audio-timer');
     let isPlaying = false;
-    let progress = 0;
-    let interval = null;
+    let audioElement = null;
+    let animInterval = null;
+
+    if (audioUrl) {
+      audioElement = new Audio(audioUrl);
+      audioElement.addEventListener('ended', () => {
+        stopPlayback();
+      });
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      if (audioElement) audioElement.pause();
+      if (animInterval) clearInterval(animInterval);
+      playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      timer.textContent = durationText || '0:14';
+      bars.forEach(b => b.classList.remove('played'));
+    }
 
     playBtn.addEventListener('click', () => {
       if (isPlaying) {
-        clearInterval(interval);
-        isPlaying = false;
-        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        stopPlayback();
       } else {
         isPlaying = true;
         playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-        progress = 0;
+        
+        let progress = 0;
         bars.forEach(b => b.classList.remove('played'));
 
-        interval = setInterval(() => {
-          if (progress < bars.length) {
-            bars[progress].classList.add('played');
-            progress++;
-            const secs = Math.floor((progress / bars.length) * 14);
-            timer.textContent = `0:${secs < 10 ? '0' + secs : secs}`;
-          } else {
-            clearInterval(interval);
-            isPlaying = false;
-            playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-            timer.textContent = '0:14';
-          }
-        }, 110);
+        if (audioElement) {
+          audioElement.currentTime = 0;
+          audioElement.play().catch(() => {});
+          
+          animInterval = setInterval(() => {
+            if (audioElement && audioElement.duration) {
+              const currentSec = Math.floor(audioElement.currentTime);
+              const m = Math.floor(currentSec / 60);
+              const s = currentSec % 60;
+              timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
+
+              const pct = audioElement.currentTime / audioElement.duration;
+              const playedCount = Math.floor(pct * bars.length);
+              bars.forEach((b, i) => {
+                if (i <= playedCount) b.classList.add('played');
+                else b.classList.remove('played');
+              });
+            }
+          }, 100);
+
+        } else {
+          // Reproducción simulada con temporizador
+          const totalSecs = parseDurationToSeconds(durationText || '0:14');
+          const stepMs = (totalSecs * 1000) / bars.length;
+
+          animInterval = setInterval(() => {
+            if (progress < bars.length) {
+              bars[progress].classList.add('played');
+              progress++;
+              const cur = Math.floor((progress / bars.length) * totalSecs);
+              const m = Math.floor(cur / 60);
+              const s = cur % 60;
+              timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
+            } else {
+              stopPlayback();
+            }
+          }, stepMs);
+        }
       }
     });
+  }
+
+  function parseDurationToSeconds(str) {
+    const parts = str.split(':');
+    if (parts.length === 2) {
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+    return 14;
   }
 
   function formatMessageText(text) {
@@ -598,79 +839,107 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // ENVÍO DE MENSAJES & AUTOMATIZACIÓN
+  // ENVÍO DE MENSAJES & AUTOMATIZACIÓN MULTI-USUARIO
   // ==========================================
-  function sendMessage(content, type = 'text') {
+  function sendMessage(content, type = 'text', customProps = {}) {
     if (!content && type === 'text') return;
-    const contact = getActiveContact();
-    if (!contact) return;
+    const chat = getActiveChat();
+    if (!chat) return;
 
     const time = getCurrentTimeString();
+    let senderId = state.sender;
+    let senderName = '';
+    let senderColor = '';
+
+    if (state.sender !== 'me' && chat.type === 'group') {
+      const p = chat.participants.find(part => part.id === state.sender);
+      if (p) {
+        senderName = p.name;
+        senderColor = p.color;
+      }
+    }
+
     const newMsg = {
       id: 'm_' + Date.now(),
-      sender: state.sender,
+      sender: senderId,
+      senderName: senderName,
+      senderColor: senderColor,
       type: type,
       content: content,
       time: time,
-      ticks: state.sender === 'me' ? (state.autoReply.enabled ? 'grey' : 'single') : 'none'
+      ticks: senderId === 'me' ? (chat.autoReply && chat.autoReply.enabled ? 'grey' : 'single') : 'none',
+      ...customProps
     };
 
-    contact.messages.push(newMsg);
+    chat.messages.push(newMsg);
     renderMessages();
     renderChatList();
 
-    if (state.sender === 'me') {
+    if (senderId === 'me') {
       playSentPopSound();
 
-      // Si la automatización está activada:
-      if (state.autoReply.enabled && state.autoReply.scriptLines.length > 0) {
-        triggerAutomatedReply(contact, newMsg);
+      // Si la automatización está activada en este chat:
+      if (chat.autoReply && chat.autoReply.enabled && chat.autoReply.steps && chat.autoReply.steps.length > 0) {
+        triggerStepAutomatedReply(chat);
       }
     } else {
       playReceivedPopSound();
     }
   }
 
-  function triggerAutomatedReply(contact, lastSentMsg) {
-    const script = state.autoReply.scriptLines;
-    if (!script || script.length === 0) return;
+  function triggerStepAutomatedReply(chat) {
+    const auto = chat.autoReply;
+    if (!auto || !auto.steps || auto.steps.length === 0) return;
 
-    const replyText = script[state.autoReply.currentIndex % script.length];
-    state.autoReply.currentIndex++;
+    const step = auto.steps[auto.currentStepIndex % auto.steps.length];
+    auto.currentStepIndex++;
 
-    const delayMs = Math.max(500, state.autoReply.delay * 1000);
+    const delayMs = Math.max(800, (step.delaySec || 2) * 1000);
+    const typingText = step.type === 'audio'
+      ? `${step.senderName || 'Contacto'} está grabando audio...`
+      : `${step.senderName || 'Contacto'} está escribiendo...`;
 
-    // 1. A los 400ms: El contacto entra "en línea" y lee el mensaje (doble tick azul)
+    // 1. A los 400ms: Leer mensajes globales (ticks azules)
     setTimeout(() => {
-      lastSentMsg.ticks = 'blue';
-      contact.status = 'en línea';
-      if (contact.id === state.activeContactId) renderActiveHeader();
+      chat.messages.forEach(m => {
+        if (m.sender === 'me') m.ticks = 'blue';
+      });
       renderMessages();
-      renderChatList();
     }, 400);
 
-    // 2. A mitad de tiempo: El contacto pasa a "escribiendo..."
+    // 2. A mitad del tiempo: Estado "escribiendo..." o "grabando audio..."
     setTimeout(() => {
-      contact.status = 'escribiendo...';
-      if (contact.id === state.activeContactId) renderActiveHeader();
+      chat.typingStatus = typingText;
+      if (chat.id === state.activeChatId) renderActiveHeader();
       renderChatList();
-    }, Math.max(600, delayMs - 800));
+    }, Math.max(500, delayMs - 900));
 
-    // 3. Al cumplirse el delay: Envía la respuesta y vuelve a "en línea"
+    // 3. Al completarse el delay: Entregar el mensaje y limpiar typingStatus
     setTimeout(() => {
-      contact.status = 'en línea';
-      if (contact.id === state.activeContactId) renderActiveHeader();
+      chat.typingStatus = '';
+      if (chat.id === state.activeChatId) renderActiveHeader();
 
       const time = getCurrentTimeString();
-      contact.messages.push({
+      let senderColor = step.senderColor;
+      if (!senderColor && chat.type === 'group') {
+        const p = chat.participants.find(part => part.id === step.senderId);
+        if (p) senderColor = p.color;
+      }
+
+      const replyMsg = {
         id: 'm_' + Date.now(),
-        sender: 'contact',
-        type: 'text',
-        content: replyText,
+        sender: step.senderId || 'contact',
+        senderName: step.senderName || 'Contacto',
+        senderColor: senderColor || '#02a698',
+        type: step.type || 'text',
+        content: step.content || '',
+        audioUrl: step.audioUrl || '',
+        duration: step.duration || '0:12',
         time: time,
         ticks: 'none'
-      });
+      };
 
+      chat.messages.push(replyMsg);
       renderMessages();
       renderChatList();
       playReceivedPopSound();
@@ -702,8 +971,8 @@ document.addEventListener('DOMContentLoaded', () => {
       iconSendMic.style.display = 'block';
       iconSendArrow.style.display = 'none';
     } else {
-      // Enviar nota de voz simulada
-      sendMessage('audio_note', 'audio');
+      // Abrir modal de nota de voz / audio
+      openAudioModal();
     }
   });
 
@@ -715,13 +984,75 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
+  // MODAL DE NOTA DE VOZ & AUDIO REAL
+  // ==========================================
+  function openAudioModal() {
+    tempAudioUrl = '';
+    tempAudioDuration = '0:14';
+    audioUploadBtnText.textContent = 'Seleccionar archivo de audio';
+    audioSimSeconds.value = '14';
+    audioModalOverlay.style.display = 'flex';
+  }
+
+  btnCloseAudioModal.addEventListener('click', () => audioModalOverlay.style.display = 'none');
+  btnCancelAudioModal.addEventListener('click', () => audioModalOverlay.style.display = 'none');
+
+  fileAudioInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      audioUploadBtnText.textContent = `Archivo: ${file.name}`;
+      tempAudioUrl = URL.createObjectURL(file);
+
+      // Calcular duración real del archivo de audio
+      const tempAudio = new Audio(tempAudioUrl);
+      tempAudio.addEventListener('loadedmetadata', () => {
+        const sec = Math.round(tempAudio.duration);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        tempAudioDuration = `${m}:${s < 10 ? '0' + s : s}`;
+        audioSimSeconds.value = sec;
+      });
+    }
+  });
+
+  btnConfirmAudioSend.addEventListener('click', () => {
+    let dur = tempAudioDuration;
+    if (!tempAudioUrl) {
+      const sec = parseInt(audioSimSeconds.value) || 14;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      dur = `${m}:${s < 10 ? '0' + s : s}`;
+    }
+
+    sendMessage('audio_note', 'audio', {
+      audioUrl: tempAudioUrl,
+      duration: dur
+    });
+
+    audioModalOverlay.style.display = 'none';
+  });
+
+  btnMenuAttachAudio.addEventListener('click', () => {
+    closeAllDropdowns();
+    openAudioModal();
+  });
+
+  // ==========================================
   // DROPDOWN MENÚS NATIVOS
   // ==========================================
   function closeAllDropdowns() {
+    addDropdown.classList.remove('show');
     sidebarDropdown.classList.remove('show');
     chatDropdown.classList.remove('show');
     clipDropdown.classList.remove('show');
   }
+
+  btnAddMenuTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = addDropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isShown) addDropdown.classList.add('show');
+  });
 
   btnSidebarMenu.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -751,8 +1082,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // ACCIONES DEL MENÚ GENERAL (SIDEBAR)
   // ==========================================
-
-  // Alternar Tema
   btnMenuToggleTheme.addEventListener('click', () => {
     if (state.theme === 'dark') {
       state.theme = 'light';
@@ -768,7 +1097,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllDropdowns();
   });
 
-  // Alternar Vista (Forzar Móvil o Automático)
   btnMenuToggleView.addEventListener('click', () => {
     if (state.mode === 'auto') {
       state.mode = 'forced-mobile';
@@ -784,17 +1112,15 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllDropdowns();
   });
 
-  // Exportar Chats (JSON)
   btnMenuExportChats.addEventListener('click', () => {
     closeAllDropdowns();
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.contacts, null, 2));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.chats, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute("href", dataStr);
     dlAnchorElem.setAttribute("download", "whatsapp_chats_backup.json");
     dlAnchorElem.click();
   });
 
-  // Importar Chats (JSON)
   btnMenuImportChats.addEventListener('click', () => {
     closeAllDropdowns();
     fileImportJson.click();
@@ -808,12 +1134,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const imported = JSON.parse(event.target.result);
           if (Array.isArray(imported) && imported.length > 0) {
-            state.contacts = imported;
-            selectContact(imported[0].id);
+            state.chats = imported;
+            selectChat(imported[0].id);
             alert('¡Chats importados correctamente!');
           }
         } catch (err) {
-          alert('El archivo seleccionado no tiene un formato JSON válido.');
+          alert('El archivo no tiene un formato JSON válido.');
         }
       };
       reader.readAsText(file);
@@ -824,43 +1150,54 @@ document.addEventListener('DOMContentLoaded', () => {
   // ACCIONES DEL MENÚ DEL CHAT ACTIVO
   // ==========================================
 
-  // Abrir Modal de Respuestas Automáticas
-  btnChatAutoReply.addEventListener('click', () => {
+  // Fijar / Desfijar Chat (Chincheta)
+  btnChatTogglePin.addEventListener('click', () => {
     closeAllDropdowns();
-    autoReplyCheckbox.checked = state.autoReply.enabled;
-    autoReplyDelayInput.value = state.autoReply.delay;
-    autoReplyScriptTextarea.value = state.autoReply.scriptLines.join('\n');
-    autoModalOverlay.style.display = 'flex';
+    const chat = getActiveChat();
+    if (chat) {
+      chat.isPinned = !chat.isPinned;
+      renderActiveHeader();
+      renderChatList();
+    }
   });
 
-  btnCloseAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
-  btnCancelAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
-
-  btnSaveAutoModal.addEventListener('click', () => {
-    state.autoReply.enabled = autoReplyCheckbox.checked;
-    state.autoReply.delay = parseFloat(autoReplyDelayInput.value) || 2;
-    state.autoReply.scriptLines = autoReplyScriptTextarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    autoModalOverlay.style.display = 'none';
-  });
-
-  // Alternar Emisor (Tú / Contacto)
+  // Alternar Emisor (Tú / Participantes)
   btnChatToggleSender.addEventListener('click', () => {
     closeAllDropdowns();
-    if (state.sender === 'me') {
-      state.sender = 'contact';
-      chatSenderToggleLabel.textContent = 'Enviar como: Contacto (Gris)';
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    if (chat.type === 'group' && chat.participants.length > 0) {
+      if (state.sender === 'me') {
+        state.sender = chat.participants[0].id;
+        chatSenderToggleLabel.textContent = `Enviar como: ${chat.participants[0].name}`;
+      } else {
+        const curIdx = chat.participants.findIndex(p => p.id === state.sender);
+        if (curIdx !== -1 && curIdx < chat.participants.length - 1) {
+          state.sender = chat.participants[curIdx + 1].id;
+          chatSenderToggleLabel.textContent = `Enviar como: ${chat.participants[curIdx + 1].name}`;
+        } else {
+          state.sender = 'me';
+          chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
+        }
+      }
     } else {
-      state.sender = 'me';
-      chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
+      if (state.sender === 'me') {
+        state.sender = 'contact';
+        chatSenderToggleLabel.textContent = 'Enviar como: Contacto (Gris)';
+      } else {
+        state.sender = 'me';
+        chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
+      }
     }
   });
 
   // Vaciar Mensajes
   btnChatClearMsgs.addEventListener('click', () => {
     closeAllDropdowns();
-    const contact = getActiveContact();
-    if (contact && confirm('¿Estás seguro de vaciar todos los mensajes de este chat?')) {
-      contact.messages = [];
+    const chat = getActiveChat();
+    if (chat && confirm('¿Estás seguro de vaciar todos los mensajes de este chat?')) {
+      chat.messages = [];
       renderMessages();
       renderChatList();
     }
@@ -869,14 +1206,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restablecer Demo
   btnChatResetDemo.addEventListener('click', () => {
     closeAllDropdowns();
-    const contact = getActiveContact();
-    if (contact) {
-      contact.messages = [
-        { id: 'p1', sender: 'contact', type: 'text', content: 'Hola! Sigues despierto?', time: '15:38', ticks: 'none' },
-        { id: 'p2', sender: 'me', type: 'text', content: 'Sí, dime qué pasó', time: '15:39', ticks: 'blue' },
-        { id: 'p3', sender: 'contact', type: 'text', content: 'Viste lo que subieron al grupo de la uni? 😱', time: '15:40', ticks: 'none' },
-        { id: 'p4', sender: 'me', type: 'text', content: 'No todavía, pásamelo', time: '15:41', ticks: 'blue' }
-      ];
+    const chat = getActiveChat();
+    if (chat) {
+      if (chat.type === 'group') {
+        chat.messages = [
+          { id: 'mg1', sender: 'p_fede', senderName: 'Federico', senderColor: '#e542a3', type: 'text', content: 'Buenas chavales, quién va hoy a entrenar?', time: '15:30', ticks: 'none' },
+          { id: 'mg2', sender: 'p_pedro', senderName: 'Pedro', senderColor: '#02a698', type: 'text', content: 'Yo voy a las 18:30 con José 💪', time: '15:32', ticks: 'none' },
+          { id: 'mg3', sender: 'me', type: 'text', content: 'Me apunto, nos vemos en recepción!', time: '15:34', ticks: 'blue' }
+        ];
+      } else {
+        chat.messages = [
+          { id: 'p1', sender: 'contact', type: 'text', content: 'Hola! Sigues despierto?', time: '15:38', ticks: 'none' },
+          { id: 'p2', sender: 'me', type: 'text', content: 'Sí, dime qué pasó', time: '15:39', ticks: 'blue' },
+          { id: 'p3', sender: 'contact', type: 'text', content: 'Viste lo que subieron al grupo de la uni? 😱', time: '15:40', ticks: 'none' },
+          { id: 'p4', sender: 'me', type: 'text', content: 'No todavía, pásamelo', time: '15:41', ticks: 'blue' }
+        ];
+      }
       renderMessages();
       renderChatList();
     }
@@ -895,13 +1240,8 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessage('1_time_view', 'onetime');
   });
 
-  btnInputCamera.addEventListener('click', () => {
-    fileAttachInput.click();
-  });
-
-  btnSidebarCamera.addEventListener('click', () => {
-    fileAttachInput.click();
-  });
+  btnInputCamera.addEventListener('click', () => fileAttachInput.click());
+  btnSidebarCamera.addEventListener('click', () => fileAttachInput.click());
 
   fileAttachInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -916,25 +1256,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // MODAL CREAR / EDITAR CONTACTO NATIVO
+  // MODAL CREAR / EDITAR CONTACTO
   // ==========================================
-  function openContactModal(contact = null) {
-    if (contact) {
-      state.editingContactId = contact.id;
+  function openContactModal(chat = null) {
+    if (chat && chat.type === 'personal') {
+      state.editingChatId = chat.id;
       contactModalTitle.textContent = 'Editar Contacto';
-      modalContactName.value = contact.name;
-      tempAvatarBase64 = contact.avatar || '';
+      modalContactName.value = chat.name;
+      tempAvatarBase64 = chat.avatar || '';
 
-      if (['en línea', 'escribiendo...', 'grabando audio...', 'últ. vez hoy a las 15:08'].includes(contact.status)) {
-        modalContactStatus.value = contact.status;
+      if (['en línea', 'escribiendo...', 'grabando audio...', 'últ. vez hoy a las 15:08'].includes(chat.status)) {
+        modalContactStatus.value = chat.status;
         modalContactStatusCustom.style.display = 'none';
       } else {
         modalContactStatus.value = 'custom';
         modalContactStatusCustom.style.display = 'block';
-        modalContactStatusCustom.value = contact.status;
+        modalContactStatusCustom.value = chat.status || '';
       }
     } else {
-      state.editingContactId = null;
+      state.editingChatId = null;
       contactModalTitle.textContent = 'Nuevo Contacto';
       modalContactName.value = '';
       tempAvatarBase64 = '';
@@ -959,16 +1299,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  modalContactName.addEventListener('input', () => {
-    updateModalAvatarPreview(modalContactName.value);
-  });
-
+  modalContactName.addEventListener('input', () => updateModalAvatarPreview(modalContactName.value));
   modalContactStatus.addEventListener('change', () => {
-    if (modalContactStatus.value === 'custom') {
-      modalContactStatusCustom.style.display = 'block';
-    } else {
-      modalContactStatusCustom.style.display = 'none';
-    }
+    modalContactStatusCustom.style.display = modalContactStatus.value === 'custom' ? 'block' : 'none';
   });
 
   modalAvatarFileInput.addEventListener('change', (e) => {
@@ -998,26 +1331,35 @@ document.addEventListener('DOMContentLoaded', () => {
       status = modalContactStatusCustom.value.trim() || 'disponible';
     }
 
-    if (state.editingContactId) {
-      const contact = state.contacts.find(c => c.id === state.editingContactId);
-      if (contact) {
-        contact.name = name;
-        contact.avatar = tempAvatarBase64;
-        contact.status = status;
+    if (state.editingChatId) {
+      const chat = state.chats.find(c => c.id === state.editingChatId);
+      if (chat) {
+        chat.name = name;
+        chat.avatar = tempAvatarBase64;
+        chat.status = status;
       }
     } else {
       const newId = 'c_' + Date.now();
-      const newContact = {
+      const newChat = {
         id: newId,
         name: name,
         avatar: tempAvatarBase64,
+        type: 'personal',
+        isPinned: false,
         status: status,
         unreadCount: 0,
-        type: 'personal',
-        messages: []
+        participants: [],
+        messages: [],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderId: 'contact', senderName: name, type: 'text', content: 'Hola! Qué tal?', delaySec: 2 }
+          ],
+          currentStepIndex: 0
+        }
       };
-      state.contacts.unshift(newContact);
-      state.activeContactId = newId;
+      state.chats.unshift(newChat);
+      state.activeChatId = newId;
     }
 
     contactModalOverlay.style.display = 'none';
@@ -1026,19 +1368,362 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMessages();
   });
 
-  // Triggers para abrir modal
-  btnAddContactTop.addEventListener('click', () => openContactModal(null));
-  btnMobileFab.addEventListener('click', () => openContactModal(null));
-  btnOpenContactModal.addEventListener('click', () => openContactModal(getActiveContact()));
-  btnChatEditContact.addEventListener('click', () => {
-    closeAllDropdowns();
-    openContactModal(getActiveContact());
+  // ==========================================
+  // MODAL CREAR / EDITAR GRUPO
+  // ==========================================
+  function openGroupModal(chat = null) {
+    if (chat && chat.type === 'group') {
+      state.editingChatId = chat.id;
+      groupModalTitle.textContent = 'Editar Grupo';
+      groupNameInput.value = chat.name;
+      tempGroupAvatarBase64 = chat.avatar || '';
+      state.tempGroupMembers = [...chat.participants];
+    } else {
+      state.editingChatId = null;
+      groupModalTitle.textContent = 'Nuevo Grupo';
+      groupNameInput.value = '';
+      tempGroupAvatarBase64 = '';
+      state.tempGroupMembers = [
+        { id: 'p_' + Date.now() + '_1', name: 'Federico', color: WA_COLORS[0] },
+        { id: 'p_' + Date.now() + '_2', name: 'Pedro', color: WA_COLORS[1] }
+      ];
+    }
+
+    renderGroupMembersList();
+    updateGroupAvatarPreview();
+    groupModalOverlay.style.display = 'flex';
+  }
+
+  function renderGroupMembersList() {
+    groupMembersContainer.innerHTML = '';
+    state.tempGroupMembers.forEach((member, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'group-member-chip';
+      chip.innerHTML = `
+        <span class="member-chip-color" style="background-color: ${member.color};"></span>
+        <span>${escapeHTML(member.name)}</span>
+        <button type="button" class="member-chip-remove" data-idx="${idx}">&times;</button>
+      `;
+
+      chip.querySelector('.member-chip-remove').addEventListener('click', () => {
+        state.tempGroupMembers.splice(idx, 1);
+        renderGroupMembersList();
+      });
+
+      groupMembersContainer.appendChild(chip);
+    });
+  }
+
+  btnAddMemberToGroup.addEventListener('click', () => {
+    const name = groupNewMemberName.value.trim();
+    if (name) {
+      const color = WA_COLORS[state.tempGroupMembers.length % WA_COLORS.length];
+      state.tempGroupMembers.push({
+        id: 'p_' + Date.now(),
+        name: name,
+        color: color
+      });
+      groupNewMemberName.value = '';
+      renderGroupMembersList();
+    }
   });
 
-  // Botón Volver (Móvil)
-  btnBackToList.addEventListener('click', () => {
-    state.mobileView = 'in-list';
-    updateMobileLayoutView();
+  function updateGroupAvatarPreview() {
+    if (tempGroupAvatarBase64) {
+      groupAvatarPreviewImg.src = tempGroupAvatarBase64;
+      groupAvatarPreviewImg.style.display = 'block';
+      groupAvatarPreviewLetter.style.display = 'none';
+    } else {
+      groupAvatarPreviewImg.style.display = 'none';
+      groupAvatarPreviewLetter.style.display = 'block';
+      groupAvatarPreviewLetter.textContent = '👥';
+    }
+  }
+
+  groupAvatarFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempGroupAvatarBase64 = event.target.result;
+        updateGroupAvatarPreview();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  btnGroupRemoveAvatar.addEventListener('click', () => {
+    tempGroupAvatarBase64 = '';
+    updateGroupAvatarPreview();
+  });
+
+  btnCloseGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
+  btnCancelGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
+
+  btnSaveGroupModal.addEventListener('click', () => {
+    const name = groupNameInput.value.trim() || 'Nuevo Grupo';
+
+    if (state.editingChatId) {
+      const chat = state.chats.find(c => c.id === state.editingChatId);
+      if (chat) {
+        chat.name = name;
+        chat.avatar = tempGroupAvatarBase64;
+        chat.participants = [...state.tempGroupMembers];
+      }
+    } else {
+      const newId = 'g_' + Date.now();
+      const newGroup = {
+        id: newId,
+        name: name,
+        avatar: tempGroupAvatarBase64,
+        type: 'group',
+        isPinned: false,
+        unreadCount: 0,
+        participants: [...state.tempGroupMembers],
+        messages: [],
+        autoReply: {
+          enabled: true,
+          steps: state.tempGroupMembers.map(m => ({
+            senderId: m.id,
+            senderName: m.name,
+            senderColor: m.color,
+            type: 'text',
+            content: `Hola a todos desde ${m.name}!`,
+            delaySec: 2
+          })),
+          currentStepIndex: 0
+        }
+      };
+      state.chats.unshift(newGroup);
+      state.activeChatId = newId;
+    }
+
+    groupModalOverlay.style.display = 'none';
+    renderActiveHeader();
+    renderChatList();
+    renderMessages();
+  });
+
+  // Triggers de Apertura de Modales
+  btnMenuAddContact.addEventListener('click', () => {
+    closeAllDropdowns();
+    openContactModal(null);
+  });
+
+  btnMenuAddGroup.addEventListener('click', () => {
+    closeAllDropdowns();
+    openGroupModal(null);
+  });
+
+  btnMobileFab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = addDropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isShown) addDropdown.classList.add('show');
+  });
+
+  btnOpenChatInfoModal.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (chat) {
+      if (chat.type === 'group') openGroupModal(chat);
+      else openContactModal(chat);
+    }
+  });
+
+  btnChatEditChat.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (chat) {
+      if (chat.type === 'group') openGroupModal(chat);
+      else openContactModal(chat);
+    }
+  });
+
+  // ==========================================
+  // MODAL RESPUESTAS AUTOMÁTICAS & STEP BUILDER
+  // ==========================================
+  btnChatAutoReply.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    if (!chat.autoReply) {
+      chat.autoReply = { enabled: true, steps: [], currentStepIndex: 0 };
+    }
+
+    autoReplyCheckbox.checked = chat.autoReply.enabled;
+    tempWorkingSteps = JSON.parse(JSON.stringify(chat.autoReply.steps || []));
+
+    populateStepSenderOptions(chat);
+    renderAutoStepsList();
+
+    // Reset Formulario
+    stepTypeSelect.value = 'text';
+    stepInputTextWrap.style.display = 'block';
+    stepInputImageWrap.style.display = 'none';
+    stepInputAudioWrap.style.display = 'none';
+    stepTextInput.value = '';
+    tempStepImageBase64 = '';
+    tempStepAudioUrl = '';
+    stepImageBtnText.textContent = 'Subir imagen';
+    stepAudioBtnText.textContent = 'Subir .mp3/.wav';
+    stepDelayInput.value = '2';
+
+    autoModalOverlay.style.display = 'flex';
+  });
+
+  function populateStepSenderOptions(chat) {
+    stepSenderSelect.innerHTML = '';
+    if (chat.type === 'group' && chat.participants.length > 0) {
+      chat.participants.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        stepSenderSelect.appendChild(opt);
+      });
+    } else {
+      const opt = document.createElement('option');
+      opt.value = 'contact';
+      opt.textContent = chat.name;
+      stepSenderSelect.appendChild(opt);
+    }
+  }
+
+  stepTypeSelect.addEventListener('change', () => {
+    const t = stepTypeSelect.value;
+    stepInputTextWrap.style.display = t === 'text' ? 'block' : 'none';
+    stepInputImageWrap.style.display = t === 'image' ? 'block' : 'none';
+    stepInputAudioWrap.style.display = t === 'audio' ? 'block' : 'none';
+  });
+
+  stepImageFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      stepImageBtnText.textContent = `Foto: ${file.name}`;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempStepImageBase64 = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  stepAudioFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      stepAudioBtnText.textContent = `Audio: ${file.name}`;
+      tempStepAudioUrl = URL.createObjectURL(file);
+      const tempAudio = new Audio(tempStepAudioUrl);
+      tempAudio.addEventListener('loadedmetadata', () => {
+        const sec = Math.round(tempAudio.duration);
+        stepAudioDurationInput.value = sec;
+      });
+    }
+  });
+
+  function renderAutoStepsList() {
+    autoStepsContainer.innerHTML = '';
+    if (tempWorkingSteps.length === 0) {
+      autoStepsContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No hay pasos programados en este guion. Añade uno debajo.</div>`;
+      return;
+    }
+
+    tempWorkingSteps.forEach((step, idx) => {
+      const item = document.createElement('div');
+      item.className = 'auto-step-item';
+
+      let detailText = '';
+      if (step.type === 'text') detailText = `Texto: "${step.content}"`;
+      else if (step.type === 'image') detailText = `📷 Imagen / Foto`;
+      else if (step.type === 'audio') detailText = `🎙️ Nota de voz (${step.duration || '0:12'})`;
+
+      item.innerHTML = `
+        <div class="auto-step-meta">
+          <span class="step-sender-name" style="color: ${step.senderColor || '#00a884'};">${idx + 1}. [${escapeHTML(step.senderName || 'Contacto')}]</span>
+          <span class="step-detail-text">${escapeHTML(detailText)} (${step.delaySec || 2}s de espera)</span>
+        </div>
+        <button type="button" class="step-remove-btn" data-idx="${idx}">&times;</button>
+      `;
+
+      item.querySelector('.step-remove-btn').addEventListener('click', () => {
+        tempWorkingSteps.splice(idx, 1);
+        renderAutoStepsList();
+      });
+
+      autoStepsContainer.appendChild(item);
+    });
+  }
+
+  btnAddStepToList.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    const senderId = stepSenderSelect.value;
+    let senderName = chat.name;
+    let senderColor = '#00a884';
+
+    if (chat.type === 'group') {
+      const p = chat.participants.find(part => part.id === senderId);
+      if (p) {
+        senderName = p.name;
+        senderColor = p.color;
+      }
+    }
+
+    const type = stepTypeSelect.value;
+    const delaySec = parseFloat(stepDelayInput.value) || 2;
+    let content = '';
+    let audioUrl = '';
+    let duration = '0:12';
+
+    if (type === 'text') {
+      content = stepTextInput.value.trim();
+      if (!content) {
+        alert('Por favor introduce el texto del mensaje.');
+        return;
+      }
+    } else if (type === 'image') {
+      content = tempStepImageBase64 || 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400';
+    } else if (type === 'audio') {
+      audioUrl = tempStepAudioUrl;
+      const sec = parseInt(stepAudioDurationInput.value) || 12;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      duration = `${m}:${s < 10 ? '0' + s : s}`;
+    }
+
+    tempWorkingSteps.push({
+      senderId,
+      senderName,
+      senderColor,
+      type,
+      content,
+      audioUrl,
+      duration,
+      delaySec
+    });
+
+    renderAutoStepsList();
+
+    // Resetear campos
+    stepTextInput.value = '';
+    stepImageBtnText.textContent = 'Subir imagen';
+    stepAudioBtnText.textContent = 'Subir .mp3/.wav';
+    tempStepImageBase64 = '';
+    tempStepAudioUrl = '';
+  });
+
+  btnCloseAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
+  btnCancelAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
+
+  btnSaveAutoModal.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (chat) {
+      if (!chat.autoReply) chat.autoReply = { currentStepIndex: 0 };
+      chat.autoReply.enabled = autoReplyCheckbox.checked;
+      chat.autoReply.steps = tempWorkingSteps;
+    }
+    autoModalOverlay.style.display = 'none';
   });
 
   // ==========================================
@@ -1048,22 +1733,22 @@ document.addEventListener('DOMContentLoaded', () => {
   let callSeconds = 0;
 
   function startVoiceCall() {
-    const contact = getActiveContact();
-    if (!contact) return;
+    const chat = getActiveChat();
+    if (!chat) return;
 
-    callNameDisplay.textContent = contact.name;
+    callNameDisplay.textContent = chat.name;
     callStatusText.textContent = 'Llamando...';
     
     const letterEl = document.getElementById('call-avatar-letter');
     const imgEl = document.getElementById('call-avatar-img');
-    if (contact.avatar) {
-      imgEl.src = contact.avatar;
+    if (chat.avatar) {
+      imgEl.src = chat.avatar;
       imgEl.style.display = 'block';
       letterEl.style.display = 'none';
     } else {
       imgEl.style.display = 'none';
       letterEl.style.display = 'block';
-      letterEl.textContent = contact.name.charAt(0).toUpperCase();
+      letterEl.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
     }
 
     voiceOverlay.style.display = 'flex';
@@ -1086,22 +1771,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startVideoCall() {
-    const contact = getActiveContact();
-    if (!contact) return;
+    const chat = getActiveChat();
+    if (!chat) return;
 
-    videoNameDisplay.textContent = contact.name;
+    videoNameDisplay.textContent = chat.name;
     videoStatusText.textContent = 'Conectando...';
 
     const letterEl = document.getElementById('videocall-avatar-letter');
     const imgEl = document.getElementById('videocall-avatar-img');
-    if (contact.avatar) {
-      imgEl.src = contact.avatar;
+    if (chat.avatar) {
+      imgEl.src = chat.avatar;
       imgEl.style.display = 'block';
       letterEl.style.display = 'none';
     } else {
       imgEl.style.display = 'none';
       letterEl.style.display = 'block';
-      letterEl.textContent = contact.name.charAt(0).toUpperCase();
+      letterEl.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
     }
 
     videoOverlay.style.display = 'flex';
@@ -1128,9 +1813,13 @@ document.addEventListener('DOMContentLoaded', () => {
   btnVideoCall.addEventListener('click', startVideoCall);
   btnVideoHangup.addEventListener('click', hangupVideoCall);
 
-  // ==========================================
-  // BÚSQUEDA Y FILTROS
-  // ==========================================
+  // Botón Volver Móvil
+  btnBackToList.addEventListener('click', () => {
+    state.mobileView = 'in-list';
+    updateMobileLayoutView();
+  });
+
+  // Búsqueda & Filtros
   searchInput.addEventListener('input', renderChatList);
 
   filterPills.forEach(pill => {
@@ -1142,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Atajo de Teclado Alt+S para alternar emisor
+  // Atajo de Teclado Alt+S
   document.addEventListener('keydown', (e) => {
     if (e.altKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
@@ -1153,6 +1842,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // INICIALIZACIÓN
   // ==========================================
-  selectContact(state.activeContactId);
+  selectChat(state.activeChatId);
 
 });
