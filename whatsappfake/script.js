@@ -393,8 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatMenuEditLabel = document.getElementById('chat-menu-edit-label');
   const btnChatTogglePin = document.getElementById('chat-menu-btn-toggle-pin');
   const chatMenuPinLabel = document.getElementById('chat-menu-pin-label');
-  const btnChatMarkAllRead = document.getElementById('chat-menu-btn-mark-all-read');
-  const btnChatMarkAllUnread = document.getElementById('chat-menu-btn-mark-all-unread');
   const btnChatClearMsgs = document.getElementById('chat-menu-btn-clear-msgs');
   const btnChatDeleteChat = document.getElementById('chat-menu-btn-delete-chat');
   const chatMenuDeleteLabel = document.getElementById('chat-menu-delete-label');
@@ -1615,30 +1613,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     separatorModalOverlay.style.display = 'none';
     renderMessages();
-  });
-
-  // Marcar todos los mensajes enviados como leídos (ticks azules)
-  btnChatMarkAllRead.addEventListener('click', () => {
-    closeAllDropdowns();
-    const chat = getActiveChat();
-    if (chat) {
-      chat.messages.forEach(m => {
-        if (m.sender === 'me') m.ticks = 'blue';
-      });
-      renderMessages();
-    }
-  });
-
-  // Marcar todos los mensajes enviados como no leídos (ticks grises)
-  btnChatMarkAllUnread.addEventListener('click', () => {
-    closeAllDropdowns();
-    const chat = getActiveChat();
-    if (chat) {
-      chat.messages.forEach(m => {
-        if (m.sender === 'me') m.ticks = 'grey';
-      });
-      renderMessages();
-    }
   });
 
   // Vaciar Mensajes
