@@ -9,11 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ESTADO GLOBAL DE LA APLICACIÓN
   // ==========================================
   const state = {
-    theme: 'dark',
-    mode: 'desktop',
-    mobileView: 'in-chat', // 'in-list' o 'in-chat'
-    sender: 'me', // 'me' o 'contact'
+    theme: 'dark', // 'dark' | 'light'
+    mode: 'auto', // 'auto' | 'forced-mobile'
+    mobileView: 'in-chat', // 'in-list' | 'in-chat'
+    sender: 'me', // 'me' | 'contact'
     activeContactId: 'c1',
+    editingContactId: null, // id cuando se abre el modal de edición
     autoReply: {
       enabled: true,
       delay: 2.0,
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'No',
         'Llegaré a las 8',
         'El finde que viene si quieres vemos',
-        'Vale venga va'
+        'Vale venga va 👍'
       ],
       currentIndex: 0
     },
@@ -135,10 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ==========================================
-  // REFERENCIAS DOM
+  // ELEMENTOS DEL DOM
   // ==========================================
   const body = document.body;
   const layout = document.getElementById('wa-app-layout');
+  const sidebar = document.getElementById('wa-sidebar');
+  const sidebarResizer = document.getElementById('sidebar-resizer');
   const chatListContainer = document.getElementById('wa-chat-list');
   const messagesContainer = document.getElementById('wa-messages-container');
   const messagesViewport = document.getElementById('wa-messages-viewport');
@@ -147,31 +150,73 @@ document.addEventListener('DOMContentLoaded', () => {
   const iconSendArrow = document.getElementById('icon-send-arrow');
   const iconSendMic = document.getElementById('icon-send-mic');
   
-  // HUD Elements
-  const btnDesktop = document.getElementById('hud-btn-desktop');
-  const btnMobile = document.getElementById('hud-btn-mobile');
-  const btnThemeDark = document.getElementById('hud-theme-dark');
-  const btnThemeLight = document.getElementById('hud-theme-light');
-  const btnConfig = document.getElementById('hud-btn-config');
-  
-  // Header Elements
+  // Header Activo
   const headerContactName = document.getElementById('header-contact-name');
   const headerContactStatus = document.getElementById('header-contact-status');
   const headerAvatarImg = document.getElementById('header-avatar-img');
   const headerAvatarLetter = document.getElementById('header-avatar-letter');
   const btnBackToList = document.getElementById('btn-back-to-list');
-  const btnEditActiveContact = document.getElementById('btn-edit-active-contact');
+  const btnOpenContactModal = document.getElementById('btn-open-contact-modal');
   
-  // Sender Toggle
-  const btnSenderMe = document.getElementById('btn-sender-me');
-  const btnSenderContact = document.getElementById('btn-sender-contact');
-  const btnTriggerAudio = document.getElementById('btn-trigger-audio-msg');
-  const btnTriggerOneTime = document.getElementById('btn-trigger-onetime-msg');
-  const btnTriggerImage = document.getElementById('btn-trigger-image-msg');
+  // Dropdown Menús
+  const btnSidebarMenu = document.getElementById('btn-sidebar-menu');
+  const sidebarDropdown = document.getElementById('sidebar-dropdown-menu');
+  const btnChatMenu = document.getElementById('btn-chat-menu');
+  const chatDropdown = document.getElementById('chat-dropdown-menu');
   const btnClipAttach = document.getElementById('btn-clip-attach');
-  const chatImageInput = document.getElementById('chat-file-image-input');
+  const clipDropdown = document.getElementById('clip-dropdown-menu');
   
-  // Calls
+  // Opciones del Menú de Sidebar
+  const btnMenuToggleTheme = document.getElementById('menu-btn-toggle-theme');
+  const themeToggleLabel = document.getElementById('theme-toggle-label');
+  const btnMenuToggleView = document.getElementById('menu-btn-toggle-view');
+  const viewToggleLabel = document.getElementById('view-toggle-label');
+  const btnMenuExportChats = document.getElementById('menu-btn-export-chats');
+  const btnMenuImportChats = document.getElementById('menu-btn-import-chats');
+  const fileImportJson = document.getElementById('chat-import-json-input');
+  
+  // Opciones del Menú de Chat
+  const btnChatAutoReply = document.getElementById('chat-menu-btn-auto-reply');
+  const btnChatEditContact = document.getElementById('chat-menu-btn-edit-contact');
+  const btnChatToggleSender = document.getElementById('chat-menu-btn-toggle-sender');
+  const chatSenderToggleLabel = document.getElementById('chat-sender-toggle-label');
+  const btnChatClearMsgs = document.getElementById('chat-menu-btn-clear-msgs');
+  const btnChatResetDemo = document.getElementById('chat-menu-btn-reset-demo');
+  
+  // Adjuntar
+  const btnMenuAttachPhoto = document.getElementById('btn-menu-attach-photo');
+  const btnMenuAttachOneTime = document.getElementById('btn-menu-attach-onetime');
+  const fileAttachInput = document.getElementById('chat-attach-file-input');
+  const btnInputCamera = document.getElementById('btn-input-camera');
+  const btnSidebarCamera = document.getElementById('btn-sidebar-camera');
+  
+  // Modal Contacto
+  const contactModalOverlay = document.getElementById('contact-modal-overlay');
+  const contactModalTitle = document.getElementById('contact-modal-title');
+  const btnCloseContactModal = document.getElementById('btn-close-contact-modal');
+  const btnCancelContactModal = document.getElementById('btn-cancel-contact-modal');
+  const btnSaveContactModal = document.getElementById('btn-save-contact-modal');
+  const modalContactName = document.getElementById('modal-contact-name-input');
+  const modalContactStatus = document.getElementById('modal-contact-status-select');
+  const modalContactStatusCustom = document.getElementById('modal-contact-status-custom');
+  const modalAvatarPreviewImg = document.getElementById('modal-avatar-img');
+  const modalAvatarPreviewLetter = document.getElementById('modal-avatar-letter');
+  const modalAvatarFileInput = document.getElementById('modal-avatar-file-input');
+  const btnModalRemoveAvatar = document.getElementById('btn-modal-remove-avatar');
+  const btnAddContactTop = document.getElementById('btn-add-contact-top');
+  const btnMobileFab = document.getElementById('btn-mobile-fab');
+  let tempAvatarBase64 = '';
+  
+  // Modal Automatización
+  const autoModalOverlay = document.getElementById('automation-modal-overlay');
+  const btnCloseAutoModal = document.getElementById('btn-close-automation-modal');
+  const btnCancelAutoModal = document.getElementById('btn-cancel-automation-modal');
+  const btnSaveAutoModal = document.getElementById('btn-save-automation-modal');
+  const autoReplyCheckbox = document.getElementById('auto-reply-checkbox');
+  const autoReplyDelayInput = document.getElementById('auto-reply-delay-input');
+  const autoReplyScriptTextarea = document.getElementById('auto-reply-script-textarea');
+  
+  // Llamadas
   const btnVoiceCall = document.getElementById('btn-trigger-voicecall');
   const btnVideoCall = document.getElementById('btn-trigger-videocall');
   const voiceOverlay = document.getElementById('voicecall-overlay');
@@ -183,33 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const videoNameDisplay = document.getElementById('videocall-name-display');
   const videoStatusText = document.getElementById('videocall-status-text');
   
-  // Config Drawer
-  const configOverlay = document.getElementById('config-drawer-overlay');
-  const btnCloseDrawer = document.getElementById('btn-close-drawer');
-  const drawerTabs = document.querySelectorAll('.drawer-tab');
-  const tabPanes = document.querySelectorAll('.tab-pane');
-  const cfgContactName = document.getElementById('cfg-contact-name');
-  const cfgContactStatus = document.getElementById('cfg-contact-status');
-  const cfgContactStatusCustom = document.getElementById('cfg-contact-status-custom');
-  const cfgAvatarFile = document.getElementById('cfg-avatar-file');
-  const cfgAvatarImg = document.getElementById('cfg-avatar-img');
-  const cfgAvatarLetter = document.getElementById('cfg-avatar-letter');
-  const btnClearAvatar = document.getElementById('btn-clear-avatar');
-  const btnSaveContactInfo = document.getElementById('btn-save-contact-info');
-  const cfgAutoReply = document.getElementById('cfg-auto-reply-enabled');
-  const cfgReplyDelay = document.getElementById('cfg-reply-delay');
-  const cfgScriptReplies = document.getElementById('cfg-script-replies');
-  const btnClearAllMessages = document.getElementById('btn-clear-all-messages');
-  const btnLoadPresetChat = document.getElementById('btn-load-preset-chat');
-  const btnAddContactTop = document.getElementById('btn-add-contact-top');
-  const btnMobileFab = document.getElementById('btn-mobile-fab');
-  
-  // Search & Filters
+  // Búsqueda & Filtros
   const searchInput = document.getElementById('wa-search-input');
   const filterPills = document.querySelectorAll('.wa-pill');
   let currentFilter = 'all';
 
-  // Live Timer for Clock
+  // Actualización del Reloj
   function updateClock() {
     const clockEl = document.getElementById('status-clock');
     if (clockEl) {
@@ -223,7 +247,36 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 30000);
 
   // ==========================================
-  // AUDIO SYNTHESIZER (WEB AUDIO API)
+  // RESIZER DE LA BARRA LATERAL (DESKTOP)
+  // ==========================================
+  let isResizing = false;
+  sidebarResizer.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    sidebarResizer.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    const offsetLeft = layout.getBoundingClientRect().left;
+    const newWidth = e.clientX - offsetLeft;
+    if (newWidth >= 260 && newWidth <= 600) {
+      sidebar.style.width = `${newWidth}px`;
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      sidebarResizer.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  });
+
+  // ==========================================
+  // WEB AUDIO SINTETIZADOR
   // ==========================================
   let audioCtx = null;
   function getAudioContext() {
@@ -273,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // GESTIÓN DE CHATS & CONTACTOS
+  // GESTIÓN DE CONTACTOS Y SELECCIÓN
   // ==========================================
   function getActiveContact() {
     return state.contacts.find(c => c.id === state.activeContactId) || state.contacts[0];
@@ -290,8 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!matchesQuery) return false;
       if (currentFilter === 'all') return true;
       if (currentFilter === 'unread') return c.unreadCount > 0;
+      if (currentFilter === 'favorites') return c.isFavorite;
       if (currentFilter === 'groups') return c.type === 'groups';
-      if (currentFilter === 'personal') return c.type === 'personal';
       return true;
     });
 
@@ -321,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="wa-chat-info">
           <div class="wa-chat-info-top">
-            <span class="wa-chat-title">${contact.name}</span>
+            <span class="wa-chat-title">${escapeHTML(contact.name)}</span>
             <span class="wa-chat-time ${contact.unreadCount > 0 ? 'unread' : ''}">${lastTime}</span>
           </div>
           <div class="wa-chat-info-bottom">
@@ -348,11 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
       contact.unreadCount = 0;
     }
     
-    // Si estamos en modo móvil, pasar a pantalla de chat
-    if (state.mode === 'mobile') {
-      state.mobileView = 'in-chat';
-      updateMobileLayoutView();
-    }
+    state.mobileView = 'in-chat';
+    updateMobileLayoutView();
 
     renderActiveHeader();
     renderMessages();
@@ -377,6 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateMobileLayoutView() {
+    layout.className = `wa-app-layout mobile-${state.mobileView}`;
+  }
+
   // ==========================================
   // RENDERIZADO DE MENSAJES
   // ==========================================
@@ -384,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const contact = getActiveContact();
     if (!contact) return;
 
-    // Mantener la fecha y el aviso cifrado
     const dateDivider = messagesContainer.querySelector('.wa-date-divider');
     const encryptionNotice = messagesContainer.querySelector('.wa-encryption-notice');
     
@@ -427,17 +480,17 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     } else if (msg.type === 'audio') {
-      const barsCount = 28;
+      const barsCount = 30;
       let barsHtml = '';
       for (let i = 0; i < barsCount; i++) {
-        const height = Math.floor(Math.random() * 16) + 4;
+        const height = Math.floor(Math.random() * 20) + 6;
         barsHtml += `<div class="audio-bar" style="height: ${height}px;"></div>`;
       }
 
       contentHtml = `
         <div class="wa-audio-player" data-duration="${msg.duration || '0:14'}">
           <button class="audio-play-btn" title="Reproducir nota de voz">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           </button>
           <div class="audio-waveform-wrap">
             <div class="audio-bars-container">
@@ -451,15 +504,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Ticks de verificación
+    // Ticks SVG oficiales
     let tickHtml = '';
     if (msg.sender === 'me') {
       if (msg.ticks === 'blue') {
-        tickHtml = `<span class="tick-icon blue"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon blue" title="Leído"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'grey') {
-        tickHtml = `<span class="tick-icon grey"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Entregado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'single') {
-        tickHtml = `<span class="tick-icon grey"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.01 3.316l-6.79 6.79a.75.75 0 0 1-1.06 0l-2.24-2.24a.75.75 0 0 1 1.06-1.06l1.71 1.71 6.26-6.26a.75.75 0 0 1 1.06 1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Enviado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.01 3.316l-6.79 6.79a.75.75 0 0 1-1.06 0l-2.24-2.24a.75.75 0 0 1 1.06-1.06l1.71 1.71 6.26-6.26a.75.75 0 0 1 1.06 1.06z"/></svg></span>`;
       }
     }
 
@@ -471,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // Asignar interacción si es reproductor de audio
     if (msg.type === 'audio') {
       setupAudioPlayer(bubble);
     }
@@ -492,10 +544,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isPlaying) {
         clearInterval(interval);
         isPlaying = false;
-        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
       } else {
         isPlaying = true;
-        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
         progress = 0;
         bars.forEach(b => b.classList.remove('played'));
 
@@ -508,10 +560,10 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             clearInterval(interval);
             isPlaying = false;
-            playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+            playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
             timer.textContent = '0:14';
           }
-        }, 120);
+        }, 110);
       }
     });
   }
@@ -519,13 +571,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatMessageText(text) {
     if (!text) return '';
     let escaped = escapeHTML(text);
-    // Negrita *texto*
     escaped = escaped.replace(/\*([^\*]+)\*/g, '<strong>$1</strong>');
-    // Cursiva _texto_
     escaped = escaped.replace(/_([^_]+)_/g, '<em>$1</em>');
-    // Tachado ~texto~
     escaped = escaped.replace(/~([^~]+)~/g, '<del>$1</del>');
-    // Enlaces
     escaped = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--text-link); text-decoration:underline;">$1</a>');
     return escaped;
   }
@@ -564,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
       type: type,
       content: content,
       time: time,
-      ticks: state.sender === 'me' ? 'single' : 'none'
+      ticks: state.sender === 'me' ? (state.autoReply.enabled ? 'grey' : 'single') : 'none'
     };
 
     contact.messages.push(newMsg);
@@ -574,27 +622,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.sender === 'me') {
       playSentPopSound();
 
-      // Transición progresiva de ticks: single -> grey -> blue
-      setTimeout(() => {
-        newMsg.ticks = 'grey';
-        renderMessages();
-      }, 300);
-
-      setTimeout(() => {
-        newMsg.ticks = 'blue';
-        renderMessages();
-      }, 700);
-
-      // Desencadenar Automatización de Respuesta
+      // Si la automatización está activada:
       if (state.autoReply.enabled && state.autoReply.scriptLines.length > 0) {
-        triggerAutomatedReply(contact);
+        triggerAutomatedReply(contact, newMsg);
       }
     } else {
       playReceivedPopSound();
     }
   }
 
-  function triggerAutomatedReply(contact) {
+  function triggerAutomatedReply(contact, lastSentMsg) {
     const script = state.autoReply.scriptLines;
     if (!script || script.length === 0) return;
 
@@ -603,21 +640,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const delayMs = Math.max(500, state.autoReply.delay * 1000);
 
-    // 1. Contacto pasa a "en línea"
+    // 1. A los 400ms: El contacto entra "en línea" y lee el mensaje (doble tick azul)
     setTimeout(() => {
+      lastSentMsg.ticks = 'blue';
       contact.status = 'en línea';
       if (contact.id === state.activeContactId) renderActiveHeader();
+      renderMessages();
       renderChatList();
     }, 400);
 
-    // 2. Contacto pasa a "escribiendo..."
+    // 2. A mitad de tiempo: El contacto pasa a "escribiendo..."
     setTimeout(() => {
       contact.status = 'escribiendo...';
       if (contact.id === state.activeContactId) renderActiveHeader();
       renderChatList();
-    }, Math.min(delayMs - 600, 1000));
+    }, Math.max(600, delayMs - 800));
 
-    // 3. Envía el mensaje y regresa a "en línea"
+    // 3. Al cumplirse el delay: Envía la respuesta y vuelve a "en línea"
     setTimeout(() => {
       contact.status = 'en línea';
       if (contact.id === state.activeContactId) renderActiveHeader();
@@ -637,6 +676,370 @@ document.addEventListener('DOMContentLoaded', () => {
       playReceivedPopSound();
     }, delayMs);
   }
+
+  // ==========================================
+  // INPUT TEXTAREA & MORPHING MIC/SEND BUTTON
+  // ==========================================
+  textInput.addEventListener('input', () => {
+    const val = textInput.value.trim();
+    if (val.length > 0) {
+      iconSendMic.style.display = 'none';
+      iconSendArrow.style.display = 'block';
+      btnSend.title = 'Enviar mensaje';
+    } else {
+      iconSendMic.style.display = 'block';
+      iconSendArrow.style.display = 'none';
+      btnSend.title = 'Grabar nota de voz';
+    }
+  });
+
+  btnSend.addEventListener('click', () => {
+    const text = textInput.value.trim();
+    if (text.length > 0) {
+      sendMessage(text, 'text');
+      textInput.value = '';
+      textInput.style.height = 'auto';
+      iconSendMic.style.display = 'block';
+      iconSendArrow.style.display = 'none';
+    } else {
+      // Enviar nota de voz simulada
+      sendMessage('audio_note', 'audio');
+    }
+  });
+
+  textInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      btnSend.click();
+    }
+  });
+
+  // ==========================================
+  // DROPDOWN MENÚS NATIVOS
+  // ==========================================
+  function closeAllDropdowns() {
+    sidebarDropdown.classList.remove('show');
+    chatDropdown.classList.remove('show');
+    clipDropdown.classList.remove('show');
+  }
+
+  btnSidebarMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = sidebarDropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isShown) sidebarDropdown.classList.add('show');
+  });
+
+  btnChatMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = chatDropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isShown) chatDropdown.classList.add('show');
+  });
+
+  btnClipAttach.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isShown = clipDropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isShown) clipDropdown.classList.add('show');
+  });
+
+  document.addEventListener('click', () => {
+    closeAllDropdowns();
+  });
+
+  // ==========================================
+  // ACCIONES DEL MENÚ GENERAL (SIDEBAR)
+  // ==========================================
+
+  // Alternar Tema
+  btnMenuToggleTheme.addEventListener('click', () => {
+    if (state.theme === 'dark') {
+      state.theme = 'light';
+      body.classList.remove('theme-dark');
+      body.classList.add('theme-light');
+      themeToggleLabel.textContent = 'Cambiar a Tema Oscuro';
+    } else {
+      state.theme = 'dark';
+      body.classList.remove('theme-light');
+      body.classList.add('theme-dark');
+      themeToggleLabel.textContent = 'Cambiar a Tema Claro';
+    }
+    closeAllDropdowns();
+  });
+
+  // Alternar Vista (Forzar Móvil o Automático)
+  btnMenuToggleView.addEventListener('click', () => {
+    if (state.mode === 'auto') {
+      state.mode = 'forced-mobile';
+      body.classList.remove('mode-auto');
+      body.classList.add('mode-forced-mobile');
+      viewToggleLabel.textContent = 'Restablecer Vista Automática';
+    } else {
+      state.mode = 'auto';
+      body.classList.remove('mode-forced-mobile');
+      body.classList.add('mode-auto');
+      viewToggleLabel.textContent = 'Forzar Marco Móvil';
+    }
+    closeAllDropdowns();
+  });
+
+  // Exportar Chats (JSON)
+  btnMenuExportChats.addEventListener('click', () => {
+    closeAllDropdowns();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.contacts, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "whatsapp_chats_backup.json");
+    dlAnchorElem.click();
+  });
+
+  // Importar Chats (JSON)
+  btnMenuImportChats.addEventListener('click', () => {
+    closeAllDropdowns();
+    fileImportJson.click();
+  });
+
+  fileImportJson.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported) && imported.length > 0) {
+            state.contacts = imported;
+            selectContact(imported[0].id);
+            alert('¡Chats importados correctamente!');
+          }
+        } catch (err) {
+          alert('El archivo seleccionado no tiene un formato JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  // ==========================================
+  // ACCIONES DEL MENÚ DEL CHAT ACTIVO
+  // ==========================================
+
+  // Abrir Modal de Respuestas Automáticas
+  btnChatAutoReply.addEventListener('click', () => {
+    closeAllDropdowns();
+    autoReplyCheckbox.checked = state.autoReply.enabled;
+    autoReplyDelayInput.value = state.autoReply.delay;
+    autoReplyScriptTextarea.value = state.autoReply.scriptLines.join('\n');
+    autoModalOverlay.style.display = 'flex';
+  });
+
+  btnCloseAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
+  btnCancelAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');
+
+  btnSaveAutoModal.addEventListener('click', () => {
+    state.autoReply.enabled = autoReplyCheckbox.checked;
+    state.autoReply.delay = parseFloat(autoReplyDelayInput.value) || 2;
+    state.autoReply.scriptLines = autoReplyScriptTextarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    autoModalOverlay.style.display = 'none';
+  });
+
+  // Alternar Emisor (Tú / Contacto)
+  btnChatToggleSender.addEventListener('click', () => {
+    closeAllDropdowns();
+    if (state.sender === 'me') {
+      state.sender = 'contact';
+      chatSenderToggleLabel.textContent = 'Enviar como: Contacto (Gris)';
+    } else {
+      state.sender = 'me';
+      chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
+    }
+  });
+
+  // Vaciar Mensajes
+  btnChatClearMsgs.addEventListener('click', () => {
+    closeAllDropdowns();
+    const contact = getActiveContact();
+    if (contact && confirm('¿Estás seguro de vaciar todos los mensajes de este chat?')) {
+      contact.messages = [];
+      renderMessages();
+      renderChatList();
+    }
+  });
+
+  // Restablecer Demo
+  btnChatResetDemo.addEventListener('click', () => {
+    closeAllDropdowns();
+    const contact = getActiveContact();
+    if (contact) {
+      contact.messages = [
+        { id: 'p1', sender: 'contact', type: 'text', content: 'Hola! Sigues despierto?', time: '15:38', ticks: 'none' },
+        { id: 'p2', sender: 'me', type: 'text', content: 'Sí, dime qué pasó', time: '15:39', ticks: 'blue' },
+        { id: 'p3', sender: 'contact', type: 'text', content: 'Viste lo que subieron al grupo de la uni? 😱', time: '15:40', ticks: 'none' },
+        { id: 'p4', sender: 'me', type: 'text', content: 'No todavía, pásamelo', time: '15:41', ticks: 'blue' }
+      ];
+      renderMessages();
+      renderChatList();
+    }
+  });
+
+  // ==========================================
+  // ADJUNTAR ARCHIVOS & FOTOS
+  // ==========================================
+  btnMenuAttachPhoto.addEventListener('click', () => {
+    closeAllDropdowns();
+    fileAttachInput.click();
+  });
+
+  btnMenuAttachOneTime.addEventListener('click', () => {
+    closeAllDropdowns();
+    sendMessage('1_time_view', 'onetime');
+  });
+
+  btnInputCamera.addEventListener('click', () => {
+    fileAttachInput.click();
+  });
+
+  btnSidebarCamera.addEventListener('click', () => {
+    fileAttachInput.click();
+  });
+
+  fileAttachInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        sendMessage(event.target.result, 'image');
+        fileAttachInput.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ==========================================
+  // MODAL CREAR / EDITAR CONTACTO NATIVO
+  // ==========================================
+  function openContactModal(contact = null) {
+    if (contact) {
+      state.editingContactId = contact.id;
+      contactModalTitle.textContent = 'Editar Contacto';
+      modalContactName.value = contact.name;
+      tempAvatarBase64 = contact.avatar || '';
+
+      if (['en línea', 'escribiendo...', 'grabando audio...', 'últ. vez hoy a las 15:08'].includes(contact.status)) {
+        modalContactStatus.value = contact.status;
+        modalContactStatusCustom.style.display = 'none';
+      } else {
+        modalContactStatus.value = 'custom';
+        modalContactStatusCustom.style.display = 'block';
+        modalContactStatusCustom.value = contact.status;
+      }
+    } else {
+      state.editingContactId = null;
+      contactModalTitle.textContent = 'Nuevo Contacto';
+      modalContactName.value = '';
+      tempAvatarBase64 = '';
+      modalContactStatus.value = 'en línea';
+      modalContactStatusCustom.style.display = 'none';
+      modalContactStatusCustom.value = '';
+    }
+
+    updateModalAvatarPreview(modalContactName.value);
+    contactModalOverlay.style.display = 'flex';
+  }
+
+  function updateModalAvatarPreview(name) {
+    if (tempAvatarBase64) {
+      modalAvatarPreviewImg.src = tempAvatarBase64;
+      modalAvatarPreviewImg.style.display = 'block';
+      modalAvatarPreviewLetter.style.display = 'none';
+    } else {
+      modalAvatarPreviewImg.style.display = 'none';
+      modalAvatarPreviewLetter.style.display = 'block';
+      modalAvatarPreviewLetter.textContent = (name && name.charAt(0).toUpperCase()) || 'N';
+    }
+  }
+
+  modalContactName.addEventListener('input', () => {
+    updateModalAvatarPreview(modalContactName.value);
+  });
+
+  modalContactStatus.addEventListener('change', () => {
+    if (modalContactStatus.value === 'custom') {
+      modalContactStatusCustom.style.display = 'block';
+    } else {
+      modalContactStatusCustom.style.display = 'none';
+    }
+  });
+
+  modalAvatarFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempAvatarBase64 = event.target.result;
+        updateModalAvatarPreview(modalContactName.value);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  btnModalRemoveAvatar.addEventListener('click', () => {
+    tempAvatarBase64 = '';
+    updateModalAvatarPreview(modalContactName.value);
+  });
+
+  btnCloseContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
+  btnCancelContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
+
+  btnSaveContactModal.addEventListener('click', () => {
+    const name = modalContactName.value.trim() || 'Contacto';
+    let status = modalContactStatus.value;
+    if (status === 'custom') {
+      status = modalContactStatusCustom.value.trim() || 'disponible';
+    }
+
+    if (state.editingContactId) {
+      const contact = state.contacts.find(c => c.id === state.editingContactId);
+      if (contact) {
+        contact.name = name;
+        contact.avatar = tempAvatarBase64;
+        contact.status = status;
+      }
+    } else {
+      const newId = 'c_' + Date.now();
+      const newContact = {
+        id: newId,
+        name: name,
+        avatar: tempAvatarBase64,
+        status: status,
+        unreadCount: 0,
+        type: 'personal',
+        messages: []
+      };
+      state.contacts.unshift(newContact);
+      state.activeContactId = newId;
+    }
+
+    contactModalOverlay.style.display = 'none';
+    renderActiveHeader();
+    renderChatList();
+    renderMessages();
+  });
+
+  // Triggers para abrir modal
+  btnAddContactTop.addEventListener('click', () => openContactModal(null));
+  btnMobileFab.addEventListener('click', () => openContactModal(null));
+  btnOpenContactModal.addEventListener('click', () => openContactModal(getActiveContact()));
+  btnChatEditContact.addEventListener('click', () => {
+    closeAllDropdowns();
+    openContactModal(getActiveContact());
+  });
+
+  // Botón Volver (Móvil)
+  btnBackToList.addEventListener('click', () => {
+    state.mobileView = 'in-list';
+    updateMobileLayoutView();
+  });
 
   // ==========================================
   // LLAMADAS Y VIDEOLLAMADAS SIMULADAS
@@ -666,7 +1069,6 @@ document.addEventListener('DOMContentLoaded', () => {
     voiceOverlay.style.display = 'flex';
     callSeconds = 0;
 
-    // Transición a "00:00" y cuenta activa
     setTimeout(() => {
       callStatusText.textContent = '00:00';
       callTimerInterval = setInterval(() => {
@@ -721,289 +1123,14 @@ document.addEventListener('DOMContentLoaded', () => {
     videoOverlay.style.display = 'none';
   }
 
-  // ==========================================
-  // CONFIGURACIÓN & MODAL
-  // ==========================================
-  function openConfigDrawer() {
-    const contact = getActiveContact();
-    if (!contact) return;
-
-    cfgContactName.value = contact.name;
-    cfgContactStatus.value = ['en línea', 'escribiendo...', 'grabando audio...', 'últ. vez hoy a las 15:08'].includes(contact.status) ? contact.status : 'custom';
-    
-    if (cfgContactStatus.value === 'custom') {
-      cfgContactStatusCustom.style.display = 'block';
-      cfgContactStatusCustom.value = contact.status;
-    } else {
-      cfgContactStatusCustom.style.display = 'none';
-    }
-
-    if (contact.avatar) {
-      cfgAvatarImg.src = contact.avatar;
-      cfgAvatarImg.style.display = 'block';
-      cfgAvatarLetter.style.display = 'none';
-    } else {
-      cfgAvatarImg.style.display = 'none';
-      cfgAvatarLetter.style.display = 'block';
-      cfgAvatarLetter.textContent = contact.name.charAt(0).toUpperCase();
-    }
-
-    cfgAutoReply.checked = state.autoReply.enabled;
-    cfgReplyDelay.value = state.autoReply.delay;
-    cfgScriptReplies.value = state.autoReply.scriptLines.join('\n');
-
-    configOverlay.style.display = 'flex';
-  }
-
-  function closeConfigDrawer() {
-    configOverlay.style.display = 'none';
-  }
-
-  function saveContactSettings() {
-    const contact = getActiveContact();
-    if (!contact) return;
-
-    contact.name = cfgContactName.value.trim() || 'Contacto';
-    if (cfgContactStatus.value === 'custom') {
-      contact.status = cfgContactStatusCustom.value.trim() || 'disponible';
-    } else {
-      contact.status = cfgContactStatus.value;
-    }
-
-    state.autoReply.enabled = cfgAutoReply.checked;
-    state.autoReply.delay = parseFloat(cfgReplyDelay.value) || 2;
-    state.autoReply.scriptLines = cfgScriptReplies.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-    renderActiveHeader();
-    renderChatList();
-    closeConfigDrawer();
-  }
-
-  // ==========================================
-  // LISTENERS DE EVENTOS
-  // ==========================================
-
-  // Enviar mensaje
-  btnSend.addEventListener('click', () => {
-    const text = textInput.value.trim();
-    if (text) {
-      sendMessage(text, 'text');
-      textInput.value = '';
-      textInput.style.height = 'auto';
-    }
-  });
-
-  textInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      btnSend.click();
-    }
-  });
-
-  // Alternar emisor (Tú vs Contacto)
-  btnSenderMe.addEventListener('click', () => {
-    state.sender = 'me';
-    btnSenderMe.classList.add('active');
-    btnSenderContact.classList.remove('active');
-  });
-
-  btnSenderContact.addEventListener('click', () => {
-    state.sender = 'contact';
-    btnSenderContact.classList.add('active');
-    btnSenderMe.classList.remove('active');
-  });
-
-  // Enviar Audio simulado
-  btnTriggerAudio.addEventListener('click', () => {
-    sendMessage('audio_note', 'audio');
-  });
-
-  // Enviar Foto de 1 sola visualización
-  btnTriggerOneTime.addEventListener('click', () => {
-    sendMessage('1_time_view', 'onetime');
-  });
-
-  // Adjuntar Foto
-  btnTriggerImage.addEventListener('click', () => {
-    chatImageInput.click();
-  });
-
-  btnClipAttach.addEventListener('click', () => {
-    chatImageInput.click();
-  });
-
-  chatImageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        sendMessage(event.target.result, 'image');
-        chatImageInput.value = '';
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  // Subir Avatar en Drawer
-  cfgAvatarFile.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const contact = getActiveContact();
-        if (contact) {
-          contact.avatar = event.target.result;
-          cfgAvatarImg.src = event.target.result;
-          cfgAvatarImg.style.display = 'block';
-          cfgAvatarLetter.style.display = 'none';
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  btnClearAvatar.addEventListener('click', () => {
-    const contact = getActiveContact();
-    if (contact) {
-      contact.avatar = '';
-      cfgAvatarImg.style.display = 'none';
-      cfgAvatarLetter.style.display = 'block';
-      cfgAvatarLetter.textContent = contact.name.charAt(0).toUpperCase();
-    }
-  });
-
-  cfgContactStatus.addEventListener('change', () => {
-    if (cfgContactStatus.value === 'custom') {
-      cfgContactStatusCustom.style.display = 'block';
-    } else {
-      cfgContactStatusCustom.style.display = 'none';
-    }
-  });
-
-  // HUD: Modo Dispositivo
-  btnDesktop.addEventListener('click', () => {
-    state.mode = 'desktop';
-    body.classList.remove('mode-mobile');
-    body.classList.add('mode-desktop');
-    btnDesktop.classList.add('active');
-    btnMobile.classList.remove('active');
-    layout.className = 'wa-app-layout';
-  });
-
-  btnMobile.addEventListener('click', () => {
-    state.mode = 'mobile';
-    body.classList.remove('mode-desktop');
-    body.classList.add('mode-mobile');
-    btnMobile.classList.add('active');
-    btnDesktop.classList.remove('active');
-    updateMobileLayoutView();
-  });
-
-  function updateMobileLayoutView() {
-    if (state.mode !== 'mobile') return;
-    layout.className = `wa-app-layout mobile-${state.mobileView}`;
-  }
-
-  // Botón Volver (Móvil)
-  btnBackToList.addEventListener('click', () => {
-    if (state.mode === 'mobile') {
-      state.mobileView = 'in-list';
-      updateMobileLayoutView();
-    }
-  });
-
-  // HUD: Tema Claro / Oscuro
-  btnThemeDark.addEventListener('click', () => {
-    state.theme = 'dark';
-    body.classList.remove('theme-light');
-    body.classList.add('theme-dark');
-    btnThemeDark.classList.add('active');
-    btnThemeLight.classList.remove('active');
-  });
-
-  btnThemeLight.addEventListener('click', () => {
-    state.theme = 'light';
-    body.classList.remove('theme-dark');
-    body.classList.add('theme-light');
-    btnThemeLight.classList.add('active');
-    btnThemeDark.classList.remove('active');
-  });
-
-  // Drawer / Opciones
-  btnConfig.addEventListener('click', openConfigDrawer);
-  btnEditActiveContact.addEventListener('click', openConfigDrawer);
-  btnCloseDrawer.addEventListener('click', closeConfigDrawer);
-  btnSaveContactInfo.addEventListener('click', saveContactSettings);
-
-  configOverlay.addEventListener('click', (e) => {
-    if (e.target === configOverlay) closeConfigDrawer();
-  });
-
-  // Pestañas de Drawer
-  drawerTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      drawerTabs.forEach(t => t.classList.remove('active'));
-      tabPanes.forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      const targetPane = document.getElementById(tab.dataset.tab);
-      if (targetPane) targetPane.classList.add('active');
-    });
-  });
-
-  // Llamadas
   btnVoiceCall.addEventListener('click', startVoiceCall);
   btnCallHangup.addEventListener('click', hangupVoiceCall);
   btnVideoCall.addEventListener('click', startVideoCall);
   btnVideoHangup.addEventListener('click', hangupVideoCall);
 
-  // Crear Nuevo Contacto
-  function addNewContact() {
-    const name = prompt('Nombre del nuevo contacto:', 'Nuevo Contacto');
-    if (!name) return;
-    const newId = 'c_' + Date.now();
-    const newContact = {
-      id: newId,
-      name: name,
-      avatar: '',
-      status: 'en línea',
-      unreadCount: 0,
-      type: 'personal',
-      messages: []
-    };
-    state.contacts.unshift(newContact);
-    selectContact(newId);
-  }
-
-  btnAddContactTop.addEventListener('click', addNewContact);
-  btnMobileFab.addEventListener('click', addNewContact);
-
-  // Vaciar y Restablecer
-  btnClearAllMessages.addEventListener('click', () => {
-    const contact = getActiveContact();
-    if (contact && confirm('¿Estás seguro de vaciar todos los mensajes de este chat?')) {
-      contact.messages = [];
-      renderMessages();
-      renderChatList();
-      closeConfigDrawer();
-    }
-  });
-
-  btnLoadPresetChat.addEventListener('click', () => {
-    const contact = getActiveContact();
-    if (contact) {
-      contact.messages = [
-        { id: 'p1', sender: 'contact', type: 'text', content: 'Hola! Sigues despierto?', time: '15:38', ticks: 'none' },
-        { id: 'p2', sender: 'me', type: 'text', content: 'Sí, dime qué pasó', time: '15:39', ticks: 'blue' },
-        { id: 'p3', sender: 'contact', type: 'text', content: 'Viste lo que subieron al grupo de la uni? 😱', time: '15:40', ticks: 'none' },
-        { id: 'p4', sender: 'me', type: 'text', content: 'No todavía, pásamelo', time: '15:41', ticks: 'blue' }
-      ];
-      renderMessages();
-      renderChatList();
-      closeConfigDrawer();
-    }
-  });
-
-  // Búsqueda y Filtros
+  // ==========================================
+  // BÚSQUEDA Y FILTROS
+  // ==========================================
   searchInput.addEventListener('input', renderChatList);
 
   filterPills.forEach(pill => {
@@ -1015,17 +1142,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Atajos de Teclado
+  // Atajo de Teclado Alt+S para alternar emisor
   document.addEventListener('keydown', (e) => {
     if (e.altKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault();
-      if (state.sender === 'me') btnSenderContact.click();
-      else btnSenderMe.click();
-    }
-    if ((e.key === 'h' || e.key === 'H') && document.activeElement !== textInput && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      if (configOverlay.style.display === 'flex') closeConfigDrawer();
-      else openConfigDrawer();
+      btnChatToggleSender.click();
     }
   });
 
