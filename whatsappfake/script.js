@@ -11,324 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // CONFIGURACIÓN Y CHATS POR DEFECTO
   // ==========================================
-  const STORAGE_KEY = 'wa_fake_chats_v3';
+  const STORAGE_KEY = 'wa_fake_chats_v4';
 
-  const DEFAULT_CHATS = [
-    {
-      id: 'g1',
-      name: 'Los Panas del Gym',
-      avatar: '',
-      type: 'group',
-      isPinned: true,
-      unreadCount: 0,
-      participantContactIds: ['c_fede', 'c_pedro', 'c_jose'],
-      messages: [
-        {
-          id: 'd1',
-          type: 'date_divider',
-          content: 'HOY'
-        },
-        {
-          id: 'e1',
-          type: 'encryption_notice',
-          content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
-        },
-        {
-          id: 'mg1',
-          sender: 'c_fede',
-          type: 'text',
-          content: 'Buenas chavales, quien va hoy a entrenar?',
-          time: '15:30',
-          ticks: 'none'
-        },
-        {
-          id: 'mg2',
-          sender: 'c_pedro',
-          type: 'text',
-          content: 'Yo voy a las 18:30 con Jose',
-          time: '15:32',
-          ticks: 'none'
-        },
-        {
-          id: 'mg3',
-          sender: 'me',
-          type: 'text',
-          content: 'Me apunto, nos vemos en recepcion!',
-          time: '15:34',
-          ticks: 'blue'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          {
-            senderContactId: 'c_fede',
-            type: 'text',
-            content: 'Perfecto, traigo la rutina de espalda nueva!',
-            delaySec: 2
-          },
-          {
-            senderContactId: 'c_pedro',
-            type: 'audio',
-            duration: '0:12',
-            delaySec: 2.5
-          },
-          {
-            senderContactId: 'c_jose',
-            type: 'text',
-            content: 'Llegare puntual chavales',
-            delaySec: 2
-          }
-        ],
-        currentStepIndex: 0
-      }
-    },
-    {
-      id: 'c_fede',
-      name: 'Federico',
-      avatar: '',
-      type: 'personal',
-      isPinned: false,
-      status: 'en línea',
-      unreadCount: 0,
-      messages: [
-        {
-          id: 'df1',
-          type: 'date_divider',
-          content: 'HOY'
-        },
-        {
-          id: 'ef1',
-          type: 'encryption_notice',
-          content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
-        },
-        {
-          id: 'mf1',
-          sender: 'contact',
-          type: 'text',
-          content: 'Bro, tienes la clave de la taquilla?',
-          time: '12:20',
-          ticks: 'none'
-        },
-        {
-          id: 'mf2',
-          sender: 'me',
-          type: 'text',
-          content: 'Si, es 4820!',
-          time: '12:22',
-          ticks: 'blue'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          { senderContactId: 'contact', type: 'text', content: 'De locos, gracias bro!', delaySec: 2 }
-        ],
-        currentStepIndex: 0
-      }
-    },
-    {
-      id: 'c_pedro',
-      name: 'Pedro',
-      avatar: '',
-      type: 'personal',
-      isPinned: false,
-      status: 'en línea',
-      unreadCount: 0,
-      messages: [
-        {
-          id: 'dp1',
-          type: 'date_divider',
-          content: 'HOY'
-        },
-        {
-          id: 'mp1',
-          sender: 'contact',
-          type: 'text',
-          content: 'Que tal la sesion de hoy?',
-          time: '13:00',
-          ticks: 'none'
-        },
-        {
-          id: 'mp2',
-          sender: 'me',
-          type: 'text',
-          content: 'Bastante bien, manana repetimos',
-          time: '13:02',
-          ticks: 'blue'
-        },
-        {
-          id: 'mp3',
-          sender: 'contact',
-          type: 'audio',
-          duration: '0:52',
-          time: '13:05',
-          ticks: 'none'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          { senderContactId: 'contact', type: 'text', content: 'Manana mas y mejor!', delaySec: 2 }
-        ],
-        currentStepIndex: 0
-      }
-    },
-    {
-      id: 'c_jose',
-      name: 'Jose',
-      avatar: '',
-      type: 'personal',
-      isPinned: false,
-      status: 'últ. vez hoy a las 15:00',
-      unreadCount: 0,
-      messages: [
-        {
-          id: 'dj1',
-          type: 'date_divider',
-          content: 'HOY'
-        },
-        {
-          id: 'mj1',
-          sender: 'contact',
-          type: 'text',
-          content: 'Nos vemos en el gym luego!',
-          time: '14:50',
-          ticks: 'none'
-        },
-        {
-          id: 'mj2',
-          sender: 'me',
-          type: 'text',
-          content: 'Ahi estaremos',
-          time: '14:52',
-          ticks: 'blue'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          { senderContactId: 'contact', type: 'text', content: 'Alli nos vemos!', delaySec: 2 }
-        ],
-        currentStepIndex: 0
-      }
-    },
-    {
-      id: 'c1',
-      name: 'Aanano',
-      avatar: '',
-      type: 'personal',
-      isPinned: true,
-      status: 'en línea',
-      unreadCount: 0,
-      messages: [
-        {
-          id: 'da1',
-          type: 'date_divider',
-          content: 'HOY'
-        },
-        {
-          id: 'ea1',
-          type: 'encryption_notice',
-          content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
-        },
-        {
-          id: 'm1',
-          sender: 'contact',
-          type: 'text',
-          content: 'Hola! Sigues despierto?',
-          time: '15:38',
-          ticks: 'none'
-        },
-        {
-          id: 'm2',
-          sender: 'me',
-          type: 'text',
-          content: 'Si, dime que paso',
-          time: '15:39',
-          ticks: 'blue'
-        },
-        {
-          id: 'm3',
-          sender: 'contact',
-          type: 'text',
-          content: 'Viste lo que subieron al grupo de la uni?',
-          time: '15:40',
-          ticks: 'none'
-        },
-        {
-          id: 'm4',
-          sender: 'me',
-          type: 'text',
-          content: 'No todavia, pasamelo',
-          time: '15:41',
-          ticks: 'blue'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          {
-            senderContactId: 'contact',
-            type: 'text',
-            content: 'Es un video muy bueno, te lo acabo de mandar',
-            delaySec: 2
-          },
-          {
-            senderContactId: 'contact',
-            type: 'audio',
-            duration: '0:09',
-            delaySec: 2.5
-          }
-        ],
-        currentStepIndex: 0
-      }
-    },
-    {
-      id: 'c2',
-      name: 'Mama',
-      avatar: '',
-      type: 'personal',
-      isPinned: false,
-      status: 'últ. vez hoy a las 14:15',
-      unreadCount: 2,
-      messages: [
-        {
-          id: 'dm1',
-          type: 'date_divider',
-          content: 'AYER'
-        },
-        {
-          id: 'em1',
-          type: 'encryption_notice',
-          content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
-        },
-        {
-          id: 'm21',
-          sender: 'contact',
-          type: 'text',
-          content: 'Hijo, acuerdate de comprar pan al volver',
-          time: '14:10',
-          ticks: 'none'
-        },
-        {
-          id: 'm22',
-          sender: 'contact',
-          type: 'text',
-          content: 'Llamame cuando puedas',
-          time: '14:15',
-          ticks: 'none'
-        }
-      ],
-      autoReply: {
-        enabled: true,
-        steps: [
-          { senderContactId: 'contact', type: 'text', content: 'Vale hijo, un beso!', delaySec: 2 }
-        ],
-        currentStepIndex: 0
-      }
-    }
-  ];
+  const DEFAULT_CHATS = [];
 
   // ==========================================
   // ESTADO GLOBAL DE LA APLICACIÓN
@@ -336,13 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const state = {
     theme: 'dark', // 'dark' | 'light'
     mode: 'auto', // 'auto' | 'forced-mobile'
-    mobileView: 'in-chat', // 'in-list' | 'in-chat'
-    activeChatId: 'g1',
+    mobileView: 'in-list', // 'in-list' | 'in-chat'
+    activeChatId: null,
     editingChatId: null,
     isSelectionMode: false,
     selectedMessageIds: new Set(),
     tempGroupMemberIds: [], // IDs de contactos individuales seleccionados
-    chats: JSON.parse(JSON.stringify(DEFAULT_CHATS))
+    chats: []
   };
 
   // Guardado y Carga en LocalStorage
@@ -365,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
-        if (data && Array.isArray(data.chats) && data.chats.length > 0) {
+        if (data && Array.isArray(data.chats)) {
           state.chats = data.chats;
         }
         if (data && data.theme) {
@@ -376,8 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (data && data.activeChatId) {
           const chatExists = state.chats.some(c => c.id === data.activeChatId);
-          state.activeChatId = chatExists ? data.activeChatId : state.chats[0]?.id;
+          state.activeChatId = chatExists ? data.activeChatId : (state.chats[0]?.id || null);
+        } else {
+          state.activeChatId = state.chats[0]?.id || null;
         }
+      } else {
+        state.chats = [];
+        state.activeChatId = null;
       }
     } catch (e) {
       console.error('Error al cargar estado desde localStorage:', e);
@@ -432,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggleLabel = document.getElementById('theme-toggle-label');
   const btnMenuToggleView = document.getElementById('menu-btn-toggle-view');
   const viewToggleLabel = document.getElementById('view-toggle-label');
+  const btnMenuFullscreen = document.getElementById('menu-btn-fullscreen');
+  const fullscreenToggleLabel = document.getElementById('fullscreen-toggle-label');
   const btnMenuExportChats = document.getElementById('menu-btn-export-chats');
   const btnMenuImportChats = document.getElementById('menu-btn-import-chats');
   const btnMenuResetChats = document.getElementById('menu-btn-reset-chats');
@@ -731,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getActiveChat() {
-    return state.chats.find(c => c.id === state.activeChatId) || (state.chats.length > 0 ? state.chats[0] : null);
+    return state.chats.find(c => c.id === state.activeChatId) || null;
   }
 
   function getSortedChats() {
@@ -759,6 +451,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentFilter === 'groups') return c.type === 'group';
       return true;
     });
+
+    if (filtered.length === 0) {
+      const emptyTip = document.createElement('div');
+      emptyTip.className = 'wa-empty-chatlist-tip';
+      emptyTip.style.padding = '32px 20px';
+      emptyTip.style.textAlign = 'center';
+      emptyTip.style.color = 'var(--text-muted)';
+      emptyTip.style.fontSize = '13.5px';
+      emptyTip.style.lineHeight = '1.5';
+      emptyTip.innerHTML = `
+        <div style="font-size: 28px; margin-bottom: 8px;">💬</div>
+        <div style="font-weight: 500; color: var(--text-secondary); margin-bottom: 4px;">No hay chats</div>
+        <div>Toca el botón <strong>+</strong> para añadir un nuevo contacto o grupo.</div>
+      `;
+      chatListContainer.appendChild(emptyTip);
+      return;
+    }
 
     filtered.forEach(chat => {
       const item = document.createElement('div');
@@ -843,12 +552,13 @@ document.addEventListener('DOMContentLoaded', () => {
       activeChatWrapper.style.display = 'flex';
       renderActiveHeader();
       renderMessages();
+      state.mobileView = 'in-chat';
     } else {
       noChatScreen.style.display = 'flex';
       activeChatWrapper.style.display = 'none';
+      state.mobileView = 'in-list';
     }
     
-    state.mobileView = 'in-chat';
     updateMobileLayoutView();
     renderChatList();
   }
@@ -1736,6 +1446,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ==========================================
+  // PANTALLA COMPLETA
+  // ==========================================
+  function isFullscreenActive() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+
+  function toggleFullscreen() {
+    if (!isFullscreenActive()) {
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      } else if (el.mozRequestFullScreen) {
+        el.mozRequestFullScreen();
+      } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }
+
+  if (btnMenuFullscreen) {
+    btnMenuFullscreen.addEventListener('click', () => {
+      closeAllDropdowns();
+      toggleFullscreen();
+    });
+  }
+
+  function updateFullscreenUI() {
+    if (fullscreenToggleLabel) {
+      fullscreenToggleLabel.textContent = isFullscreenActive() ? 'Salir de pantalla completa' : 'Pantalla completa';
+    }
+  }
+
+  document.addEventListener('fullscreenchange', updateFullscreenUI);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+  document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+  document.addEventListener('MSFullscreenChange', updateFullscreenUI);
+
   btnMenuExportChats.addEventListener('click', () => {
     closeAllDropdowns();
     const dataToExport = {
@@ -1790,16 +1550,16 @@ document.addEventListener('DOMContentLoaded', () => {
     btnMenuResetChats.addEventListener('click', async () => {
       closeAllDropdowns();
       const ok = await showCustomConfirm(
-        'Restablecer chats',
-        '¿Estás seguro de que quieres restablecer los chats por defecto? Se perderán las modificaciones locales no exportadas.',
+        'Restablecer por defecto',
+        '¿Estás seguro de que quieres restablecer por defecto? Se borrarán todos los chats y contactos.',
         'Restablecer',
         true
       );
       if (ok) {
-        state.chats = JSON.parse(JSON.stringify(DEFAULT_CHATS));
-        state.activeChatId = state.chats[0]?.id || 'g1';
+        state.chats = [];
+        state.activeChatId = null;
         saveState();
-        selectChat(state.activeChatId);
+        selectChat(null);
       }
     });
   }
