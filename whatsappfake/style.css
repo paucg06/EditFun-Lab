@@ -1209,64 +1209,171 @@ body.mode-forced-mobile .wa-bubble {
   font-size: 14px;
 }
 
-/* REPRODUCTOR DE NOTA DE VOZ */
-.wa-audio-player {
+/* REPRODUCTOR DE NOTA DE VOZ (WHATSAPP ORIGINAL) */
+.wa-audio-bubble-content {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 4px;
-  min-width: 250px;
+  gap: 10px;
+  padding: 2px 2px;
+  min-width: 290px;
+  max-width: 350px;
+  position: relative;
+}
+
+.wa-audio-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.wa-audio-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--avatar-bg-default, #6b7b84);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.wa-audio-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wa-audio-mic-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-chat-header);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #53bdeb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.wa-msg-row.sent .wa-audio-mic-badge {
+  background: var(--bubble-sent);
+}
+
+.wa-msg-row.received .wa-audio-mic-badge {
+  background: var(--bubble-received);
+}
+
+.wa-audio-mic-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wa-audio-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wa-audio-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .audio-play-btn {
-  width: 42px;
-  height: 42px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: transparent;
   border: none;
-  color: var(--audio-bar-played);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s ease;
+  transition: transform 0.12s ease;
+  padding: 0;
 }
 
 .audio-play-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
-.audio-waveform-wrap {
+.audio-play-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.audio-waveform-track {
   flex: 1;
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  height: 26px;
+  cursor: pointer;
+  padding-right: 12px;
 }
 
 .audio-bars-container {
   display: flex;
   align-items: center;
-  gap: 3px;
-  height: 28px;
+  gap: 2.5px;
+  width: 100%;
+  height: 100%;
 }
 
 .audio-bar {
-  width: 3.5px;
+  flex: 1;
+  min-width: 2px;
+  max-width: 4px;
   border-radius: 2px;
-  background-color: var(--audio-bar-unplayed);
-  transition: background-color 0.2s ease;
+  background-color: var(--audio-bar-unplayed, #8696a0);
+  transition: background-color 0.15s ease;
 }
 
 .audio-bar.played {
-  background-color: var(--audio-bar-played);
+  background-color: #53bdeb;
 }
 
-.audio-info-row {
+.audio-scrubber-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #53bdeb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  transition: left 0.08s linear;
+}
+
+.wa-audio-bottom-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: 11px;
+  line-height: 14px;
   color: var(--bubble-timestamp);
+  user-select: none;
+  padding-left: 32px;
+}
+
+.wa-audio-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 /* Ticks de Lectura / Envío */

@@ -165,6 +165,14 @@ document.addEventListener('DOMContentLoaded', () => {
             content: 'Bastante bien, manana repetimos',
             time: '13:02',
             ticks: 'blue'
+          },
+          {
+            id: 'mp3',
+            sender: 'contact',
+            type: 'audio',
+            duration: '0:52',
+            time: '13:05',
+            ticks: 'none'
           }
         ],
         autoReply: {
@@ -862,24 +870,68 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     } else if (msg.type === 'audio') {
-      const barsCount = 30;
-      let barsHtml = '';
-      for (let i = 0; i < barsCount; i++) {
-        const height = Math.floor(Math.random() * 20) + 6;
-        barsHtml += `<div class="audio-bar" style="height: ${height}px;"></div>`;
+      let audioAvatarHtml = '';
+      if (isSent) {
+        if (state.myAvatar) {
+          audioAvatarHtml = `<img src="${state.myAvatar}" alt="Avatar">`;
+        } else {
+          audioAvatarHtml = `<span>T</span>`;
+        }
+      } else {
+        if (chat.type === 'group') {
+          const senderContact = getContactById(msg.sender);
+          if (senderContact && senderContact.avatar) {
+            audioAvatarHtml = `<img src="${senderContact.avatar}" alt="${senderContact.name}">`;
+          } else {
+            const initial = (senderContact ? senderContact.name : (msg.senderName || 'C')).charAt(0).toUpperCase();
+            audioAvatarHtml = `<span>${initial}</span>`;
+          }
+        } else {
+          if (chat.avatar) {
+            audioAvatarHtml = `<img src="${chat.avatar}" alt="${chat.name}">`;
+          } else {
+            audioAvatarHtml = `<span>${chat.name.charAt(0).toUpperCase()}</span>`;
+          }
+        }
       }
 
+      const waveformHeights = [8, 14, 20, 16, 10, 6, 12, 18, 24, 18, 12, 6, 10, 16, 22, 26, 20, 14, 8, 12, 18, 22, 16, 10, 6, 12, 18, 22, 16, 10, 6, 14, 18];
+      let barsHtml = '';
+      waveformHeights.forEach(h => {
+        barsHtml += `<div class="audio-bar" style="height: ${h}px;"></div>`;
+      });
+
       contentHtml = `
-        <div class="wa-audio-player" data-audio-url="${msg.audioUrl || ''}" data-duration="${msg.duration || '0:14'}">
-          <button class="audio-play-btn" title="Reproducir nota de voz">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          </button>
-          <div class="audio-waveform-wrap">
-            <div class="audio-bars-container">
-              ${barsHtml}
+        <div class="wa-audio-bubble-content">
+          <div class="wa-audio-avatar-wrap">
+            <div class="wa-audio-avatar">
+              ${audioAvatarHtml}
             </div>
-            <div class="audio-info-row">
+            <div class="wa-audio-mic-badge">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="wa-audio-body">
+            <div class="wa-audio-top-row">
+              <button class="audio-play-btn" title="Reproducir nota de voz">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+              <div class="audio-waveform-track">
+                <div class="audio-bars-container">
+                  ${barsHtml}
+                </div>
+                <div class="audio-scrubber-dot" style="left: 0%;"></div>
+              </div>
+            </div>
+            <div class="wa-audio-bottom-row">
               <span class="audio-timer">${msg.duration || '0:14'}</span>
+              <div class="wa-audio-meta">
+                <span class="wa-msg-time">${msg.time}</span>
+                ${tickHtml}
+              </div>
             </div>
           </div>
         </div>
@@ -905,11 +957,18 @@ document.addEventListener('DOMContentLoaded', () => {
       </span>
     `;
 
-    bubble.innerHTML = `
-      ${authorHtml}
-      ${contentHtml}
-      ${metaHtml}
-    `;
+    if (msg.type === 'audio') {
+      bubble.innerHTML = `
+        ${authorHtml}
+        ${contentHtml}
+      `;
+    } else {
+      bubble.innerHTML = `
+        ${authorHtml}
+        ${contentHtml}
+        ${metaHtml}
+      `;
+    }
     bubble.appendChild(chevronBtn);
 
     // Clic en la fila si estamos en modo selección
@@ -1137,6 +1196,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function setupAudioPlayer(bubble, audioUrl, durationText) {
     const playBtn = bubble.querySelector('.audio-play-btn');
     const bars = bubble.querySelectorAll('.audio-bar');
+    const scrubber = bubble.querySelector('.audio-scrubber-dot');
+    const track = bubble.querySelector('.audio-waveform-track');
     const timer = bubble.querySelector('.audio-timer');
     let isPlaying = false;
     let audioElement = null;
@@ -1153,17 +1214,29 @@ document.addEventListener('DOMContentLoaded', () => {
       isPlaying = false;
       if (audioElement) audioElement.pause();
       if (animInterval) clearInterval(animInterval);
-      playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
       timer.textContent = durationText || '0:14';
       bars.forEach(b => b.classList.remove('played'));
+      if (scrubber) scrubber.style.left = '0%';
     }
 
-    playBtn.addEventListener('click', () => {
+    function setProgress(pct) {
+      pct = Math.max(0, Math.min(1, pct));
+      if (scrubber) scrubber.style.left = `${pct * 100}%`;
+      const playedCount = Math.floor(pct * bars.length);
+      bars.forEach((b, i) => {
+        if (i <= playedCount) b.classList.add('played');
+        else b.classList.remove('played');
+      });
+    }
+
+    playBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (isPlaying) {
         stopPlayback();
       } else {
         isPlaying = true;
-        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+        playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
         
         let progress = 0;
         bars.forEach(b => b.classList.remove('played'));
@@ -1180,13 +1253,9 @@ document.addEventListener('DOMContentLoaded', () => {
               timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
 
               const pct = audioElement.currentTime / audioElement.duration;
-              const playedCount = Math.floor(pct * bars.length);
-              bars.forEach((b, i) => {
-                if (i <= playedCount) b.classList.add('played');
-                else b.classList.remove('played');
-              });
+              setProgress(pct);
             }
-          }, 100);
+          }, 60);
 
         } else {
           const totalSecs = parseDurationToSeconds(durationText || '0:14');
@@ -1194,9 +1263,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
           animInterval = setInterval(() => {
             if (progress < bars.length) {
-              bars[progress].classList.add('played');
               progress++;
-              const cur = Math.floor((progress / bars.length) * totalSecs);
+              const pct = progress / bars.length;
+              setProgress(pct);
+              const cur = Math.floor(pct * totalSecs);
               const m = Math.floor(cur / 60);
               const s = cur % 60;
               timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
@@ -1207,6 +1277,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+
+    if (track) {
+      track.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const pct = Math.max(0, Math.min(1, clickX / rect.width));
+        setProgress(pct);
+
+        const totalSecs = parseDurationToSeconds(durationText || '0:14');
+        const cur = Math.floor(pct * totalSecs);
+        const m = Math.floor(cur / 60);
+        const s = cur % 60;
+        timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
+
+        if (audioElement && audioElement.duration) {
+          audioElement.currentTime = pct * audioElement.duration;
+        }
+      });
+    }
   }
 
   function parseDurationToSeconds(str) {
