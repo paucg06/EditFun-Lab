@@ -493,15 +493,18 @@
           <input type="text" id="group-name-input" class="wa-form-input" placeholder="Ej. Los Panas 🚀, Proyecto Uni">
         </div>
 
-        <!-- Miembros del Grupo -->
+        <!-- Miembros del Grupo (Seleccionados de tus Contactos) -->
         <div class="wa-form-group">
           <label class="wa-form-label">Participantes del Grupo</label>
           <div class="group-members-list" id="group-members-container">
-            <!-- Participantes dinámicos -->
+            <!-- Participantes dinámicos seleccionados -->
           </div>
           <div class="add-member-row">
-            <input type="text" id="group-new-member-name" class="wa-form-input" placeholder="Nombre nuevo miembro (ej. Federico, Pedro)">
-            <button type="button" class="btn-wa-action" id="btn-add-member-to-group">+ Añadir</button>
+            <select id="group-select-existing-contact" class="wa-form-select" style="flex: 1;"></select>
+            <button type="button" class="btn-wa-action" id="btn-add-member-to-group">+ Añadir al grupo</button>
+          </div>
+          <div class="wa-help-text" id="group-no-contacts-tip" style="display:none; font-size:12px; color:var(--text-muted); margin-top:4px;">
+            * Para añadir a alguien al grupo, primero debes tenerlo creado en tus contactos.
           </div>
         </div>
       </div>

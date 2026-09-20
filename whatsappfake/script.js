@@ -1,6 +1,6 @@
 /**
  * WhatsApp Fake Simulator - Script Logic
- * Multi-user Groups, Real Audio Notes, Step Builder & Pinning
+ * Multi-user Groups linked to Real Contacts, Step Builder & Pinning
  * Author: EditFun Suite
  */
 
@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     theme: 'dark', // 'dark' | 'light'
     mode: 'auto', // 'auto' | 'forced-mobile'
     mobileView: 'in-chat', // 'in-list' | 'in-chat'
-    sender: 'me', // 'me' | 'contact' | participantId
+    sender: 'me', // 'me' | contactId
     activeChatId: 'g1',
     editingChatId: null,
-    tempGroupMembers: [],
+    tempGroupMemberIds: [], // IDs de contactos individuales seleccionados
     
-    // Lista de Chats (Contactos y Grupos)
+    // Lista de Chats (Contactos Individuales y Grupos)
     chats: [
       {
         id: 'g1',
@@ -29,17 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'group',
         isPinned: true,
         unreadCount: 0,
-        participants: [
-          { id: 'p_fede', name: 'Federico', color: '#e542a3' },
-          { id: 'p_pedro', name: 'Pedro', color: '#02a698' },
-          { id: 'p_jose', name: 'José', color: '#dfa62a' }
-        ],
+        participantContactIds: ['c_fede', 'c_pedro', 'c_jose'],
         messages: [
           {
             id: 'mg1',
-            sender: 'p_fede',
-            senderName: 'Federico',
-            senderColor: '#e542a3',
+            sender: 'c_fede',
             type: 'text',
             content: 'Buenas chavales, quién va hoy a entrenar?',
             time: '15:30',
@@ -47,9 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           {
             id: 'mg2',
-            sender: 'p_pedro',
-            senderName: 'Pedro',
-            senderColor: '#02a698',
+            sender: 'c_pedro',
             type: 'text',
             content: 'Yo voy a las 18:30 con José 💪',
             time: '15:32',
@@ -68,29 +60,109 @@ document.addEventListener('DOMContentLoaded', () => {
           enabled: true,
           steps: [
             {
-              senderId: 'p_fede',
-              senderName: 'Federico',
-              senderColor: '#e542a3',
+              senderContactId: 'c_fede',
               type: 'text',
               content: 'Perfecto, traigo la rutina de espalda nueva!',
               delaySec: 2
             },
             {
-              senderId: 'p_pedro',
-              senderName: 'Pedro',
-              senderColor: '#02a698',
+              senderContactId: 'c_pedro',
               type: 'audio',
               duration: '0:12',
               delaySec: 2.5
             },
             {
-              senderId: 'p_jose',
-              senderName: 'José',
-              senderColor: '#dfa62a',
+              senderContactId: 'c_jose',
               type: 'text',
               content: 'Llegaré puntual chavales 👊',
               delaySec: 2
             }
+          ],
+          currentStepIndex: 0
+        }
+      },
+      {
+        id: 'c_fede',
+        name: 'Federico',
+        avatar: '',
+        type: 'personal',
+        isPinned: false,
+        status: 'en línea',
+        unreadCount: 0,
+        messages: [
+          {
+            id: 'mf1',
+            sender: 'contact',
+            type: 'text',
+            content: 'Bro, tienes la clave de la taquilla?',
+            time: '12:20',
+            ticks: 'none'
+          },
+          {
+            id: 'mf2',
+            sender: 'me',
+            type: 'text',
+            content: 'Sí, es 4820!',
+            time: '12:22',
+            ticks: 'blue'
+          }
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderContactId: 'contact', type: 'text', content: 'De locos, gracias bro!', delaySec: 2 }
+          ],
+          currentStepIndex: 0
+        }
+      },
+      {
+        id: 'c_pedro',
+        name: 'Pedro',
+        avatar: '',
+        type: 'personal',
+        isPinned: false,
+        status: 'en línea',
+        unreadCount: 0,
+        messages: [
+          {
+            id: 'mp1',
+            sender: 'contact',
+            type: 'text',
+            content: 'Qué tal la sesión de hoy?',
+            time: '13:00',
+            ticks: 'none'
+          }
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderContactId: 'contact', type: 'text', content: 'Mañana más y mejor 💪', delaySec: 2 }
+          ],
+          currentStepIndex: 0
+        }
+      },
+      {
+        id: 'c_jose',
+        name: 'José',
+        avatar: '',
+        type: 'personal',
+        isPinned: false,
+        status: 'últ. vez hoy a las 15:00',
+        unreadCount: 0,
+        messages: [
+          {
+            id: 'mj1',
+            sender: 'contact',
+            type: 'text',
+            content: 'Nos vemos en el gym luego!',
+            time: '14:50',
+            ticks: 'none'
+          }
+        ],
+        autoReply: {
+          enabled: true,
+          steps: [
+            { senderContactId: 'contact', type: 'text', content: 'Allí nos vemos!', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
@@ -103,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinned: true,
         status: 'en línea',
         unreadCount: 0,
-        participants: [],
         messages: [
           {
             id: 'm1',
@@ -142,15 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
           enabled: true,
           steps: [
             {
-              senderId: 'contact',
-              senderName: 'Aanano 💎',
+              senderContactId: 'contact',
               type: 'text',
               content: 'Es un vídeo épico, te lo acabo de mandar jaja',
               delaySec: 2
             },
             {
-              senderId: 'contact',
-              senderName: 'Aanano 💎',
+              senderContactId: 'contact',
               type: 'audio',
               duration: '0:09',
               delaySec: 2.5
@@ -167,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinned: false,
         status: 'últ. vez hoy a las 14:15',
         unreadCount: 2,
-        participants: [],
         messages: [
           {
             id: 'm21',
@@ -189,38 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoReply: {
           enabled: true,
           steps: [
-            { senderId: 'contact', senderName: 'Mamá ❤️', type: 'text', content: 'Vale hijo, un beso!', delaySec: 2 }
-          ],
-          currentStepIndex: 0
-        }
-      },
-      {
-        id: 'g2',
-        name: 'Proyecto Trabajo 💼',
-        avatar: '',
-        type: 'group',
-        isPinned: false,
-        unreadCount: 0,
-        participants: [
-          { id: 'p_carlos', name: 'Carlos Lead', color: '#6bcbef' },
-          { id: 'p_laura', name: 'Laura UX', color: '#ec78a9' }
-        ],
-        messages: [
-          {
-            id: 'm31',
-            sender: 'p_carlos',
-            senderName: 'Carlos Lead',
-            senderColor: '#6bcbef',
-            type: 'text',
-            content: 'Por favor revisad los cambios de la v2.0 en GitHub',
-            time: 'Ayer',
-            ticks: 'none'
-          }
-        ],
-        autoReply: {
-          enabled: true,
-          steps: [
-            { senderId: 'p_laura', senderName: 'Laura UX', senderColor: '#ec78a9', type: 'text', content: 'Revisado y todo aprobado 👍', delaySec: 2 }
+            { senderContactId: 'contact', type: 'text', content: 'Vale hijo, un beso!', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
@@ -326,8 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSaveGroupModal = document.getElementById('btn-save-group-modal');
   const groupNameInput = document.getElementById('group-name-input');
   const groupMembersContainer = document.getElementById('group-members-container');
-  const groupNewMemberName = document.getElementById('group-new-member-name');
+  const groupSelectExistingContact = document.getElementById('group-select-existing-contact');
   const btnAddMemberToGroup = document.getElementById('btn-add-member-to-group');
+  const groupNoContactsTip = document.getElementById('group-no-contacts-tip');
   const groupAvatarPreviewImg = document.getElementById('group-avatar-img');
   const groupAvatarPreviewLetter = document.getElementById('group-avatar-letter');
   const groupAvatarFileInput = document.getElementById('group-avatar-file-input');
@@ -375,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterPills = document.querySelectorAll('.wa-pill');
   let currentFilter = 'all';
 
-  // Reloj Móvil
+  // Reloj
   function updateClock() {
     const clockEl = document.getElementById('status-clock');
     if (clockEl) {
@@ -467,9 +505,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   }
 
-  // ==========================================
-  // GESTIÓN DE CHATS (ORDENACIÓN POR CHINCHETA)
-  // ==========================================
+  // Helper para buscar contacto individual por ID
+  function getContactById(id) {
+    return state.chats.find(c => c.id === id && c.type === 'personal') || null;
+  }
+
   function getActiveChat() {
     return state.chats.find(c => c.id === state.activeChatId) || state.chats[0];
   }
@@ -513,8 +553,10 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (lastMsg.type === 'onetime') lastText = '📷 Foto';
         else if (lastMsg.type === 'image') lastText = '📷 Foto';
         else {
-          if (chat.type === 'group' && lastMsg.sender !== 'me' && lastMsg.senderName) {
-            lastText = `${lastMsg.senderName}: ${lastMsg.content}`;
+          if (chat.type === 'group' && lastMsg.sender !== 'me') {
+            const senderContact = getContactById(lastMsg.sender);
+            const senderName = senderContact ? senderContact.name : (lastMsg.senderName || 'Contacto');
+            lastText = `${senderName}: ${lastMsg.content}`;
           } else {
             lastText = lastMsg.content;
           }
@@ -592,8 +634,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chat.typingStatus) {
       headerContactStatus.textContent = chat.typingStatus;
     } else if (chat.type === 'group') {
-      const memberNames = chat.participants.map(p => p.name).join(', ');
-      headerContactStatus.textContent = `Tú, ${memberNames}`;
+      const memberNames = (chat.participantContactIds || []).map(cid => {
+        const contact = getContactById(cid);
+        return contact ? contact.name : 'Contacto';
+      }).join(', ');
+      headerContactStatus.textContent = memberNames ? `Tú, ${memberNames}` : 'Tú';
     } else {
       headerContactStatus.textContent = chat.status || 'en línea';
     }
@@ -608,7 +653,6 @@ document.addEventListener('DOMContentLoaded', () => {
       headerAvatarLetter.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
     }
 
-    // Actualizar etiquetas en menú del chat
     chatMenuEditLabel.textContent = chat.type === 'group' ? 'Info / Editar Grupo' : 'Info / Editar Contacto';
     chatMenuPinLabel.textContent = chat.isPinned ? 'Desfijar chat' : 'Fijar chat';
   }
@@ -632,14 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (encryptionNotice) messagesContainer.appendChild(encryptionNotice);
 
     chat.messages.forEach(msg => {
-      const msgRow = createMessageElement(msg, chat.type === 'group');
+      const msgRow = createMessageElement(msg, chat);
       messagesContainer.appendChild(msgRow);
     });
 
     scrollToBottom();
   }
 
-  function createMessageElement(msg, isGroup = false) {
+  function createMessageElement(msg, chat) {
     const row = document.createElement('div');
     row.className = `wa-msg-row ${msg.sender === 'me' ? 'sent' : 'received'}`;
     row.id = `msg-${msg.id}`;
@@ -649,8 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cabecera con Nombre del Autor en Grupos
     let authorHtml = '';
-    if (isGroup && msg.sender !== 'me' && msg.senderName) {
-      authorHtml = `<div class="wa-msg-author" style="color: ${msg.senderColor || '#02a698'};">${escapeHTML(msg.senderName)}</div>`;
+    if (chat.type === 'group' && msg.sender !== 'me') {
+      const senderContact = getContactById(msg.sender);
+      const senderName = senderContact ? senderContact.name : (msg.senderName || 'Contacto');
+      const senderIdx = (chat.participantContactIds || []).indexOf(msg.sender);
+      const senderColor = senderIdx >= 0 ? WA_COLORS[senderIdx % WA_COLORS.length] : '#02a698';
+      authorHtml = `<div class="wa-msg-author" style="color: ${senderColor};">${escapeHTML(senderName)}</div>`;
     }
 
     let contentHtml = '';
@@ -780,7 +828,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 100);
 
         } else {
-          // Reproducción simulada con temporizador
           const totalSecs = parseDurationToSeconds(durationText || '0:14');
           const stepMs = (totalSecs * 1000) / bars.length;
 
@@ -848,22 +895,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const time = getCurrentTimeString();
     let senderId = state.sender;
-    let senderName = '';
-    let senderColor = '';
-
-    if (state.sender !== 'me' && chat.type === 'group') {
-      const p = chat.participants.find(part => part.id === state.sender);
-      if (p) {
-        senderName = p.name;
-        senderColor = p.color;
-      }
-    }
 
     const newMsg = {
       id: 'm_' + Date.now(),
       sender: senderId,
-      senderName: senderName,
-      senderColor: senderColor,
       type: type,
       content: content,
       time: time,
@@ -878,7 +913,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (senderId === 'me') {
       playSentPopSound();
 
-      // Si la automatización está activada en este chat:
       if (chat.autoReply && chat.autoReply.enabled && chat.autoReply.steps && chat.autoReply.steps.length > 0) {
         triggerStepAutomatedReply(chat);
       }
@@ -894,10 +928,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const step = auto.steps[auto.currentStepIndex % auto.steps.length];
     auto.currentStepIndex++;
 
+    const senderContact = getContactById(step.senderContactId);
+    const senderName = senderContact ? senderContact.name : (chat.name || 'Contacto');
+
     const delayMs = Math.max(800, (step.delaySec || 2) * 1000);
     const typingText = step.type === 'audio'
-      ? `${step.senderName || 'Contacto'} está grabando audio...`
-      : `${step.senderName || 'Contacto'} está escribiendo...`;
+      ? `${senderName} está grabando audio...`
+      : `${senderName} está escribiendo...`;
 
     // 1. A los 400ms: Leer mensajes globales (ticks azules)
     setTimeout(() => {
@@ -907,30 +944,22 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMessages();
     }, 400);
 
-    // 2. A mitad del tiempo: Estado "escribiendo..." o "grabando audio..."
+    // 2. A mitad del tiempo: Estado "escribiendo..."
     setTimeout(() => {
       chat.typingStatus = typingText;
       if (chat.id === state.activeChatId) renderActiveHeader();
       renderChatList();
     }, Math.max(500, delayMs - 900));
 
-    // 3. Al completarse el delay: Entregar el mensaje y limpiar typingStatus
+    // 3. Al completarse el delay: Entregar el mensaje
     setTimeout(() => {
       chat.typingStatus = '';
       if (chat.id === state.activeChatId) renderActiveHeader();
 
       const time = getCurrentTimeString();
-      let senderColor = step.senderColor;
-      if (!senderColor && chat.type === 'group') {
-        const p = chat.participants.find(part => part.id === step.senderId);
-        if (p) senderColor = p.color;
-      }
-
       const replyMsg = {
         id: 'm_' + Date.now(),
-        sender: step.senderId || 'contact',
-        senderName: step.senderName || 'Contacto',
-        senderColor: senderColor || '#02a698',
+        sender: step.senderContactId || 'contact',
         type: step.type || 'text',
         content: step.content || '',
         audioUrl: step.audioUrl || '',
@@ -971,7 +1000,6 @@ document.addEventListener('DOMContentLoaded', () => {
       iconSendMic.style.display = 'block';
       iconSendArrow.style.display = 'none';
     } else {
-      // Abrir modal de nota de voz / audio
       openAudioModal();
     }
   });
@@ -1003,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', () => {
       audioUploadBtnText.textContent = `Archivo: ${file.name}`;
       tempAudioUrl = URL.createObjectURL(file);
 
-      // Calcular duración real del archivo de audio
       const tempAudio = new Audio(tempAudioUrl);
       tempAudio.addEventListener('loadedmetadata', () => {
         const sec = Math.round(tempAudio.duration);
@@ -1161,21 +1188,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Alternar Emisor (Tú / Participantes)
+  // Alternar Emisor (Tú / Contactos)
   btnChatToggleSender.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
     if (!chat) return;
 
-    if (chat.type === 'group' && chat.participants.length > 0) {
+    if (chat.type === 'group' && chat.participantContactIds && chat.participantContactIds.length > 0) {
       if (state.sender === 'me') {
-        state.sender = chat.participants[0].id;
-        chatSenderToggleLabel.textContent = `Enviar como: ${chat.participants[0].name}`;
+        state.sender = chat.participantContactIds[0];
+        const c = getContactById(state.sender);
+        chatSenderToggleLabel.textContent = `Enviar como: ${c ? c.name : 'Contacto'}`;
       } else {
-        const curIdx = chat.participants.findIndex(p => p.id === state.sender);
-        if (curIdx !== -1 && curIdx < chat.participants.length - 1) {
-          state.sender = chat.participants[curIdx + 1].id;
-          chatSenderToggleLabel.textContent = `Enviar como: ${chat.participants[curIdx + 1].name}`;
+        const curIdx = chat.participantContactIds.indexOf(state.sender);
+        if (curIdx !== -1 && curIdx < chat.participantContactIds.length - 1) {
+          state.sender = chat.participantContactIds[curIdx + 1];
+          const c = getContactById(state.sender);
+          chatSenderToggleLabel.textContent = `Enviar como: ${c ? c.name : 'Contacto'}`;
         } else {
           state.sender = 'me';
           chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
@@ -1210,8 +1239,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chat) {
       if (chat.type === 'group') {
         chat.messages = [
-          { id: 'mg1', sender: 'p_fede', senderName: 'Federico', senderColor: '#e542a3', type: 'text', content: 'Buenas chavales, quién va hoy a entrenar?', time: '15:30', ticks: 'none' },
-          { id: 'mg2', sender: 'p_pedro', senderName: 'Pedro', senderColor: '#02a698', type: 'text', content: 'Yo voy a las 18:30 con José 💪', time: '15:32', ticks: 'none' },
+          { id: 'mg1', sender: 'c_fede', type: 'text', content: 'Buenas chavales, quién va hoy a entrenar?', time: '15:30', ticks: 'none' },
+          { id: 'mg2', sender: 'c_pedro', type: 'text', content: 'Yo voy a las 18:30 con José 💪', time: '15:32', ticks: 'none' },
           { id: 'mg3', sender: 'me', type: 'text', content: 'Me apunto, nos vemos en recepción!', time: '15:34', ticks: 'blue' }
         ];
       } else {
@@ -1256,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // MODAL CREAR / EDITAR CONTACTO
+  // MODAL CREAR / EDITAR CONTACTO INDIVIDUAL
   // ==========================================
   function openContactModal(chat = null) {
     if (chat && chat.type === 'personal') {
@@ -1348,12 +1377,11 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinned: false,
         status: status,
         unreadCount: 0,
-        participants: [],
         messages: [],
         autoReply: {
           enabled: true,
           steps: [
-            { senderId: 'contact', senderName: name, type: 'text', content: 'Hola! Qué tal?', delaySec: 2 }
+            { senderContactId: 'contact', type: 'text', content: 'Hola! Qué tal?', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
@@ -1369,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // MODAL CREAR / EDITAR GRUPO
+  // MODAL CREAR / EDITAR GRUPO CON CONTACTOS EXISTENTES
   // ==========================================
   function openGroupModal(chat = null) {
     if (chat && chat.type === 'group') {
@@ -1377,37 +1405,64 @@ document.addEventListener('DOMContentLoaded', () => {
       groupModalTitle.textContent = 'Editar Grupo';
       groupNameInput.value = chat.name;
       tempGroupAvatarBase64 = chat.avatar || '';
-      state.tempGroupMembers = [...chat.participants];
+      state.tempGroupMemberIds = [...(chat.participantContactIds || [])];
     } else {
       state.editingChatId = null;
       groupModalTitle.textContent = 'Nuevo Grupo';
       groupNameInput.value = '';
       tempGroupAvatarBase64 = '';
-      state.tempGroupMembers = [
-        { id: 'p_' + Date.now() + '_1', name: 'Federico', color: WA_COLORS[0] },
-        { id: 'p_' + Date.now() + '_2', name: 'Pedro', color: WA_COLORS[1] }
-      ];
+      // Seleccionar por defecto hasta 2 contactos existentes si los hay
+      const existingContacts = state.chats.filter(c => c.type === 'personal');
+      state.tempGroupMemberIds = existingContacts.slice(0, 2).map(c => c.id);
     }
 
     renderGroupMembersList();
+    populateGroupContactSelect();
     updateGroupAvatarPreview();
     groupModalOverlay.style.display = 'flex';
   }
 
+  function populateGroupContactSelect() {
+    groupSelectExistingContact.innerHTML = '';
+    const availableContacts = state.chats.filter(c => c.type === 'personal' && !state.tempGroupMemberIds.includes(c.id));
+
+    if (availableContacts.length === 0) {
+      groupNoContactsTip.style.display = 'block';
+      groupSelectExistingContact.style.display = 'none';
+      btnAddMemberToGroup.style.display = 'none';
+    } else {
+      groupNoContactsTip.style.display = 'none';
+      groupSelectExistingContact.style.display = 'block';
+      btnAddMemberToGroup.style.display = 'inline-flex';
+
+      availableContacts.forEach(contact => {
+        const opt = document.createElement('option');
+        opt.value = contact.id;
+        opt.textContent = `👤 ${contact.name}`;
+        groupSelectExistingContact.appendChild(opt);
+      });
+    }
+  }
+
   function renderGroupMembersList() {
     groupMembersContainer.innerHTML = '';
-    state.tempGroupMembers.forEach((member, idx) => {
+    state.tempGroupMemberIds.forEach((contactId, idx) => {
+      const contact = getContactById(contactId);
+      const name = contact ? contact.name : 'Contacto';
+      const color = WA_COLORS[idx % WA_COLORS.length];
+
       const chip = document.createElement('div');
       chip.className = 'group-member-chip';
       chip.innerHTML = `
-        <span class="member-chip-color" style="background-color: ${member.color};"></span>
-        <span>${escapeHTML(member.name)}</span>
-        <button type="button" class="member-chip-remove" data-idx="${idx}">&times;</button>
+        <span class="member-chip-color" style="background-color: ${color};"></span>
+        <span>${escapeHTML(name)}</span>
+        <button type="button" class="member-chip-remove" data-id="${contactId}">&times;</button>
       `;
 
       chip.querySelector('.member-chip-remove').addEventListener('click', () => {
-        state.tempGroupMembers.splice(idx, 1);
+        state.tempGroupMemberIds = state.tempGroupMemberIds.filter(id => id !== contactId);
         renderGroupMembersList();
+        populateGroupContactSelect();
       });
 
       groupMembersContainer.appendChild(chip);
@@ -1415,16 +1470,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnAddMemberToGroup.addEventListener('click', () => {
-    const name = groupNewMemberName.value.trim();
-    if (name) {
-      const color = WA_COLORS[state.tempGroupMembers.length % WA_COLORS.length];
-      state.tempGroupMembers.push({
-        id: 'p_' + Date.now(),
-        name: name,
-        color: color
-      });
-      groupNewMemberName.value = '';
+    const selectedId = groupSelectExistingContact.value;
+    if (selectedId && !state.tempGroupMemberIds.includes(selectedId)) {
+      state.tempGroupMemberIds.push(selectedId);
       renderGroupMembersList();
+      populateGroupContactSelect();
     }
   });
 
@@ -1468,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chat) {
         chat.name = name;
         chat.avatar = tempGroupAvatarBase64;
-        chat.participants = [...state.tempGroupMembers];
+        chat.participantContactIds = [...state.tempGroupMemberIds];
       }
     } else {
       const newId = 'g_' + Date.now();
@@ -1479,18 +1529,19 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'group',
         isPinned: false,
         unreadCount: 0,
-        participants: [...state.tempGroupMembers],
+        participantContactIds: [...state.tempGroupMemberIds],
         messages: [],
         autoReply: {
           enabled: true,
-          steps: state.tempGroupMembers.map(m => ({
-            senderId: m.id,
-            senderName: m.name,
-            senderColor: m.color,
-            type: 'text',
-            content: `Hola a todos desde ${m.name}!`,
-            delaySec: 2
-          })),
+          steps: state.tempGroupMemberIds.map(cid => {
+            const c = getContactById(cid);
+            return {
+              senderContactId: cid,
+              type: 'text',
+              content: `Hola a todos desde ${c ? c.name : 'Contacto'}!`,
+              delaySec: 2
+            };
+          }),
           currentStepIndex: 0
         }
       };
@@ -1574,17 +1625,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function populateStepSenderOptions(chat) {
     stepSenderSelect.innerHTML = '';
-    if (chat.type === 'group' && chat.participants.length > 0) {
-      chat.participants.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        stepSenderSelect.appendChild(opt);
+    if (chat.type === 'group' && chat.participantContactIds && chat.participantContactIds.length > 0) {
+      chat.participantContactIds.forEach(cid => {
+        const contact = getContactById(cid);
+        if (contact) {
+          const opt = document.createElement('option');
+          opt.value = contact.id;
+          opt.textContent = `👤 ${contact.name}`;
+          stepSenderSelect.appendChild(opt);
+        }
       });
     } else {
       const opt = document.createElement('option');
       opt.value = 'contact';
-      opt.textContent = chat.name;
+      opt.textContent = `👤 ${chat.name}`;
       stepSenderSelect.appendChild(opt);
     }
   }
@@ -1624,13 +1678,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderAutoStepsList() {
     autoStepsContainer.innerHTML = '';
     if (tempWorkingSteps.length === 0) {
-      autoStepsContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No hay pasos programados en este guion. Añade uno debajo.</div>`;
+      autoStepsContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; font-style: italic;">No hay respuestas programadas en este guion. Añade una debajo.</div>`;
       return;
     }
 
     tempWorkingSteps.forEach((step, idx) => {
       const item = document.createElement('div');
       item.className = 'auto-step-item';
+
+      const contact = getContactById(step.senderContactId);
+      const senderName = contact ? contact.name : 'Contacto';
 
       let detailText = '';
       if (step.type === 'text') detailText = `Texto: "${step.content}"`;
@@ -1639,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       item.innerHTML = `
         <div class="auto-step-meta">
-          <span class="step-sender-name" style="color: ${step.senderColor || '#00a884'};">${idx + 1}. [${escapeHTML(step.senderName || 'Contacto')}]</span>
+          <span class="step-sender-name" style="color: var(--wa-green-deep);">${idx + 1}. [${escapeHTML(senderName)}]</span>
           <span class="step-detail-text">${escapeHTML(detailText)} (${step.delaySec || 2}s de espera)</span>
         </div>
         <button type="button" class="step-remove-btn" data-idx="${idx}">&times;</button>
@@ -1658,18 +1715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chat = getActiveChat();
     if (!chat) return;
 
-    const senderId = stepSenderSelect.value;
-    let senderName = chat.name;
-    let senderColor = '#00a884';
-
-    if (chat.type === 'group') {
-      const p = chat.participants.find(part => part.id === senderId);
-      if (p) {
-        senderName = p.name;
-        senderColor = p.color;
-      }
-    }
-
+    const senderContactId = stepSenderSelect.value;
     const type = stepTypeSelect.value;
     const delaySec = parseFloat(stepDelayInput.value) || 2;
     let content = '';
@@ -1693,9 +1739,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tempWorkingSteps.push({
-      senderId,
-      senderName,
-      senderColor,
+      senderContactId,
       type,
       content,
       audioUrl,
