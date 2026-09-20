@@ -14,7 +14,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp</title>
-  <link rel="icon" href="https://static.whatsapp.net/rsrc.php/v3/yP/r/rNqOrigins_0.png" type="image/png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 33 33'%3E%3Cpath fill='%2325D366' d='M16.5 0C7.388 0 0 7.388 0 16.5c0 2.923.766 5.765 2.222 8.274L.234 32.22l7.63-2.001A16.425 16.425 0 0 0 16.5 33c9.112 0 16.5-7.388 16.5-16.5S25.612 0 16.5 0z'/%3E%3Cpath fill='%23FFFFFF' fill-rule='evenodd' clip-rule='evenodd' d='M9.82 7.747c-.368-.818-.755-.834-1.107-.849-.286-.012-.614-.012-.942-.012-.327 0-.859.123-1.309.614-.45.491-1.718 1.678-1.718 4.093 0 2.414 1.759 4.747 2.004 5.074.246.328 3.407 5.434 8.397 7.375 4.146 1.613 4.99 1.293 5.89 1.211.901-.082 2.906-1.187 3.315-2.333.41-1.146.41-2.128.286-2.333-.123-.205-.45-.328-.941-.573-.491-.246-2.906-1.433-3.356-1.596-.45-.164-.778-.246-1.105.246-.328.491-1.269 1.596-1.556 1.924-.286.327-.573.368-1.064.122-.491-.245-2.073-.764-3.948-2.436-1.46-1.302-2.445-2.91-2.732-3.402-.286-.491-.03-.757.215-1.001.22-.22.491-.573.737-.86.245-.286.327-.491.491-.818.164-.328.082-.614-.041-.86-.123-.245-1.077-2.651-1.51-3.643z'/%3E%3C/svg%3E" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -57,16 +57,8 @@
             <!-- Header de Barra Lateral -->
             <div class="wa-sidebar-header">
               <div class="wa-header-left">
-                <div class="wa-brand-header-title">
-                  <div class="wa-app-logo-badge" title="WhatsApp">
-                    <svg viewBox="0 0 33 33" width="28" height="28" fill="none">
-                      <path fill="#25D366" d="M16.5 0C7.388 0 0 7.388 0 16.5c0 2.923.766 5.765 2.222 8.274L.234 32.22l7.63-2.001A16.425 16.425 0 0 0 16.5 33c9.112 0 16.5-7.388 16.5-16.5S25.612 0 16.5 0z"/>
-                      <path fill="#FFFFFF" fill-rule="evenodd" clip-rule="evenodd" d="M9.82 7.747c-.368-.818-.755-.834-1.107-.849-.286-.012-.614-.012-.942-.012-.327 0-.859.123-1.309.614-.45.491-1.718 1.678-1.718 4.093 0 2.414 1.759 4.747 2.004 5.074.246.328 3.407 5.434 8.397 7.375 4.146 1.613 4.99 1.293 5.89 1.211.901-.082 2.906-1.187 3.315-2.333.41-1.146.41-2.128.286-2.333-.123-.205-.45-.328-.941-.573-.491-.246-2.906-1.433-3.356-1.596-.45-.164-.778-.246-1.105.246-.328.491-1.269 1.596-1.556 1.924-.286.327-.573.368-1.064.122-.491-.245-2.073-.764-3.948-2.436-1.46-1.302-2.445-2.91-2.732-3.402-.286-.491-.03-.757.215-1.001.22-.22.491-.573.737-.86.245-.286.327-.491.491-.818.164-.328.082-.614-.041-.86-.123-.245-1.077-2.651-1.51-3.643z"/>
-                    </svg>
-                  </div>
-                  <div class="desktop-header-title">Chats</div>
-                  <div class="mobile-header-title">WhatsApp</div>
-                </div>
+                <div class="desktop-header-title">Chats</div>
+                <div class="mobile-header-title">WhatsApp</div>
               </div>
 
               <div class="wa-sidebar-actions">
@@ -121,6 +113,11 @@
                     <button class="dropdown-item" id="menu-btn-import-chats">
                       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                       <span>Cargar / Importar Chats (JSON)</span>
+                    </button>
+
+                    <button class="dropdown-item" id="menu-btn-reset-chats">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                      <span>Restablecer chats por defecto</span>
                     </button>
 
                     <div class="dropdown-divider"></div>
