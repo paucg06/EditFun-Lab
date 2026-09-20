@@ -851,6 +851,18 @@ document.addEventListener('DOMContentLoaded', () => {
       authorHtml = `<div class="wa-msg-author" style="color: ${senderColor};">${escapeHTML(senderName)}</div>`;
     }
 
+    // Ticks SVG oficiales (SOLO en mensajes enviados por 'me')
+    let tickHtml = '';
+    if (isSent) {
+      if (msg.ticks === 'blue') {
+        tickHtml = `<span class="tick-icon blue" title="Leído"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+      } else if (msg.ticks === 'grey') {
+        tickHtml = `<span class="tick-icon grey" title="Entregado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+      } else if (msg.ticks === 'single') {
+        tickHtml = `<span class="tick-icon grey" title="Enviado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+      }
+    }
+
     let contentHtml = '';
 
     if (msg.type === 'text') {
@@ -936,18 +948,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       `;
-    }
-
-    // Ticks SVG oficiales (SOLO en mensajes enviados por 'me')
-    let tickHtml = '';
-    if (isSent) {
-      if (msg.ticks === 'blue') {
-        tickHtml = `<span class="tick-icon blue" title="Leído"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
-      } else if (msg.ticks === 'grey') {
-        tickHtml = `<span class="tick-icon grey" title="Entregado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
-      } else if (msg.ticks === 'single') {
-        tickHtml = `<span class="tick-icon grey" title="Enviado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg></span>`;
-      }
     }
 
     const metaHtml = `
