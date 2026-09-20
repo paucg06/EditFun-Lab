@@ -53,6 +53,9 @@
   --audio-bar-played: #00a884;
   --audio-bar-unplayed: #8696a0;
   
+  --avatar-bg-default: #374248;
+  --avatar-text-default: #cfd4d8;
+  
   --status-bar-bg: #111b21;
   --mobile-nav-bg: #111b21;
 }
@@ -96,6 +99,9 @@ body.theme-light {
   
   --audio-bar-played: #008069;
   --audio-bar-unplayed: #b2b8bd;
+  
+  --avatar-bg-default: #dfe5e7;
+  --avatar-text-default: #54656f;
   
   --status-bar-bg: #f0f2f5;
   --mobile-nav-bg: #ffffff;
@@ -369,6 +375,28 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   flex-shrink: 0;
 }
 
+.wa-brand-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wa-app-logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.wa-app-logo-badge svg {
+  display: block;
+}
+
+.wa-app-logo-badge:hover {
+  transform: scale(1.08);
+}
+
 .desktop-header-title {
   font-size: 20px;
   font-weight: 700;
@@ -526,8 +554,9 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #374248;
-  color: #cfd4d8;
+  clip-path: circle(50% at 50% 50%);
+  background: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -537,12 +566,18 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .wa-chat-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 .wa-chat-info {
@@ -811,8 +846,9 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #374248;
-  color: #cfd4d8;
+  clip-path: circle(50% at 50% 50%);
+  background: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -820,12 +856,18 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   font-weight: 600;
   overflow: hidden;
   flex-shrink: 0;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .wa-header-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 .wa-header-meta {
@@ -1231,14 +1273,18 @@ body.mode-forced-mobile .wa-bubble {
   width: 48px;
   height: 48px;
   border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
   overflow: hidden;
-  background-color: var(--avatar-bg-default, #6b7b84);
+  background-color: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
   font-weight: 600;
   font-size: 18px;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .wa-audio-avatar img {
@@ -1246,6 +1292,8 @@ body.mode-forced-mobile .wa-bubble {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 .wa-audio-mic-badge {
@@ -1689,22 +1737,29 @@ body.mode-forced-mobile .wa-bubble {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #374248;
-  color: #e9edef;
+  clip-path: circle(50% at 50% 50%);
+  background: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
   font-weight: 600;
   overflow: hidden;
-  border: 2px solid var(--border-color);
+  border: none;
   flex-shrink: 0;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .contact-avatar-large img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 .avatar-upload-buttons {
@@ -2056,23 +2111,30 @@ input:checked + .ios-slider:before {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: #202c33;
-  color: #e9edef;
+  clip-path: circle(50% at 50% 50%);
+  background: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
   font-size: 42px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: none;
   box-shadow: 0 0 30px rgba(0, 168, 132, 0.2);
   animation: pulseAvatar 2.5s infinite;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .call-avatar-circle img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 @keyframes pulseAvatar {
@@ -2099,6 +2161,12 @@ input:checked + .ios-slider:before {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.call-dock-btn svg {
+  width: 24px;
+  height: 24px;
+  display: block;
 }
 
 .call-dock-btn:hover {
@@ -2141,20 +2209,29 @@ input:checked + .ios-slider:before {
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: #374248;
-  color: #ffffff;
+  clip-path: circle(50% at 50% 50%);
+  background: var(--avatar-bg-default);
+  color: var(--avatar-text-default);
+  font-size: 38px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  font-weight: 600;
   overflow: hidden;
+  border: none;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .videocall-caller-circle img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 50%;
+  clip-path: circle(50% at 50% 50%);
 }
 
 .videocall-caller-info {
