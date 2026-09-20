@@ -659,19 +659,48 @@
 
     /* Tarjeta 7: WhatsApp Fake */
     .card-whatsapp {
-      background-color: #25d366;
-      background-image: none;
-      color: #ffffff;
+      background-color: #ffffff;
+      color: #111b21;
       text-align: center;
       align-items: center;
-      justify-content: center;
-      gap: 14px;
-      padding: 24px 22px;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 16px 22px 14px 22px;
       position: relative;
       overflow: hidden;
       border: 3px solid #111111;
       box-shadow: 0 4px 0 #111111;
       border-radius: 22px;
+      min-height: 160px;
+    }
+
+    .card-wa-top-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      width: 100%;
+      height: 16px;
+    }
+
+    .card-wa-chevron {
+      color: #8696a0;
+      opacity: 0.8;
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+
+    .card-whatsapp:hover .card-wa-chevron {
+      transform: translateY(1px);
+      color: #111b21;
+      opacity: 1;
+    }
+
+    .card-wa-center-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 2px 0;
     }
 
     .whatsapp-card-title {
@@ -682,75 +711,46 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       line-height: 1;
       margin: 0;
     }
 
-    .wa-brand-text,
-    .wa-fake-text {
-      color: #ffffff;
-      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+    .wa-brand-text {
+      color: #25d366;
     }
 
     .wa-fake-text {
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .whatsapp-bubble-preview {
-      background: #ffffff;
       color: #111b21;
-      width: 100%;
-      max-width: 320px;
-      border: 1.5px solid #d1d7db;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      padding: 8px 12px 6px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      position: relative;
+      font-weight: 900;
     }
 
-    .wa-preview-top-row {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      height: 12px;
-      margin-top: -2px;
-    }
-
-    .wa-preview-chevron {
-      color: #667781;
-      opacity: 0.75;
-    }
-
-    .wa-preview-text {
+    .wa-subtext {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
       font-size: 13.5px;
-      font-weight: 600;
-      color: #111b21;
-      text-align: left;
+      font-weight: 500;
+      color: #667781;
+      margin: 0;
       line-height: 1.3;
     }
 
-    .wa-preview-meta {
+    .card-wa-meta-row {
       display: flex;
-      justify-content: flex-end;
       align-items: center;
-      gap: 4px;
+      justify-content: flex-end;
+      gap: 5px;
+      width: 100%;
     }
 
-    .wa-preview-time {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 11.5px;
+    .card-wa-time {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+      font-size: 12px;
       font-weight: 500;
       color: #667781;
       line-height: 1;
     }
 
-    .wa-preview-ticks {
+    .card-wa-ticks {
       display: inline-flex;
       align-items: center;
       color: #53bdeb;
