@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script>
+    (function() {
+      let p = window.location.pathname;
+      if (p.endsWith('.html')) p = p.replace(/\.html$/, '');
+      if (p.endsWith('/') && p !== '/') p = p.slice(0, -1);
+      if (p !== window.location.pathname) {
+        window.history.replaceState(null, '', p + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Fake</title>
+  <link rel="icon" href="https://static.whatsapp.net/rsrc.php/v3/yP/r/rNqOrigins_0.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/whatsappfake/style.css">
+</head>
+<body class="theme-dark mode-desktop">
+
+  <!-- ========================================== -->
+  <!-- BARRA DE CONTROL FLOTANTE / CONFIGURACIÓN -->
+  <!-- ========================================== -->
+  <div class="control-hud">
+    <div class="hud-brand">
+      <span class="hud-dot"></span>
+      <span>WhatsApp Fake</span>
+    </div>
+
+    <!-- Selector Rápido de Dispositivo -->
+    <div class="hud-btn-group">
+      <button class="hud-pill-btn active" id="hud-btn-desktop" title="Modo WhatsApp Web / Escritorio">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span>Escritorio</span>
+      </button>
+      <button class="hud-pill-btn" id="hud-btn-mobile" title="Modo Smartphone Móvil">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg>
+        <span>Móvil</span>
+      </button>
+    </div>
+
+    <!-- Selector Rápido de Tema -->
+    <div class="hud-btn-group">
+      <button class="hud-pill-btn active" id="hud-theme-dark" title="Tema Oscuro">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span>Oscuro</span>
+      </button>
+      <button class="hud-pill-btn" id="hud-theme-light" title="Tema Claro">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+        <span>Claro</span>
+      </button>
+    </div>
+
+    <!-- Botón Ajustes / Contactos / Automatización -->
+    <button class="hud-action-btn" id="hud-btn-config" title="Abrir Panel de Configuración y Automatización">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Opciones</span>
+    </button>
+
+    <!-- Salir al Menú EditFun -->
+    <a href="/" class="hud-exit-btn" title="Volver al menú principal">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Salir</span>
+    </a>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
+  <!-- ========================================== -->
+  <div class="app-viewport" id="app-viewport">
+    
+    <!-- WRAPPER PARA EL MODO MÓVIL (MARCO SMARTPHONE) -->
+    <div class="mobile-frame-container" id="mobile-frame-container">
+      
+      <!-- BARRA DE ESTADO MÓVIL (Hora, 5G, Batería) -->
+      <div class="mobile-status-bar" id="mobile-status-bar">
+        <span class="status-time" id="status-clock">15:44</span>
+        <div class="status-icons">
+          <svg class="icon-signal" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm-1 5h2v6h-2zm0 8h2v2h-2z" style="display:none;"/><path d="M2 20h20L12 4z"/></svg>
+          <span class="status-5g">5G</span>
+          <div class="status-battery">
+            <span class="battery-level">81</span>
+            <div class="battery-icon-pill">
+              <div class="battery-fill" style="width: 81%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- APLICACIÓN WHATSAPP REAL (LAYOUT FLEX/GRID) -->
+      <div class="wa-app-layout" id="wa-app-layout">
+
+        <!-- ========================================== -->
+        <!-- PANEL IZQUIERDO: BARRA LATERAL / LISTA CHATS -->
+        <!-- ========================================== -->
+        <aside class="wa-sidebar" id="wa-sidebar">
+          
+          <!-- Header de Barra Lateral (Desktop: Iconos / Móvil: Título WhatsApp) -->
+          <div class="wa-sidebar-header">
+            <div class="wa-header-left">
+              <div class="mobile-header-title">WhatsApp</div>
+              <div class="desktop-header-title">Chats</div>
+            </div>
+
+            <div class="wa-sidebar-actions">
+              <!-- Botón Crear Contacto / Nuevo Chat -->
+              <button class="wa-icon-btn" id="btn-add-contact-top" title="Crear nuevo contacto">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+
+              <!-- Cámara (Móvil) -->
+              <button class="wa-icon-btn mobile-only-icon" title="Cámara">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
+
+              <!-- Menú 3 Puntos -->
+              <button class="wa-icon-btn" id="btn-sidebar-menu" title="Más opciones">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Barra de Búsqueda -->
+          <div class="wa-search-container">
+            <div class="wa-search-input-wrap">
+              <button class="wa-search-icon-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              </button>
+              <input type="text" id="wa-search-input" placeholder="Buscar un chat o iniciar uno nuevo" class="wa-search-field">
+            </div>
+          </div>
+
+          <!-- Pastillas de Filtro (Todos, Personal, No leídos, Grupos) -->
+          <div class="wa-filter-pills">
+            <button class="wa-pill active" data-filter="all">Todos</button>
+            <button class="wa-pill" data-filter="personal">Personal</button>
+            <button class="wa-pill" data-filter="unread">No leídos</button>
+            <button class="wa-pill" data-filter="favorites">Favoritos</button>
+            <button class="wa-pill" data-filter="groups">Grupos</button>
+          </div>
+
+          <!-- Fila de Archivados -->
+          <div class="wa-archived-row" id="wa-archived-row">
+            <div class="archived-icon-box">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5h-2.5V10h-3v3.5H8l4 4 4-4z"/></svg>
+            </div>
+            <span class="archived-text">Archivados</span>
+            <span class="archived-count">4</span>
+          </div>
+
+          <!-- LISTA DINÁMICA DE CHATS -->
+          <div class="wa-chat-list" id="wa-chat-list">
+            <!-- Se llena dinámicamente con los contactos -->
+          </div>
+
+          <!-- BARRA DE NAVEGACIÓN INFERIOR (Solo en vista móvil) -->
+          <nav class="wa-mobile-nav" id="wa-mobile-nav">
+            <button class="mobile-nav-tab active">
+              <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                <span class="nav-badge">4</span>
+              </div>
+              <span>Chats</span>
+            </button>
+            <button class="mobile-nav-tab">
+              <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3a9 9 0 0 1 9 9"/></svg>
+                <span class="nav-dot"></span>
+              </div>
+              <span>Novedades</span>
+            </button>
+            <button class="mobile-nav-tab">
+              <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <span>Comunidades</span>
+            </button>
+            <button class="mobile-nav-tab">
+              <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <span>Llamadas</span>
+            </button>
+          </nav>
+
+          <!-- Botón Flotante de Nuevo Chat (Móvil) -->
+          <button class="wa-fab-btn" id="btn-mobile-fab" title="Nuevo chat">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </aside>
+
+        <!-- ========================================== -->
+        <!-- PANEL DERECHO: CONVERSACIÓN ACTIVA -->
+        <!-- ========================================== -->
+        <main class="wa-chat-area" id="wa-chat-area">
+          
+          <!-- ESTADO SIN CHAT SELECCIONADO (Desktop) -->
+          <div class="wa-no-chat-screen" id="wa-no-chat-screen" style="display: none;">
+            <div class="no-chat-content">
+              <div class="wa-lock-icon-circle">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              </div>
+              <h2>WhatsApp Web</h2>
+              <p>Envía y recibe mensajes sin necesidad de mantener tu teléfono conectado.</p>
+              <div class="end-to-end-badge">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                <span>Cifrado de extremo a extremo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHAT ACTIVO -->
+          <div class="wa-active-chat-wrapper" id="wa-active-chat-wrapper">
+            
+            <!-- HEADER DEL CHAT -->
+            <div class="wa-chat-header">
+              
+              <!-- Botón Volver (Móvil) -->
+              <button class="wa-back-btn" id="btn-back-to-list" title="Volver a chats">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+              </button>
+
+              <!-- Avatar y Datos del Contacto -->
+              <div class="wa-contact-info-header" id="btn-edit-active-contact" title="Clic para editar este contacto">
+                <div class="wa-header-avatar" id="header-avatar-box">
+                  <img src="" id="header-avatar-img" style="display:none;" alt="Avatar">
+                  <span id="header-avatar-letter">A</span>
+                </div>
+                <div class="wa-header-meta">
+                  <div class="wa-header-name-row">
+                    <span class="wa-header-name" id="header-contact-name">Aanano 💎</span>
+                  </div>
+                  <span class="wa-header-status" id="header-contact-status">en línea</span>
+                </div>
+              </div>
+
+              <!-- Acciones de Cabecera: Videollamada, Llamada, Búsqueda, Menú -->
+              <div class="wa-chat-header-actions">
+                <!-- Videollamada -->
+                <button class="wa-icon-btn" id="btn-trigger-videocall" title="Iniciar Videollamada">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                </button>
+
+                <!-- Llamada de Voz -->
+                <button class="wa-icon-btn" id="btn-trigger-voicecall" title="Iniciar Llamada de Voz">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </button>
+
+                <!-- Búsqueda en el chat (Desktop) -->
+                <button class="wa-icon-btn desktop-only-icon" title="Buscar en el chat">
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </button>
+
+                <!-- Menú del Chat -->
+                <button class="wa-icon-btn" id="btn-chat-menu" title="Opciones del chat">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- CUERPO DE MENSAJES (DOODLE PATTERN DE FONDO) -->
+            <div class="wa-messages-viewport" id="wa-messages-viewport">
+              <div class="wa-messages-container" id="wa-messages-container">
+                
+                <!-- Burbuja de Fecha -->
+                <div class="wa-date-divider">
+                  <span>13/9/2026</span>
+                </div>
+
+                <!-- Cifrado Aviso -->
+                <div class="wa-encryption-notice">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <span>Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.</span>
+                </div>
+
+                <!-- Los mensajes se renderizan dinámicamente aquí -->
+              </div>
+            </div>
+
+            <!-- BARRA INFERIOR DE ESCRITURA -->
+            <div class="wa-input-panel">
+              
+              <!-- Selector de Emisor: Tú vs Contacto -->
+              <div class="sender-switch-bar">
+                <span class="sender-label">Enviar como:</span>
+                <div class="sender-toggle-group">
+                  <button class="sender-opt-btn active" id="btn-sender-me" data-sender="me">
+                    <span>Tú (Verde)</span>
+                  </button>
+                  <button class="sender-opt-btn" id="btn-sender-contact" data-sender="contact">
+                    <span>Contacto (Gris)</span>
+                  </button>
+                </div>
+
+                <!-- Tipo de Contenido Rápido -->
+                <div class="msg-type-quick-select">
+                  <button class="msg-type-btn" id="btn-trigger-audio-msg" title="Enviar Nota de Voz simulada">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    <span>Audio</span>
+                  </button>
+                  <button class="msg-type-btn" id="btn-trigger-onetime-msg" title="Enviar Foto de 1 sola visualización (1)">
+                    <span class="onetime-circle-badge">1</span>
+                    <span>1 Vez</span>
+                  </button>
+                  <button class="msg-type-btn" id="btn-trigger-image-msg" title="Adjuntar Imagen o Foto">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Foto</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input Bar Realista -->
+              <div class="wa-input-row">
+                <!-- Emoji -->
+                <button class="wa-input-icon-btn" title="Emojis">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                </button>
+
+                <!-- Adjuntar / Clip -->
+                <button class="wa-input-icon-btn" id="btn-clip-attach" title="Adjuntar archivo o imagen">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5V6H9v9.5a3 3 0 0 0 6 0V5C15 2.24 12.76 0 10 0S5 2.24 5 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" transform="rotate(45 12 12)"/></svg>
+                </button>
+
+                <!-- Cámara (Móvil) -->
+                <button class="wa-input-icon-btn mobile-only-icon" title="Cámara">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                </button>
+
+                <!-- Campo de Entrada de Texto -->
+                <div class="wa-textbox-wrapper">
+                  <textarea id="wa-text-input" rows="1" placeholder="Escribe un mensaje" class="wa-text-field"></textarea>
+                </div>
+
+                <!-- Botón Enviar / Micrófono -->
+                <button class="wa-send-action-btn" id="btn-send-message" title="Enviar mensaje">
+                  <svg id="icon-send-arrow" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  <svg id="icon-send-mic" style="display:none;" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- OVERLAY DE LLAMADA DE VOZ INTERACTIVA -->
+  <!-- ========================================== -->
+  <div class="call-overlay" id="voicecall-overlay" style="display: none;">
+    <div class="call-card">
+      <div class="call-top-info">
+        <div class="call-security-badge">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
+          <span>Cifrado de extremo a extremo</span>
+        </div>
+        <h3 class="call-contact-name" id="call-name-display">Aanano 💎</h3>
+        <span class="call-status-label" id="call-status-text">Llamando...</span>
+      </div>
+
+      <div class="call-avatar-wrap">
+        <div class="call-avatar-circle" id="call-avatar-circle">
+          <img src="" id="call-avatar-img" style="display:none;" alt="Avatar">
+          <span id="call-avatar-letter">A</span>
+        </div>
+      </div>
+
+      <div class="call-actions-dock">
+        <button class="call-dock-btn" id="btn-call-mute" title="Silenciar">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
+        </button>
+        <button class="call-dock-btn" id="btn-call-speaker" title="Altavoz">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        </button>
+        <button class="call-dock-btn call-btn-hangup" id="btn-call-hangup" title="Colgar">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- OVERLAY DE VIDEOLLAMADA INTERACTIVA -->
+  <!-- ========================================== -->
+  <div class="videocall-overlay" id="videocall-overlay" style="display: none;">
+    <div class="videocall-screen">
+      <div class="videocall-bg-placeholder" id="videocall-bg-placeholder">
+        <div class="videocall-caller-circle" id="videocall-avatar-circle">
+          <img src="" id="videocall-avatar-img" style="display:none;" alt="Avatar">
+          <span id="videocall-avatar-letter">A</span>
+        </div>
+        <div class="videocall-caller-info">
+          <h3 id="videocall-name-display">Aanano 💎</h3>
+          <span id="videocall-status-text">Conectando...</span>
+        </div>
+      </div>
+
+      <!-- Miniatura propia flotante (Self camera pip) -->
+      <div class="videocall-self-pip">
+        <div class="pip-inner">Tú</div>
+      </div>
+
+      <!-- Barra de controles de Videollamada -->
+      <div class="videocall-controls-bar">
+        <button class="call-dock-btn" id="btn-video-cam-toggle" title="Cambiar cámara">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        </button>
+        <button class="call-dock-btn" id="btn-video-mic-toggle" title="Silenciar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
+        </button>
+        <button class="call-dock-btn call-btn-hangup" id="btn-videocall-hangup" title="Finalizar llamada">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL / DRAWER DE CONFIGURACIÓN & GUION -->
+  <!-- ========================================== -->
+  <div class="config-drawer-overlay" id="config-drawer-overlay" style="display: none;">
+    <div class="config-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title-row">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Ajustes & Automatización</span>
+        </div>
+        <button class="drawer-close-btn" id="btn-close-drawer">&times;</button>
+      </div>
+
+      <div class="drawer-tabs">
+        <button class="drawer-tab active" data-tab="tab-contact">Contacto Actual</button>
+        <button class="drawer-tab" data-tab="tab-automation">Respuestas Automáticas</button>
+        <button class="drawer-tab" data-tab="tab-tools">Ajustes & Captura</button>
+      </div>
+
+      <div class="drawer-body">
+        
+        <!-- TAB 1: EDITAR CONTACTO -->
+        <div class="tab-pane active" id="tab-contact">
+          <div class="form-section">
+            <label class="form-label">Nombre del Contacto</label>
+            <input type="text" id="cfg-contact-name" class="form-input" value="Aanano 💎" placeholder="Ej. Juan Pérez">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Estado en la Cabecera</label>
+            <select id="cfg-contact-status" class="form-select">
+              <option value="en línea" selected>en línea</option>
+              <option value="escribiendo...">escribiendo...</option>
+              <option value="grabando audio...">grabando audio...</option>
+              <option value="últ. vez hoy a las 15:08">últ. vez hoy a las 15:08</option>
+              <option value="custom">Personalizado...</option>
+            </select>
+            <input type="text" id="cfg-contact-status-custom" class="form-input" style="display:none; margin-top:6px;" placeholder="Ej. disponible, en el gym...">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Foto de Perfil</label>
+            <div class="avatar-edit-row">
+              <div class="avatar-preview-small" id="cfg-avatar-preview">
+                <span id="cfg-avatar-letter">A</span>
+                <img src="" id="cfg-avatar-img" style="display:none;" alt="Avatar">
+              </div>
+              <div class="avatar-actions">
+                <label class="btn-file-upload" for="cfg-avatar-file">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Subir Foto</span>
+                </label>
+                <input type="file" id="cfg-avatar-file" accept="image/*" style="display:none;">
+                <button type="button" class="btn-text-danger" id="btn-clear-avatar">Quitar foto</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary-action" id="btn-save-contact-info">Guardar Cambios del Contacto</button>
+        </div>
+
+        <!-- TAB 2: AUTOMATIZACIÓN Y GUION -->
+        <div class="tab-pane" id="tab-automation">
+          <div class="info-bubble-tip">
+            <strong>¿Cómo funciona la automatización?</strong>
+            <p>Cuando tú envíes un mensaje desde el chat, el sistema cambiará automáticamente los ticks a <span style="color:#53bdeb;">azul</span>, pondrá al contacto <em>"en línea"</em> y <em>"escribiendo..."</em>, y enviará la siguiente respuesta de tu guion programado.</p>
+          </div>
+
+          <div class="form-section">
+            <div class="switch-field-row">
+              <span>Activar Respuesta Automática</span>
+              <label class="ios-switch">
+                <input type="checkbox" id="cfg-auto-reply-enabled" checked>
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Retraso antes de responder (segundos)</label>
+            <input type="number" id="cfg-reply-delay" class="form-input" value="2" min="0.5" max="30" step="0.5">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Guion de Respuestas Consecutivas (1 por línea)</label>
+            <textarea id="cfg-script-replies" class="form-textarea" rows="6" placeholder="Hola, qué tal?&#10;Dale, nos vemos a las 8&#10;Te acabo de enviar el archivo!&#10;Perfecto, quedamos así 👍">Hola!
+No
+Llegaré a las 8
+El finde que viene si quieres vemos
+Vale venga va</textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: AJUSTES Y EXPORTAR -->
+        <div class="tab-pane" id="tab-tools">
+          <div class="form-section">
+            <label class="form-label">Gestión de Conversación</label>
+            <button class="btn-secondary-action" id="btn-clear-all-messages">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Vaciar mensajes de este chat</span>
+            </button>
+            <button class="btn-secondary-action" id="btn-load-preset-chat" style="margin-top:8px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Restablecer chat de demostración</span>
+            </button>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Atajos de Teclado</label>
+            <div class="shortcuts-list">
+              <div class="shortcut-item"><kbd>Enter</kbd> Enviar mensaje</div>
+              <div class="shortcut-item"><kbd>Shift + Enter</kbd> Salto de línea</div>
+              <div class="shortcut-item"><kbd>Alt + S</kbd> Alternar Tú / Contacto</div>
+              <div class="shortcut-item"><kbd>H</kbd> Abrir / Cerrar opciones</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Oculto para Subir Imágenes al Chat -->
+  <input type="file" id="chat-file-image-input" accept="image/*" style="display: none;">
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="/whatsappfake/script.js"></script>
+
+</body>
+</html>

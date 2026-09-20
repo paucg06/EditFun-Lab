@@ -104,6 +104,18 @@ La suite cuenta con **6 aplicaciones web independientes** y un **Hub principal**
 
 ---
 
+### 7. 💬 WhatsApp Fake (`/whatsappfake`)
+
+* **Propósito**: Simulador hiperrealista de chats, notas de voz y llamadas de WhatsApp para vídeos y capturas.
+* **Características**:
+  * **Vistas Duales**: Modo **Escritorio (WhatsApp Web)** y Modo **Móvil (Smartphone)** con marco y barra de estado reactiva.
+  * **Temas Oficiales**: Tema **Oscuro** (`#0b141a`) y Tema **Claro** (`#efeae2`) con patrón de doodles original.
+  * **Motor de Respuestas Automáticas**: Secuencia de respuestas programadas que simulan estado *en línea*, *escribiendo...* y progresión de ticks (*reloj* $\rightarrow$ *gris* $\rightarrow$ *doble azul*).
+  * **Simulador de Llamadas**: Interfaz interactiva de **Llamada de Voz** y **Videollamada** con contador en tiempo real y audio sintetizado.
+  * **Tipos de Mensaje**: Mensajes de texto, notas de voz con onda sonora interactiva, fotos de 1 sola visualización `(1)` e imágenes personalizadas.
+
+---
+
 ## 📁 Estructura del Proyecto
 
 ```
@@ -135,6 +147,10 @@ Edit-Fun/
 │   ├── style.css
 │   └── script.js
 ├── popfx/                        # Herramienta 6: PopFX (/popfx)
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── whatsappfake/                 # Herramienta 7: WhatsApp Fake (/whatsappfake)
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
