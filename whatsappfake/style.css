@@ -1035,16 +1035,15 @@ body.mode-forced-mobile .wa-messages-container {
 
 .wa-bubble {
   max-width: 65%;
-  min-width: 80px;
-  padding: 6px 10px 6px 10px;
+  min-width: 0;
+  padding: 6px 9px 8px 9px;
   border-radius: 8px;
   position: relative;
   font-size: 14.2px;
   line-height: 19px;
   word-wrap: break-word;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.13);
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 @media (max-width: 768px) {
@@ -1072,10 +1071,10 @@ body.mode-forced-mobile .wa-bubble {
 /* Flecha desplegable Chevron en hover sobre la burbuja */
 .wa-bubble-chevron-btn {
   position: absolute;
-  top: 3px;
+  top: 2px;
   right: 4px;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
@@ -1118,6 +1117,7 @@ body.mode-forced-mobile .wa-bubble {
   font-weight: 600;
   margin-bottom: 2px;
   line-height: 1.2;
+  display: block;
 }
 
 /* Pico de la burbuja (Tail) */
@@ -1146,22 +1146,26 @@ body.mode-forced-mobile .wa-bubble {
 }
 
 /* Contenido */
+.wa-bubble-text,
 .wa-msg-text {
-  margin-right: 48px;
-  white-space: pre-wrap;
   user-select: text;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .wa-msg-meta {
-  align-self: flex-end;
-  display: flex;
+  float: right;
+  margin-left: 8px;
+  margin-top: 4px;
+  margin-bottom: -3px;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: -8px;
-  margin-left: 12px;
+  gap: 3px;
   font-size: 11px;
+  line-height: 15px;
   color: var(--bubble-timestamp);
   white-space: nowrap;
+  user-select: none;
 }
 
 /* Imagen adjunta */

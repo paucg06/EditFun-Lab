@@ -848,13 +848,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let contentHtml = '';
 
     if (msg.type === 'text') {
-      contentHtml = `<div class="wa-msg-text">${formatMessageText(msg.content)}</div>`;
+      contentHtml = `<span class="wa-bubble-text">${formatMessageText(msg.content)}</span>`;
     } else if (msg.type === 'image') {
       contentHtml = `
         <div class="wa-msg-image-wrap">
           <img src="${msg.content}" alt="Foto adjunta">
         </div>
-        ${msg.caption ? `<div class="wa-msg-text">${formatMessageText(msg.caption)}</div>` : ''}
+        ${msg.caption ? `<span class="wa-bubble-text">${formatMessageText(msg.caption)}</span>` : ''}
       `;
     } else if (msg.type === 'onetime') {
       contentHtml = `
@@ -900,16 +900,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const bubbleInner = document.createElement('div');
-    bubbleInner.innerHTML = `
-      ${authorHtml}
-      ${contentHtml}
-      <div class="wa-msg-meta">
+    const metaHtml = `
+      <span class="wa-msg-meta">
         <span class="wa-msg-time">${msg.time}</span>
         ${tickHtml}
-      </div>
+      </span>
     `;
-    bubble.appendChild(bubbleInner);
+
+    bubble.innerHTML = `
+      ${authorHtml}
+      ${contentHtml}
+      ${metaHtml}
+    `;
+    bubble.appendChild(chevronBtn);
 
     // Clic en la fila si estamos en modo selección
     row.addEventListener('click', () => {
@@ -966,29 +969,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     menu.innerHTML = `
-      <button class="dropdown-item" data-action="info">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>Info. del mensaje</span>
-      </button>
-      <button class="dropdown-item" data-action="reply">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
-        <span>Responder</span>
-      </button>
       <button class="dropdown-item" data-action="copy">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span>Copiar</span>
-      </button>
-      <button class="dropdown-item" data-action="forward">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
-        <span>Reenviar</span>
-      </button>
-      <button class="dropdown-item" data-action="pin">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
-        <span>Fijar</span>
-      </button>
-      <button class="dropdown-item" data-action="star">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <span>Destacar</span>
       </button>
       ${tickOptionsHtml}
       <div class="dropdown-divider"></div>
@@ -1035,8 +1018,6 @@ document.addEventListener('DOMContentLoaded', () => {
           else if (msg.ticks === 'grey') msg.ticks = 'single';
           else msg.ticks = 'blue';
           renderMessages();
-        } else if (action === 'reply') {
-          textInput.focus();
         }
       });
     });
@@ -1565,14 +1546,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Marcar chat como no leído
+  // Modo selección desde menú del chat
+  btnChatSelectMode.addEventListener('click', () => {
+    closeAllDropdowns();
+    enterSelectionMode();
+  });
+
+  // Marcar mensajes sin leer (contador configurable)
   btnChatMarkChatUnread.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
     if (chat) {
-      chat.unreadCount = Math.max(1, chat.unreadCount || 1);
-      renderChatList();
+      const input = prompt('Introduce el número de mensajes sin leer (ej: 3, o 0 para quitar):', chat.unreadCount > 0 ? chat.unreadCount : '3');
+      if (input !== null) {
+        const count = parseInt(input.trim(), 10);
+        chat.unreadCount = isNaN(count) ? 0 : Math.max(0, count);
+        renderChatList();
+      }
     }
+  });
+
+  // Modal Añadir Separador (Aviso del sistema o Separador de fecha)
+  btnChatAddSeparator.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (!chat) return;
+    separatorTypeSelect.value = 'encryption';
+    separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
+    separatorPositionSelect.value = 'end';
+    separatorModalOverlay.style.display = 'flex';
+  });
+
+  separatorTypeSelect.addEventListener('change', () => {
+    if (separatorTypeSelect.value === 'encryption') {
+      separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
+    } else {
+      separatorTextInput.value = 'HOY';
+    }
+  });
+
+  btnCloseSeparatorModal.addEventListener('click', () => {
+    separatorModalOverlay.style.display = 'none';
+  });
+
+  btnCancelSeparatorModal.addEventListener('click', () => {
+    separatorModalOverlay.style.display = 'none';
+  });
+
+  btnConfirmAddSeparator.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    const type = separatorTypeSelect.value;
+    const text = separatorTextInput.value.trim();
+    const position = separatorPositionSelect.value;
+
+    const sepItem = {
+      id: (type === 'encryption' ? 'enc-' : 'sep-') + Date.now(),
+      type: type === 'encryption' ? 'encryption_notice' : 'date_divider',
+      content: text || (type === 'encryption' ? 'Los mensajes y las llamadas están cifrados de extremo a extremo.' : 'HOY')
+    };
+
+    if (position === 'start') {
+      chat.messages.unshift(sepItem);
+    } else {
+      chat.messages.push(sepItem);
+    }
+
+    separatorModalOverlay.style.display = 'none';
+    renderMessages();
   });
 
   // Marcar todos los mensajes enviados como leídos (ticks azules)
