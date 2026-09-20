@@ -920,16 +920,15 @@ document.addEventListener('DOMContentLoaded', () => {
               ${audioAvatarHtml}
             </div>
             <div class="wa-audio-mic-badge">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="#53bdeb">
+                <path d="M11.999 14.942c2.001 0 3.529-1.528 3.529-3.529V6.118c0-2.001-1.528-3.529-3.529-3.529s-3.529 1.528-3.529 3.529v5.295c0 2.001 1.528 3.529 3.529 3.529zm5.093-4.152c0 2.812-2.281 5.093-5.093 5.093s-5.093-2.281-5.093-5.093H5.32c0 3.334 2.457 6.108 5.679 6.554v3.068h2.001v-3.068c3.222-.446 5.679-3.22 5.679-6.554h-1.587z"/>
               </svg>
             </div>
           </div>
           <div class="wa-audio-body">
             <div class="wa-audio-top-row">
               <button class="audio-play-btn" title="Reproducir nota de voz">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               </button>
               <div class="audio-waveform-track">
                 <div class="audio-bars-container">

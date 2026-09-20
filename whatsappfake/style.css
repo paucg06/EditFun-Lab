@@ -1252,28 +1252,24 @@ body.mode-forced-mobile .wa-bubble {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--bg-chat-header);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #53bdeb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
 }
 
-.wa-msg-row.sent .wa-audio-mic-badge {
-  background: var(--bubble-sent);
-}
-
+.wa-msg-row.sent .wa-audio-mic-badge,
 .wa-msg-row.received .wa-audio-mic-badge {
-  background: var(--bubble-received);
+  background: transparent !important;
 }
 
 .wa-audio-mic-badge svg {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 .wa-audio-body {
@@ -1291,8 +1287,8 @@ body.mode-forced-mobile .wa-bubble {
 }
 
 .audio-play-btn {
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: transparent;
   border: none;
@@ -1311,8 +1307,8 @@ body.mode-forced-mobile .wa-bubble {
 }
 
 .audio-play-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
 }
 
 .audio-waveform-track {
@@ -1367,7 +1363,7 @@ body.mode-forced-mobile .wa-bubble {
   line-height: 14px;
   color: var(--bubble-timestamp);
   user-select: none;
-  padding-left: 32px;
+  padding-left: 42px;
 }
 
 .wa-audio-meta {
