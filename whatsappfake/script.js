@@ -1,6 +1,6 @@
 /**
  * WhatsApp Fake Simulator - Script Logic
- * Multi-user Groups linked to Real Contacts, Step Builder & Interactive Read Status
+ * Multi-user Groups linked to Real Contacts, Message Context Menu, Selection Mode, Custom Separators & Read State
  * Author: EditFun Suite
  */
 
@@ -15,9 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     theme: 'dark', // 'dark' | 'light'
     mode: 'auto', // 'auto' | 'forced-mobile'
     mobileView: 'in-chat', // 'in-list' | 'in-chat'
-    sendTickMode: 'blue', // 'blue' | 'grey' | 'single'
     activeChatId: 'g1',
     editingChatId: null,
+    isSelectionMode: false,
+    selectedMessageIds: new Set(),
     tempGroupMemberIds: [], // IDs de contactos individuales seleccionados
     
     // Lista de Chats (Contactos Individuales y Grupos) - SIN EMOJIS
@@ -31,6 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
         unreadCount: 0,
         participantContactIds: ['c_fede', 'c_pedro', 'c_jose'],
         messages: [
+          {
+            id: 'd1',
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
+            id: 'e1',
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          },
           {
             id: 'mg1',
             sender: 'c_fede',
@@ -91,6 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
         unreadCount: 0,
         messages: [
           {
+            id: 'df1',
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
+            id: 'ef1',
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          },
+          {
             id: 'mf1',
             sender: 'contact',
             type: 'text',
@@ -124,6 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
         status: 'en línea',
         unreadCount: 0,
         messages: [
+          {
+            id: 'dp1',
+            type: 'date_divider',
+            content: 'HOY'
+          },
           {
             id: 'mp1',
             sender: 'contact',
@@ -159,6 +185,11 @@ document.addEventListener('DOMContentLoaded', () => {
         unreadCount: 0,
         messages: [
           {
+            id: 'dj1',
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
             id: 'mj1',
             sender: 'contact',
             type: 'text',
@@ -192,6 +223,16 @@ document.addEventListener('DOMContentLoaded', () => {
         status: 'en línea',
         unreadCount: 0,
         messages: [
+          {
+            id: 'da1',
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
+            id: 'ea1',
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          },
           {
             id: 'm1',
             sender: 'contact',
@@ -254,6 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
         unreadCount: 2,
         messages: [
           {
+            id: 'dm1',
+            type: 'date_divider',
+            content: 'AYER'
+          },
+          {
+            id: 'em1',
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          },
+          {
             id: 'm21',
             sender: 'contact',
             type: 'text',
@@ -295,8 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSend = document.getElementById('btn-send-message');
   const iconSendArrow = document.getElementById('icon-send-arrow');
   const iconSendMic = document.getElementById('icon-send-mic');
-  const btnToggleSendTicks = document.getElementById('btn-toggle-send-ticks');
-  const sendTickPreview = document.getElementById('send-tick-preview');
   
   // Header Activo
   const headerContactName = document.getElementById('header-contact-name');
@@ -307,6 +356,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenChatInfoModal = document.getElementById('btn-open-chat-info-modal');
   const noChatScreen = document.getElementById('wa-no-chat-screen');
   const activeChatWrapper = document.getElementById('wa-active-chat-wrapper');
+  
+  // Barra de Selección
+  const selectionTopBar = document.getElementById('wa-selection-topbar');
+  const selectionCountText = document.getElementById('selection-count-text');
+  const btnCancelSelection = document.getElementById('btn-cancel-selection');
+  const btnDeleteSelected = document.getElementById('btn-delete-selected');
   
   // Dropdown Menús
   const btnAddMenuTrigger = document.getElementById('btn-add-menu-trigger');
@@ -331,6 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Chat Menú Actions
   const btnChatAutoReply = document.getElementById('chat-menu-btn-auto-reply');
+  const btnChatAddSeparator = document.getElementById('chat-menu-btn-add-separator');
+  const btnChatSelectMode = document.getElementById('chat-menu-btn-select-mode');
+  const btnChatMarkChatUnread = document.getElementById('chat-menu-btn-mark-chat-unread');
   const btnChatEditChat = document.getElementById('chat-menu-btn-edit-chat');
   const chatMenuEditLabel = document.getElementById('chat-menu-edit-label');
   const btnChatTogglePin = document.getElementById('chat-menu-btn-toggle-pin');
@@ -360,6 +418,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const audioSimSeconds = document.getElementById('audio-sim-seconds');
   let tempAudioUrl = '';
   let tempAudioDuration = '0:14';
+
+  // Modal Separador
+  const separatorModalOverlay = document.getElementById('separator-modal-overlay');
+  const btnCloseSeparatorModal = document.getElementById('btn-close-separator-modal');
+  const btnCancelSeparatorModal = document.getElementById('btn-cancel-separator-modal');
+  const btnConfirmAddSeparator = document.getElementById('btn-confirm-add-separator');
+  const separatorTypeSelect = document.getElementById('separator-type-select');
+  const separatorTextInput = document.getElementById('separator-text-input');
+  const separatorTextGroup = document.getElementById('separator-text-group');
+  const separatorPositionSelect = document.getElementById('separator-position-select');
 
   // Modal Contacto
   const contactModalOverlay = document.getElementById('contact-modal-overlay');
@@ -528,46 +596,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   }
 
-  // ==========================================
-  // TICKS SVG OFICIALES WHATSAPP WEB
-  // ==========================================
-  function getDoubleTickSVG() {
-    return `<svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg>`;
-  }
-
-  function getSingleTickSVG() {
-    return `<svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg>`;
-  }
-
-  function updateSendTickButtonUI() {
-    if (state.sendTickMode === 'blue') {
-      sendTickPreview.className = 'tick-icon blue';
-      sendTickPreview.innerHTML = getDoubleTickSVG();
-      btnToggleSendTicks.title = 'Modo al enviar: 2 ticks azules (Leído). Clic para cambiar';
-    } else if (state.sendTickMode === 'grey') {
-      sendTickPreview.className = 'tick-icon grey';
-      sendTickPreview.innerHTML = getDoubleTickSVG();
-      btnToggleSendTicks.title = 'Modo al enviar: 2 ticks grises (Entregado / Sin leer). Clic para cambiar';
-    } else if (state.sendTickMode === 'single') {
-      sendTickPreview.className = 'tick-icon grey';
-      sendTickPreview.innerHTML = getSingleTickSVG();
-      btnToggleSendTicks.title = 'Modo al enviar: 1 tick gris (Enviado). Clic para cambiar';
-    }
-  }
-
-  btnToggleSendTicks.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (state.sendTickMode === 'blue') {
-      state.sendTickMode = 'grey';
-    } else if (state.sendTickMode === 'grey') {
-      state.sendTickMode = 'single';
-    } else {
-      state.sendTickMode = 'blue';
-    }
-    updateSendTickButtonUI();
-  });
-  updateSendTickButtonUI();
-
   // Helper para buscar contacto individual por ID
   function getContactById(id) {
     return state.chats.find(c => c.id === id && c.type === 'personal') || null;
@@ -591,8 +619,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sorted = getSortedChats();
 
     const filtered = sorted.filter(c => {
+      const msgs = c.messages.filter(m => m.type !== 'date_divider' && m.type !== 'encryption_notice');
       const matchesQuery = c.name.toLowerCase().includes(query) ||
-        (c.messages.length && c.messages[c.messages.length - 1].content && c.messages[c.messages.length - 1].content.toLowerCase().includes(query));
+        (msgs.length && msgs[msgs.length - 1].content && msgs[msgs.length - 1].content.toLowerCase().includes(query));
       
       if (!matchesQuery) return false;
       if (currentFilter === 'all') return true;
@@ -607,7 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
       item.className = `wa-chat-item ${chat.id === state.activeChatId ? 'active' : ''}`;
       item.dataset.id = chat.id;
 
-      const lastMsg = chat.messages.length ? chat.messages[chat.messages.length - 1] : null;
+      const msgs = chat.messages.filter(m => m.type !== 'date_divider' && m.type !== 'encryption_notice');
+      const lastMsg = msgs.length ? msgs[msgs.length - 1] : null;
       let lastText = 'Toca para chatear';
       let lastTime = '';
       if (lastMsg) {
@@ -675,6 +705,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectChat(chatId) {
     state.activeChatId = chatId;
+    exitSelectionMode();
+
     const chat = getActiveChat();
     if (chat) {
       chat.unreadCount = 0;
@@ -741,22 +773,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // RENDERIZADO DE MENSAJES
+  // RENDERIZADO DE MENSAJES Y ELEMENTOS DE CHAT
   // ==========================================
   function renderMessages() {
     const chat = getActiveChat();
     if (!chat) return;
 
-    const dateDivider = messagesContainer.querySelector('.wa-date-divider');
-    const encryptionNotice = messagesContainer.querySelector('.wa-encryption-notice');
-    
     messagesContainer.innerHTML = '';
-    if (dateDivider) messagesContainer.appendChild(dateDivider);
-    if (encryptionNotice) messagesContainer.appendChild(encryptionNotice);
 
-    chat.messages.forEach(msg => {
-      const msgRow = createMessageElement(msg, chat);
-      messagesContainer.appendChild(msgRow);
+    chat.messages.forEach(item => {
+      if (item.type === 'date_divider') {
+        const div = document.createElement('div');
+        div.className = 'wa-date-divider';
+        div.innerHTML = `<span>${escapeHTML(item.content)}</span>`;
+        messagesContainer.appendChild(div);
+      } else if (item.type === 'encryption_notice') {
+        const notice = document.createElement('div');
+        notice.className = 'wa-encryption-notice';
+        notice.innerHTML = `
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          <span>${escapeHTML(item.content)}</span>
+        `;
+        messagesContainer.appendChild(notice);
+      } else {
+        const msgRow = createMessageElement(item, chat);
+        messagesContainer.appendChild(msgRow);
+      }
     });
 
     scrollToBottom();
@@ -764,15 +806,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function createMessageElement(msg, chat) {
     const row = document.createElement('div');
-    row.className = `wa-msg-row ${msg.sender === 'me' ? 'sent' : 'received'}`;
+    const isSent = msg.sender === 'me';
+    const isSelected = state.selectedMessageIds.has(msg.id);
+
+    row.className = `wa-msg-row ${isSent ? 'sent' : 'received'} ${state.isSelectionMode ? 'selection-mode' : ''} ${isSelected ? 'selected' : ''}`;
     row.id = `msg-${msg.id}`;
+
+    // Checkbox de Selección
+    const checkWrap = document.createElement('div');
+    checkWrap.className = 'msg-select-checkbox-wrap';
+    checkWrap.innerHTML = '<div class="msg-select-checkbox"></div>';
+    checkWrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMessageSelection(msg.id);
+    });
 
     const bubble = document.createElement('div');
     bubble.className = 'wa-bubble';
 
+    // Botón Chevron Flecha hacia abajo (aparece en hover como en WhatsApp Web)
+    const chevronBtn = document.createElement('button');
+    chevronBtn.className = 'wa-bubble-chevron-btn';
+    chevronBtn.title = 'Opciones del mensaje';
+    chevronBtn.innerHTML = `<svg viewBox="0 0 18 18" width="18" height="18" fill="currentColor"><path d="M3.3 5.3a1 1 0 0 1 1.4 0L9 9.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4z"/></svg>`;
+    chevronBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openMessageContextMenu(e, msg, chat);
+    });
+    bubble.appendChild(chevronBtn);
+
     // Cabecera con Nombre del Autor en Grupos
     let authorHtml = '';
-    if (chat.type === 'group' && msg.sender !== 'me') {
+    if (chat.type === 'group' && !isSent) {
       const senderContact = getContactById(msg.sender);
       const senderName = senderContact ? senderContact.name : (msg.senderName || 'Contacto');
       const senderIdx = (chat.participantContactIds || []).indexOf(msg.sender);
@@ -823,19 +888,20 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Ticks SVG oficiales interactivos (clic para cambiar leído/no leído)
+    // Ticks SVG oficiales (SOLO en mensajes enviados por 'me')
     let tickHtml = '';
-    if (msg.sender === 'me') {
+    if (isSent) {
       if (msg.ticks === 'blue') {
-        tickHtml = `<span class="tick-icon blue" title="Leído (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon blue" title="Leído"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'grey') {
-        tickHtml = `<span class="tick-icon grey" title="Entregado (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Entregado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'single') {
-        tickHtml = `<span class="tick-icon grey" title="Enviado (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Enviado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       }
     }
 
-    bubble.innerHTML = `
+    const bubbleInner = document.createElement('div');
+    bubbleInner.innerHTML = `
       ${authorHtml}
       ${contentHtml}
       <div class="wa-msg-meta">
@@ -843,33 +909,252 @@ document.addEventListener('DOMContentLoaded', () => {
         ${tickHtml}
       </div>
     `;
+    bubble.appendChild(bubbleInner);
 
-    // Hacer que el tick sea clickeable para alternar su estado: single -> grey -> blue -> single
-    if (msg.sender === 'me') {
-      const tickEl = bubble.querySelector('.tick-icon');
-      if (tickEl) {
-        tickEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (msg.ticks === 'blue') {
-            msg.ticks = 'grey';
-          } else if (msg.ticks === 'grey') {
-            msg.ticks = 'single';
-          } else {
-            msg.ticks = 'blue';
-          }
-          renderMessages();
-        });
+    // Clic en la fila si estamos en modo selección
+    row.addEventListener('click', () => {
+      if (state.isSelectionMode) {
+        toggleMessageSelection(msg.id);
       }
-    }
+    });
 
     if (msg.type === 'audio') {
       setupAudioPlayer(bubble, msg.audioUrl, msg.duration);
     }
 
-    row.appendChild(bubble);
+    if (!isSent) {
+      row.appendChild(checkWrap);
+      row.appendChild(bubble);
+    } else {
+      row.appendChild(bubble);
+      row.appendChild(checkWrap);
+    }
+
     return row;
   }
 
+  // ==========================================
+  // MENÚ CONTEXTUAL POP-UP DEL MENSAJE (AUTÉNTICO)
+  // ==========================================
+  let activeContextMenu = null;
+
+  function closeMessageContextMenu() {
+    if (activeContextMenu) {
+      activeContextMenu.remove();
+      activeContextMenu = null;
+    }
+  }
+
+  document.addEventListener('click', closeMessageContextMenu);
+
+  function openMessageContextMenu(e, msg, chat) {
+    closeMessageContextMenu();
+    closeAllDropdowns();
+
+    const menu = document.createElement('div');
+    menu.className = 'wa-msg-context-menu';
+
+    const isSent = msg.sender === 'me';
+    let tickOptionsHtml = '';
+    if (isSent) {
+      tickOptionsHtml = `
+        <button class="dropdown-item" data-action="toggle-ticks">
+          <svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg>
+          <span>Cambiar ticks (${msg.ticks === 'blue' ? 'Azul' : msg.ticks === 'grey' ? '2 Grises' : '1 Gris'})</span>
+        </button>
+      `;
+    }
+
+    menu.innerHTML = `
+      <button class="dropdown-item" data-action="info">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Info. del mensaje</span>
+      </button>
+      <button class="dropdown-item" data-action="reply">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+        <span>Responder</span>
+      </button>
+      <button class="dropdown-item" data-action="copy">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copiar</span>
+      </button>
+      <button class="dropdown-item" data-action="forward">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
+        <span>Reenviar</span>
+      </button>
+      <button class="dropdown-item" data-action="pin">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+        <span>Fijar</span>
+      </button>
+      <button class="dropdown-item" data-action="star">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>Destacar</span>
+      </button>
+      ${tickOptionsHtml}
+      <div class="dropdown-divider"></div>
+      <button class="dropdown-item" data-action="select">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Seleccionar</span>
+      </button>
+      <button class="dropdown-item dropdown-exit-item" data-action="delete">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        <span>Eliminar</span>
+      </button>
+    `;
+
+    // Posicionamiento inteligente del pop-up
+    document.body.appendChild(menu);
+    const rect = e.target.getBoundingClientRect();
+    let top = rect.bottom + 4;
+    let left = rect.left - 140;
+
+    if (top + menu.offsetHeight > window.innerHeight) {
+      top = rect.top - menu.offsetHeight - 4;
+    }
+    if (left < 10) left = 10;
+    if (left + menu.offsetWidth > window.innerWidth) left = window.innerWidth - menu.offsetWidth - 10;
+
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+    activeContextMenu = menu;
+
+    menu.querySelectorAll('.dropdown-item').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const action = btn.dataset.action;
+        closeMessageContextMenu();
+
+        if (action === 'delete') {
+          deleteSingleMessage(msg.id, chat);
+        } else if (action === 'select') {
+          enterSelectionMode(msg.id);
+        } else if (action === 'copy') {
+          if (msg.content) navigator.clipboard.writeText(msg.content);
+        } else if (action === 'toggle-ticks') {
+          if (msg.ticks === 'blue') msg.ticks = 'grey';
+          else if (msg.ticks === 'grey') msg.ticks = 'single';
+          else msg.ticks = 'blue';
+          renderMessages();
+        } else if (action === 'reply') {
+          textInput.focus();
+        }
+      });
+    });
+  }
+
+  function deleteSingleMessage(msgId, chat) {
+    chat.messages = chat.messages.filter(m => m.id !== msgId);
+    renderMessages();
+    renderChatList();
+  }
+
+  // ==========================================
+  // MODO SELECCIÓN MÚLTIPLE DE MENSAJES
+  // ==========================================
+  function enterSelectionMode(initialMsgId = null) {
+    state.isSelectionMode = true;
+    state.selectedMessageIds.clear();
+    if (initialMsgId) state.selectedMessageIds.add(initialMsgId);
+
+    selectionTopBar.style.display = 'flex';
+    updateSelectionCounter();
+    renderMessages();
+  }
+
+  function exitSelectionMode() {
+    state.isSelectionMode = false;
+    state.selectedMessageIds.clear();
+    selectionTopBar.style.display = 'none';
+    renderMessages();
+  }
+
+  function toggleMessageSelection(msgId) {
+    if (state.selectedMessageIds.has(msgId)) {
+      state.selectedMessageIds.delete(msgId);
+    } else {
+      state.selectedMessageIds.add(msgId);
+    }
+
+    if (state.selectedMessageIds.size === 0) {
+      exitSelectionMode();
+    } else {
+      updateSelectionCounter();
+      renderMessages();
+    }
+  }
+
+  function updateSelectionCounter() {
+    selectionCountText.textContent = `${state.selectedMessageIds.size} seleccionado${state.selectedMessageIds.size === 1 ? '' : 's'}`;
+  }
+
+  btnCancelSelection.addEventListener('click', exitSelectionMode);
+
+  btnDeleteSelected.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (!chat || state.selectedMessageIds.size === 0) return;
+
+    if (confirm(`¿Eliminar los ${state.selectedMessageIds.size} mensajes seleccionados?`)) {
+      chat.messages = chat.messages.filter(m => !state.selectedMessageIds.has(m.id));
+      exitSelectionMode();
+      renderChatList();
+    }
+  });
+
+  btnChatSelectMode.addEventListener('click', () => {
+    closeAllDropdowns();
+    enterSelectionMode();
+  });
+
+  // ==========================================
+  // MODAL INSERTAR SEPARADOR / AVISO
+  // ==========================================
+  btnChatAddSeparator.addEventListener('click', () => {
+    closeAllDropdowns();
+    separatorModalOverlay.style.display = 'flex';
+  });
+
+  btnCloseSeparatorModal.addEventListener('click', () => separatorModalOverlay.style.display = 'none');
+  btnCancelSeparatorModal.addEventListener('click', () => separatorModalOverlay.style.display = 'none');
+
+  separatorTypeSelect.addEventListener('change', () => {
+    if (separatorTypeSelect.value === 'date') {
+      separatorTextGroup.style.display = 'block';
+      separatorTextInput.value = 'AYER';
+      separatorTextInput.placeholder = 'Ej. AYER, HOY, 10 DE SEPTIEMBRE';
+    } else {
+      separatorTextGroup.style.display = 'block';
+      separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
+      separatorTextInput.placeholder = 'Texto del aviso de sistema / cifrado';
+    }
+  });
+
+  btnConfirmAddSeparator.addEventListener('click', () => {
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    const type = separatorTypeSelect.value === 'date' ? 'date_divider' : 'encryption_notice';
+    const content = separatorTextInput.value.trim() || (type === 'date_divider' ? 'HOY' : 'Aviso');
+    const position = separatorPositionSelect.value;
+
+    const newItem = {
+      id: 'sep_' + Date.now(),
+      type: type,
+      content: content
+    };
+
+    if (position === 'start') {
+      chat.messages.unshift(newItem);
+    } else {
+      chat.messages.push(newItem);
+    }
+
+    separatorModalOverlay.style.display = 'none';
+    renderMessages();
+  });
+
+  // ==========================================
+  // REPRODUCTOR DE NOTA DE VOZ
+  // ==========================================
   function setupAudioPlayer(bubble, audioUrl, durationText) {
     const playBtn = bubble.querySelector('.audio-play-btn');
     const bars = bubble.querySelectorAll('.audio-bar');
@@ -991,7 +1276,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!chat) return;
 
     const time = getCurrentTimeString();
-    const tickState = state.sendTickMode || 'blue';
 
     const newMsg = {
       id: 'm_' + Date.now(),
@@ -999,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
       type: type,
       content: content,
       time: time,
-      ticks: tickState,
+      ticks: 'blue',
       ...customProps
     };
 
@@ -1164,6 +1448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarDropdown.classList.remove('show');
     chatDropdown.classList.remove('show');
     clipDropdown.classList.remove('show');
+    closeMessageContextMenu();
   }
 
   btnAddMenuTrigger.addEventListener('click', (e) => {
@@ -1280,7 +1565,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Marcar todos como leídos (ticks azules)
+  // Marcar chat como no leído
+  btnChatMarkChatUnread.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (chat) {
+      chat.unreadCount = Math.max(1, chat.unreadCount || 1);
+      renderChatList();
+    }
+  });
+
+  // Marcar todos los mensajes enviados como leídos (ticks azules)
   btnChatMarkAllRead.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
@@ -1292,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Marcar todos como no leídos (ticks grises)
+  // Marcar todos los mensajes enviados como no leídos (ticks grises)
   btnChatMarkAllUnread.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
@@ -1331,10 +1626,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const deletedChat = state.chats.find(c => c.id === idToDelete);
     if (!deletedChat) return;
 
-    // 1. Quitar de la lista principal
     state.chats = state.chats.filter(c => c.id !== idToDelete);
 
-    // 2. Si era contacto, quitar de los grupos que lo tuvieran como participante
     if (deletedChat.type === 'personal') {
       state.chats.forEach(c => {
         if (c.type === 'group' && c.participantContactIds) {
@@ -1346,7 +1639,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 3. Seleccionar otro chat
     if (state.chats.length > 0) {
       selectChat(state.chats[0].id);
     } else {
@@ -1486,7 +1778,18 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinned: false,
         status: status,
         unreadCount: 0,
-        messages: [],
+        messages: [
+          {
+            id: 'df_' + Date.now(),
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
+            id: 'ef_' + Date.now(),
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          }
+        ],
         autoReply: {
           enabled: true,
           steps: [
@@ -1522,7 +1825,6 @@ document.addEventListener('DOMContentLoaded', () => {
       groupNameInput.value = '';
       tempGroupAvatarBase64 = '';
       btnDeleteGroupModal.style.display = 'none';
-      // Seleccionar por defecto hasta 2 contactos existentes si los hay
       const existingContacts = state.chats.filter(c => c.type === 'personal');
       state.tempGroupMemberIds = existingContacts.slice(0, 2).map(c => c.id);
     }
@@ -1648,7 +1950,18 @@ document.addEventListener('DOMContentLoaded', () => {
         isPinned: false,
         unreadCount: 0,
         participantContactIds: [...state.tempGroupMemberIds],
-        messages: [],
+        messages: [
+          {
+            id: 'dg_' + Date.now(),
+            type: 'date_divider',
+            content: 'HOY'
+          },
+          {
+            id: 'eg_' + Date.now(),
+            type: 'encryption_notice',
+            content: 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.'
+          }
+        ],
         autoReply: {
           enabled: true,
           steps: state.tempGroupMemberIds.map(cid => {

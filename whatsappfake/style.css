@@ -890,7 +890,7 @@ body.mode-forced-mobile .wa-messages-container {
 /* Divisores de Fecha & Aviso Cifrado */
 .wa-date-divider {
   align-self: center;
-  margin: 10px 0;
+  margin: 12px 0 8px 0;
   display: flex;
   justify-content: center;
 }
@@ -898,23 +898,23 @@ body.mode-forced-mobile .wa-messages-container {
 .wa-date-divider span {
   background-color: var(--bubble-received);
   color: var(--text-secondary);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   padding: 5px 12px;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   text-transform: uppercase;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
 }
 
 .wa-encryption-notice {
   align-self: center;
-  max-width: 480px;
+  max-width: 520px;
   background-color: var(--bubble-system-bg);
   color: var(--bubble-system-text);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.4;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
   text-align: center;
   margin-bottom: 12px;
@@ -927,7 +927,46 @@ body.mode-forced-mobile .wa-messages-container {
 
 .wa-encryption-notice svg {
   flex-shrink: 0;
-  opacity: 0.85;
+  color: #ffd279;
+}
+
+/* =========================================================
+   BARRA SUPERIOR DE SELECCIÓN DE MENSAJES
+   ========================================================= */
+.wa-selection-topbar {
+  height: 60px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-chat-header);
+  border-bottom: 1px solid var(--border-subtle);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 20;
+  animation: slideDownBar 0.15s ease;
+}
+
+@keyframes slideDownBar {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* =========================================================
@@ -935,9 +974,11 @@ body.mode-forced-mobile .wa-messages-container {
    ========================================================= */
 .wa-msg-row {
   display: flex;
+  align-items: center;
   width: 100%;
   margin: 2px 0;
   position: relative;
+  transition: background-color 0.15s ease;
 }
 
 .wa-msg-row.sent {
@@ -946,6 +987,50 @@ body.mode-forced-mobile .wa-messages-container {
 
 .wa-msg-row.received {
   justify-content: flex-start;
+}
+
+.wa-msg-row.selected {
+  background-color: rgba(0, 168, 132, 0.08);
+}
+
+/* Checkbox en modo selección */
+.msg-select-checkbox-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin: 0 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.wa-msg-row.selection-mode .msg-select-checkbox-wrap {
+  display: flex;
+}
+
+.msg-select-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.wa-msg-row.selected .msg-select-checkbox {
+  background-color: var(--wa-green-deep);
+  border-color: var(--wa-green-deep);
+}
+
+.wa-msg-row.selected .msg-select-checkbox::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
 }
 
 .wa-bubble {
@@ -982,6 +1067,49 @@ body.mode-forced-mobile .wa-bubble {
   background-color: var(--bubble-received);
   color: var(--bubble-received-text);
   border-top-left-radius: 0;
+}
+
+/* Flecha desplegable Chevron en hover sobre la burbuja */
+.wa-bubble-chevron-btn {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  z-index: 5;
+  transition: background-color 0.15s ease;
+}
+
+.wa-bubble:hover .wa-bubble-chevron-btn {
+  display: flex;
+}
+
+.wa-bubble-chevron-btn:hover {
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
+}
+
+/* Pop-up Menú Contextual de Mensaje (Idéntico a WhatsApp Web) */
+.wa-msg-context-menu {
+  position: fixed;
+  background: var(--dropdown-bg);
+  min-width: 190px;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+  padding: 6px 0;
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  animation: fadeInMenu 0.12s ease;
 }
 
 /* Nombre del autor en burbujas de grupo */
