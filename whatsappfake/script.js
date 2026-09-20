@@ -555,6 +555,84 @@ document.addEventListener('DOMContentLoaded', () => {
   const filterPills = document.querySelectorAll('.wa-pill');
   let currentFilter = 'all';
 
+  // Modal de Diálogo Personalizado (Reemplazo de alert, confirm, prompt)
+  const customDialogOverlay = document.getElementById('custom-dialog-overlay');
+  const customDialogTitle = document.getElementById('custom-dialog-title');
+  const customDialogMessage = document.getElementById('custom-dialog-message');
+  const customDialogCloseBtn = document.getElementById('custom-dialog-close-btn');
+  const customDialogCancelBtn = document.getElementById('custom-dialog-cancel-btn');
+  const customDialogConfirmBtn = document.getElementById('custom-dialog-confirm-btn');
+  const customDialogPromptWrap = document.getElementById('custom-dialog-prompt-wrap');
+  const customDialogInput = document.getElementById('custom-dialog-input');
+
+  let currentDialogResolver = null;
+
+  function closeCustomDialog(result) {
+    if (customDialogOverlay) customDialogOverlay.style.display = 'none';
+    if (currentDialogResolver) {
+      const resolve = currentDialogResolver;
+      currentDialogResolver = null;
+      resolve(result);
+    }
+  }
+
+  if (customDialogCloseBtn) customDialogCloseBtn.addEventListener('click', () => closeCustomDialog(null));
+  if (customDialogCancelBtn) customDialogCancelBtn.addEventListener('click', () => closeCustomDialog(false));
+
+  function showCustomAlert(title, message) {
+    return new Promise(resolve => {
+      customDialogTitle.textContent = title || 'Información';
+      customDialogMessage.textContent = message || '';
+      customDialogPromptWrap.style.display = 'none';
+      customDialogCancelBtn.style.display = 'none';
+      customDialogConfirmBtn.textContent = 'Aceptar';
+      customDialogConfirmBtn.className = 'btn-wa-save';
+      customDialogOverlay.style.display = 'flex';
+
+      currentDialogResolver = () => resolve();
+      customDialogConfirmBtn.onclick = () => closeCustomDialog(true);
+    });
+  }
+
+  function showCustomConfirm(title, message, confirmText = 'Aceptar', isDanger = false) {
+    return new Promise(resolve => {
+      customDialogTitle.textContent = title || '¿Estás seguro?';
+      customDialogMessage.textContent = message || '';
+      customDialogPromptWrap.style.display = 'none';
+      customDialogCancelBtn.style.display = 'inline-block';
+      customDialogConfirmBtn.textContent = confirmText;
+      customDialogConfirmBtn.className = isDanger ? 'btn-wa-danger-action' : 'btn-wa-save';
+      customDialogOverlay.style.display = 'flex';
+
+      currentDialogResolver = (res) => resolve(res === true);
+      customDialogConfirmBtn.onclick = () => closeCustomDialog(true);
+    });
+  }
+
+  function showCustomPrompt(title, message, defaultValue = '', inputType = 'text') {
+    return new Promise(resolve => {
+      customDialogTitle.textContent = title || 'Ingresar valor';
+      customDialogMessage.textContent = message || '';
+      customDialogPromptWrap.style.display = 'block';
+      customDialogInput.type = inputType;
+      customDialogInput.value = defaultValue;
+      customDialogCancelBtn.style.display = 'inline-block';
+      customDialogConfirmBtn.textContent = 'Aceptar';
+      customDialogConfirmBtn.className = 'btn-wa-save';
+      customDialogOverlay.style.display = 'flex';
+      setTimeout(() => customDialogInput.focus(), 50);
+
+      currentDialogResolver = (res) => {
+        if (res === null || res === false) resolve(null);
+        else resolve(customDialogInput.value);
+      };
+      customDialogConfirmBtn.onclick = () => closeCustomDialog(true);
+      customDialogInput.onkeydown = (e) => {
+        if (e.key === 'Enter') closeCustomDialog(true);
+      };
+    });
+  }
+
   // Reloj
   function updateClock() {
     const clockEl = document.getElementById('status-clock');
@@ -1168,11 +1246,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCancelSelection.addEventListener('click', exitSelectionMode);
 
-  btnDeleteSelected.addEventListener('click', () => {
+  btnDeleteSelected.addEventListener('click', async () => {
     const chat = getActiveChat();
     if (!chat || state.selectedMessageIds.size === 0) return;
 
-    if (confirm(`¿Eliminar los ${state.selectedMessageIds.size} mensajes seleccionados?`)) {
+    const count = state.selectedMessageIds.size;
+    const ok = await showCustomConfirm(
+      'Eliminar mensajes',
+      `¿Deseas eliminar los ${count} mensaje${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}?`,
+      'Eliminar',
+      true
+    );
+    if (ok) {
       chat.messages = chat.messages.filter(m => !state.selectedMessageIds.has(m.id));
       saveState();
       exitSelectionMode();
@@ -1601,16 +1686,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // HELPERS DE TEMA Y MODO DE VISTA
   // ==========================================
+  const SUN_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  const CLOUD_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`;
+
   function applyTheme(theme) {
     state.theme = theme;
     if (theme === 'light') {
       body.classList.remove('theme-dark');
       body.classList.add('theme-light');
-      if (themeToggleLabel) themeToggleLabel.textContent = 'Cambiar a Tema Oscuro';
+      if (btnMenuToggleTheme) {
+        btnMenuToggleTheme.innerHTML = `${CLOUD_SVG}<span id="theme-toggle-label">Modo oscuro</span>`;
+      }
     } else {
       body.classList.remove('theme-light');
       body.classList.add('theme-dark');
-      if (themeToggleLabel) themeToggleLabel.textContent = 'Cambiar a Tema Claro';
+      if (btnMenuToggleTheme) {
+        btnMenuToggleTheme.innerHTML = `${SUN_SVG}<span id="theme-toggle-label">Modo claro</span>`;
+      }
     }
   }
 
@@ -1654,7 +1746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "whatsapp_chats_backup.json");
+    dlAnchorElem.setAttribute("download", "whatsapp_chats_backup.whts");
     dlAnchorElem.click();
   });
 
@@ -1667,36 +1759,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const imported = JSON.parse(event.target.result);
           if (Array.isArray(imported) && imported.length > 0) {
             state.chats = imported;
             saveState();
             selectChat(imported[0].id);
-            alert('¡Chats importados correctamente!');
+            await showCustomAlert('Importación completada', '¡Chats importados correctamente!');
           } else if (imported && Array.isArray(imported.chats) && imported.chats.length > 0) {
             state.chats = imported.chats;
             if (imported.theme) applyTheme(imported.theme);
             if (imported.mode) applyMode(imported.mode);
             saveState();
             selectChat(imported.chats[0].id);
-            alert('¡Chats importados correctamente!');
+            await showCustomAlert('Importación completada', '¡Chats importados correctamente!');
           } else {
-            alert('El archivo no contiene un formato de chats válido.');
+            await showCustomAlert('Error al importar', 'El archivo no contiene un formato de chats válido.');
           }
         } catch (err) {
-          alert('El archivo no tiene un formato JSON válido.');
+          await showCustomAlert('Error al importar', 'El archivo no tiene un formato válido (.whts o JSON).');
         }
+        fileImportJson.value = '';
       };
       reader.readAsText(file);
     }
   });
 
   if (btnMenuResetChats) {
-    btnMenuResetChats.addEventListener('click', () => {
+    btnMenuResetChats.addEventListener('click', async () => {
       closeAllDropdowns();
-      if (confirm('¿Estás seguro de que quieres restablecer los chats por defecto? Se perderán las modificaciones locales no exportadas.')) {
+      const ok = await showCustomConfirm(
+        'Restablecer chats',
+        '¿Estás seguro de que quieres restablecer los chats por defecto? Se perderán las modificaciones locales no exportadas.',
+        'Restablecer',
+        true
+      );
+      if (ok) {
         state.chats = JSON.parse(JSON.stringify(DEFAULT_CHATS));
         state.activeChatId = state.chats[0]?.id || 'g1';
         saveState();
@@ -1728,11 +1827,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Marcar mensajes sin leer (contador configurable)
-  btnChatMarkChatUnread.addEventListener('click', () => {
+  btnChatMarkChatUnread.addEventListener('click', async () => {
     closeAllDropdowns();
     const chat = getActiveChat();
     if (chat) {
-      const input = prompt('Introduce el número de mensajes sin leer (ej: 3, o 0 para quitar):', chat.unreadCount > 0 ? chat.unreadCount : '3');
+      const input = await showCustomPrompt(
+        'Mensajes sin leer',
+        'Introduce el número de mensajes sin leer (o 0 para quitar):',
+        chat.unreadCount > 0 ? String(chat.unreadCount) : '3',
+        'number'
+      );
       if (input !== null) {
         const count = parseInt(input.trim(), 10);
         chat.unreadCount = isNaN(count) ? 0 : Math.max(0, count);
@@ -1795,10 +1899,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Vaciar Mensajes
-  btnChatClearMsgs.addEventListener('click', () => {
+  btnChatClearMsgs.addEventListener('click', async () => {
     closeAllDropdowns();
     const chat = getActiveChat();
-    if (chat && confirm('¿Estás seguro de vaciar todos los mensajes de este chat?')) {
+    if (!chat) return;
+    const ok = await showCustomConfirm(
+      'Vaciar mensajes',
+      '¿Estás seguro de que deseas vaciar todos los mensajes de este chat?',
+      'Vaciar',
+      true
+    );
+    if (ok) {
       chat.messages = [];
       saveState();
       renderMessages();
@@ -1807,13 +1918,19 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Eliminar Chat / Contacto / Grupo
-  btnChatDeleteChat.addEventListener('click', () => {
+  btnChatDeleteChat.addEventListener('click', async () => {
     closeAllDropdowns();
     const chat = getActiveChat();
     if (!chat) return;
 
     const label = chat.type === 'group' ? 'este grupo' : `al contacto "${chat.name}"`;
-    if (confirm(`¿Estás seguro de eliminar ${label}? Se borrará por completo.`)) {
+    const ok = await showCustomConfirm(
+      chat.type === 'group' ? 'Eliminar grupo' : 'Eliminar contacto',
+      `¿Estás seguro de que deseas eliminar ${label}? Se borrará por completo de la lista.`,
+      'Eliminar',
+      true
+    );
+    if (ok) {
       deleteChatOrContact(chat.id);
     }
   });
@@ -1945,10 +2062,18 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
   btnCancelContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
 
-  btnDeleteContactModal.addEventListener('click', () => {
-    if (state.editingChatId && confirm('¿Estás seguro de eliminar este contacto?')) {
-      deleteChatOrContact(state.editingChatId);
-      contactModalOverlay.style.display = 'none';
+  btnDeleteContactModal.addEventListener('click', async () => {
+    if (state.editingChatId) {
+      const ok = await showCustomConfirm(
+        'Eliminar contacto',
+        '¿Estás seguro de que deseas eliminar este contacto?',
+        'Eliminar',
+        true
+      );
+      if (ok) {
+        deleteChatOrContact(state.editingChatId);
+        contactModalOverlay.style.display = 'none';
+      }
     }
   });
 
@@ -2058,15 +2183,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGroupMembersList() {
     groupMembersContainer.innerHTML = '';
-    state.tempGroupMemberIds.forEach((contactId, idx) => {
+    state.tempGroupMemberIds.forEach((contactId) => {
       const contact = getContactById(contactId);
       const name = contact ? contact.name : 'Contacto';
-      const color = WA_COLORS[idx % WA_COLORS.length];
 
       const chip = document.createElement('div');
       chip.className = 'group-member-chip';
       chip.innerHTML = `
-        <span class="member-chip-color" style="background-color: ${color};"></span>
         <span>${escapeHTML(name)}</span>
         <button type="button" class="member-chip-remove" data-id="${contactId}">&times;</button>
       `;
@@ -2122,10 +2245,18 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
   btnCancelGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
 
-  btnDeleteGroupModal.addEventListener('click', () => {
-    if (state.editingChatId && confirm('¿Estás seguro de eliminar este grupo?')) {
-      deleteChatOrContact(state.editingChatId);
-      groupModalOverlay.style.display = 'none';
+  btnDeleteGroupModal.addEventListener('click', async () => {
+    if (state.editingChatId) {
+      const ok = await showCustomConfirm(
+        'Eliminar grupo',
+        '¿Estás seguro de que deseas eliminar este grupo?',
+        'Eliminar',
+        true
+      );
+      if (ok) {
+        deleteChatOrContact(state.editingChatId);
+        groupModalOverlay.style.display = 'none';
+      }
     }
   });
 
@@ -2356,7 +2487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (type === 'text') {
       content = stepTextInput.value.trim();
       if (!content) {
-        alert('Por favor introduce el texto del mensaje.');
+        showCustomAlert('Texto requerido', 'Por favor introduce el texto del mensaje de respuesta.');
         return;
       }
     } else if (type === 'image') {

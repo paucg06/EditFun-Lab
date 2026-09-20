@@ -1800,6 +1800,27 @@ body.mode-forced-mobile .wa-bubble {
   transition: border-color 0.15s ease;
 }
 
+.wa-form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--bg-search);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238696a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+body.theme-light .wa-form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23667781' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+.wa-form-select option {
+  background-color: var(--dropdown-bg);
+  color: var(--text-primary);
+}
+
 .wa-form-input:focus,
 .wa-form-select:focus,
 .wa-form-textarea:focus {
@@ -1926,16 +1947,11 @@ input:checked + .ios-slider:before {
   gap: 8px;
   background: var(--bg-search);
   border: 1px solid var(--border-color);
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
-}
-
-.member-chip-color {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  color: var(--text-primary);
 }
 
 .member-chip-remove {
@@ -1945,6 +1961,7 @@ input:checked + .ios-slider:before {
   font-size: 16px;
   cursor: pointer;
   line-height: 1;
+  padding: 0 2px;
 }
 
 .member-chip-remove:hover {

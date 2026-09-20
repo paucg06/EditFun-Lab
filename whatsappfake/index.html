@@ -95,8 +95,8 @@
                   <!-- Menú Desplegable de Chats -->
                   <div class="wa-dropdown-menu" id="sidebar-dropdown-menu">
                     <button class="dropdown-item" id="menu-btn-toggle-theme">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
-                      <span id="theme-toggle-label">Cambiar a Tema Claro</span>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                      <span id="theme-toggle-label">Modo claro</span>
                     </button>
 
                     <div class="dropdown-divider"></div>
@@ -626,7 +626,7 @@
             <!-- Contenido según tipo -->
             <div class="wa-form-group" id="step-input-text-wrap">
               <label class="wa-form-label">Texto del Mensaje</label>
-              <input type="text" id="step-text-input" class="wa-form-input" placeholder="Ej. Dale, nos vemos a las 8">
+              <textarea id="step-text-input" class="wa-form-textarea" rows="2" placeholder="Ej. Dale, nos vemos a las 8"></textarea>
             </div>
 
             <div class="wa-form-group" id="step-input-image-wrap" style="display: none;">
@@ -737,7 +737,29 @@
   <!-- Inputs Ocultos de Archivos -->
   <input type="file" id="chat-attach-file-input" accept="image/*" style="display: none;">
   <input type="file" id="chat-audio-file-input" accept="audio/*" style="display: none;">
-  <input type="file" id="chat-import-json-input" accept=".json,application/json" style="display: none;">
+  <input type="file" id="chat-import-json-input" accept=".whts,.json,application/json" style="display: none;">
+
+  <!-- ========================================== -->
+  <!-- MODAL PERSONALIZADO (CONFIRMAR / ALERT / PROMPT) -->
+  <!-- ========================================== -->
+  <div class="wa-modal-overlay" id="custom-dialog-overlay" style="display: none; z-index: 999;">
+    <div class="wa-modal-card" style="max-width: 400px;">
+      <div class="wa-modal-header">
+        <h3 class="wa-modal-title" id="custom-dialog-title">Confirmar acción</h3>
+        <button class="wa-modal-close-btn" id="custom-dialog-close-btn">&times;</button>
+      </div>
+      <div class="wa-modal-body" style="padding-top: 10px;">
+        <p id="custom-dialog-message" style="font-size: 14px; line-height: 1.5; color: var(--text-primary);"></p>
+        <div id="custom-dialog-prompt-wrap" style="display: none; margin-top: 12px;">
+          <input type="text" id="custom-dialog-input" class="wa-form-input" style="width: 100%;">
+        </div>
+      </div>
+      <div class="wa-modal-footer">
+        <button class="btn-wa-cancel" id="custom-dialog-cancel-btn">Cancelar</button>
+        <button class="btn-wa-save" id="custom-dialog-confirm-btn">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="/whatsappfake/script.js"></script>
