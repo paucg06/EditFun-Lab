@@ -1141,6 +1141,23 @@ body.mode-forced-mobile .wa-bubble {
 .tick-icon {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  overflow: visible;
+}
+
+.wa-msg-row.sent .tick-icon:hover {
+  transform: scale(1.2);
+  opacity: 0.9;
+}
+
+.tick-icon svg {
+  display: block;
+  overflow: visible;
 }
 
 .tick-icon.blue {
@@ -1149,6 +1166,41 @@ body.mode-forced-mobile .wa-bubble {
 
 .tick-icon.grey {
   color: var(--bubble-timestamp);
+}
+
+.wa-tick-state-btn {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wa-tick-state-btn .tick-icon {
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wa-tick-state-btn .tick-icon:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Botón Peligro / Eliminar en Modales */
+.btn-wa-danger-action {
+  background: transparent;
+  border: 1px solid var(--wa-red-hangup);
+  color: var(--wa-red-hangup);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-wa-danger-action:hover {
+  background: var(--wa-red-hangup);
+  color: #ffffff;
 }
 
 /* =========================================================

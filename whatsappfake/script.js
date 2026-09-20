@@ -1,6 +1,6 @@
 /**
  * WhatsApp Fake Simulator - Script Logic
- * Multi-user Groups linked to Real Contacts, Step Builder & Pinning
+ * Multi-user Groups linked to Real Contacts, Step Builder & Interactive Read Status
  * Author: EditFun Suite
  */
 
@@ -15,16 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
     theme: 'dark', // 'dark' | 'light'
     mode: 'auto', // 'auto' | 'forced-mobile'
     mobileView: 'in-chat', // 'in-list' | 'in-chat'
-    sender: 'me', // 'me' | contactId
+    sendTickMode: 'blue', // 'blue' | 'grey' | 'single'
     activeChatId: 'g1',
     editingChatId: null,
     tempGroupMemberIds: [], // IDs de contactos individuales seleccionados
     
-    // Lista de Chats (Contactos Individuales y Grupos)
+    // Lista de Chats (Contactos Individuales y Grupos) - SIN EMOJIS
     chats: [
       {
         id: 'g1',
-        name: 'Los Panas del Gym 🏋️‍♂️',
+        name: 'Los Panas del Gym',
         avatar: '',
         type: 'group',
         isPinned: true,
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'mg1',
             sender: 'c_fede',
             type: 'text',
-            content: 'Buenas chavales, quién va hoy a entrenar?',
+            content: 'Buenas chavales, quien va hoy a entrenar?',
             time: '15:30',
             ticks: 'none'
           },
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'mg2',
             sender: 'c_pedro',
             type: 'text',
-            content: 'Yo voy a las 18:30 con José 💪',
+            content: 'Yo voy a las 18:30 con Jose',
             time: '15:32',
             ticks: 'none'
           },
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'mg3',
             sender: 'me',
             type: 'text',
-            content: 'Me apunto, nos vemos en recepción!',
+            content: 'Me apunto, nos vemos en recepcion!',
             time: '15:34',
             ticks: 'blue'
           }
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             {
               senderContactId: 'c_jose',
               type: 'text',
-              content: 'Llegaré puntual chavales 👊',
+              content: 'Llegare puntual chavales',
               delaySec: 2
             }
           ],
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'mf2',
             sender: 'me',
             type: 'text',
-            content: 'Sí, es 4820!',
+            content: 'Si, es 4820!',
             time: '12:22',
             ticks: 'blue'
           }
@@ -128,22 +128,30 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'mp1',
             sender: 'contact',
             type: 'text',
-            content: 'Qué tal la sesión de hoy?',
+            content: 'Que tal la sesion de hoy?',
             time: '13:00',
             ticks: 'none'
+          },
+          {
+            id: 'mp2',
+            sender: 'me',
+            type: 'text',
+            content: 'Bastante bien, manana repetimos',
+            time: '13:02',
+            ticks: 'blue'
           }
         ],
         autoReply: {
           enabled: true,
           steps: [
-            { senderContactId: 'contact', type: 'text', content: 'Mañana más y mejor 💪', delaySec: 2 }
+            { senderContactId: 'contact', type: 'text', content: 'Manana mas y mejor!', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
       },
       {
         id: 'c_jose',
-        name: 'José',
+        name: 'Jose',
         avatar: '',
         type: 'personal',
         isPinned: false,
@@ -157,19 +165,27 @@ document.addEventListener('DOMContentLoaded', () => {
             content: 'Nos vemos en el gym luego!',
             time: '14:50',
             ticks: 'none'
+          },
+          {
+            id: 'mj2',
+            sender: 'me',
+            type: 'text',
+            content: 'Ahi estaremos',
+            time: '14:52',
+            ticks: 'blue'
           }
         ],
         autoReply: {
           enabled: true,
           steps: [
-            { senderContactId: 'contact', type: 'text', content: 'Allí nos vemos!', delaySec: 2 }
+            { senderContactId: 'contact', type: 'text', content: 'Alli nos vemos!', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
       },
       {
         id: 'c1',
-        name: 'Aanano 💎',
+        name: 'Aanano',
         avatar: '',
         type: 'personal',
         isPinned: true,
@@ -188,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'm2',
             sender: 'me',
             type: 'text',
-            content: 'Sí, dime qué pasó',
+            content: 'Si, dime que paso',
             time: '15:39',
             ticks: 'blue'
           },
@@ -196,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'm3',
             sender: 'contact',
             type: 'text',
-            content: 'Viste lo que subieron al grupo de la uni? 😱',
+            content: 'Viste lo que subieron al grupo de la uni?',
             time: '15:40',
             ticks: 'none'
           },
@@ -204,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'm4',
             sender: 'me',
             type: 'text',
-            content: 'No todavía, pásamelo',
+            content: 'No todavia, pasamelo',
             time: '15:41',
             ticks: 'blue'
           }
@@ -215,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
             {
               senderContactId: 'contact',
               type: 'text',
-              content: 'Es un vídeo épico, te lo acabo de mandar jaja',
+              content: 'Es un video muy bueno, te lo acabo de mandar',
               delaySec: 2
             },
             {
@@ -230,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'c2',
-        name: 'Mamá ❤️',
+        name: 'Mama',
         avatar: '',
         type: 'personal',
         isPinned: false,
@@ -241,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'm21',
             sender: 'contact',
             type: 'text',
-            content: 'Hijo, acuérdate de comprar pan al volver',
+            content: 'Hijo, acuerdate de comprar pan al volver',
             time: '14:10',
             ticks: 'none'
           },
@@ -249,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'm22',
             sender: 'contact',
             type: 'text',
-            content: 'Llámame cuando puedas',
+            content: 'Llamame cuando puedas',
             time: '14:15',
             ticks: 'none'
           }
@@ -279,6 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSend = document.getElementById('btn-send-message');
   const iconSendArrow = document.getElementById('icon-send-arrow');
   const iconSendMic = document.getElementById('icon-send-mic');
+  const btnToggleSendTicks = document.getElementById('btn-toggle-send-ticks');
+  const sendTickPreview = document.getElementById('send-tick-preview');
   
   // Header Activo
   const headerContactName = document.getElementById('header-contact-name');
@@ -287,6 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerAvatarLetter = document.getElementById('header-avatar-letter');
   const btnBackToList = document.getElementById('btn-back-to-list');
   const btnOpenChatInfoModal = document.getElementById('btn-open-chat-info-modal');
+  const noChatScreen = document.getElementById('wa-no-chat-screen');
+  const activeChatWrapper = document.getElementById('wa-active-chat-wrapper');
   
   // Dropdown Menús
   const btnAddMenuTrigger = document.getElementById('btn-add-menu-trigger');
@@ -315,10 +335,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatMenuEditLabel = document.getElementById('chat-menu-edit-label');
   const btnChatTogglePin = document.getElementById('chat-menu-btn-toggle-pin');
   const chatMenuPinLabel = document.getElementById('chat-menu-pin-label');
-  const btnChatToggleSender = document.getElementById('chat-menu-btn-toggle-sender');
-  const chatSenderToggleLabel = document.getElementById('chat-sender-toggle-label');
+  const btnChatMarkAllRead = document.getElementById('chat-menu-btn-mark-all-read');
+  const btnChatMarkAllUnread = document.getElementById('chat-menu-btn-mark-all-unread');
   const btnChatClearMsgs = document.getElementById('chat-menu-btn-clear-msgs');
-  const btnChatResetDemo = document.getElementById('chat-menu-btn-reset-demo');
+  const btnChatDeleteChat = document.getElementById('chat-menu-btn-delete-chat');
+  const chatMenuDeleteLabel = document.getElementById('chat-menu-delete-label');
   
   // Adjuntar
   const btnMenuAttachPhoto = document.getElementById('btn-menu-attach-photo');
@@ -346,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseContactModal = document.getElementById('btn-close-contact-modal');
   const btnCancelContactModal = document.getElementById('btn-cancel-contact-modal');
   const btnSaveContactModal = document.getElementById('btn-save-contact-modal');
+  const btnDeleteContactModal = document.getElementById('btn-delete-contact-modal');
   const modalContactName = document.getElementById('modal-contact-name-input');
   const modalContactStatus = document.getElementById('modal-contact-status-select');
   const modalContactStatusCustom = document.getElementById('modal-contact-status-custom');
@@ -361,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseGroupModal = document.getElementById('btn-close-group-modal');
   const btnCancelGroupModal = document.getElementById('btn-cancel-group-modal');
   const btnSaveGroupModal = document.getElementById('btn-save-group-modal');
+  const btnDeleteGroupModal = document.getElementById('btn-delete-group-modal');
   const groupNameInput = document.getElementById('group-name-input');
   const groupMembersContainer = document.getElementById('group-members-container');
   const groupSelectExistingContact = document.getElementById('group-select-existing-contact');
@@ -505,13 +528,53 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   }
 
+  // ==========================================
+  // TICKS SVG OFICIALES WHATSAPP WEB
+  // ==========================================
+  function getDoubleTickSVG() {
+    return `<svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg>`;
+  }
+
+  function getSingleTickSVG() {
+    return `<svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg>`;
+  }
+
+  function updateSendTickButtonUI() {
+    if (state.sendTickMode === 'blue') {
+      sendTickPreview.className = 'tick-icon blue';
+      sendTickPreview.innerHTML = getDoubleTickSVG();
+      btnToggleSendTicks.title = 'Modo al enviar: 2 ticks azules (Leído). Clic para cambiar';
+    } else if (state.sendTickMode === 'grey') {
+      sendTickPreview.className = 'tick-icon grey';
+      sendTickPreview.innerHTML = getDoubleTickSVG();
+      btnToggleSendTicks.title = 'Modo al enviar: 2 ticks grises (Entregado / Sin leer). Clic para cambiar';
+    } else if (state.sendTickMode === 'single') {
+      sendTickPreview.className = 'tick-icon grey';
+      sendTickPreview.innerHTML = getSingleTickSVG();
+      btnToggleSendTicks.title = 'Modo al enviar: 1 tick gris (Enviado). Clic para cambiar';
+    }
+  }
+
+  btnToggleSendTicks.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (state.sendTickMode === 'blue') {
+      state.sendTickMode = 'grey';
+    } else if (state.sendTickMode === 'grey') {
+      state.sendTickMode = 'single';
+    } else {
+      state.sendTickMode = 'blue';
+    }
+    updateSendTickButtonUI();
+  });
+  updateSendTickButtonUI();
+
   // Helper para buscar contacto individual por ID
   function getContactById(id) {
     return state.chats.find(c => c.id === id && c.type === 'personal') || null;
   }
 
   function getActiveChat() {
-    return state.chats.find(c => c.id === state.activeChatId) || state.chats[0];
+    return state.chats.find(c => c.id === state.activeChatId) || (state.chats.length > 0 ? state.chats[0] : null);
   }
 
   function getSortedChats() {
@@ -534,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!matchesQuery) return false;
       if (currentFilter === 'all') return true;
       if (currentFilter === 'unread') return c.unreadCount > 0;
-      if (currentFilter === 'favorites') return c.isFavorite;
+      if (currentFilter === 'favorites') return c.isPinned;
       if (currentFilter === 'groups') return c.type === 'group';
       return true;
     });
@@ -549,9 +612,9 @@ document.addEventListener('DOMContentLoaded', () => {
       let lastTime = '';
       if (lastMsg) {
         lastTime = lastMsg.time;
-        if (lastMsg.type === 'audio') lastText = '🎤 Audio (' + (lastMsg.duration || '0:14') + ')';
-        else if (lastMsg.type === 'onetime') lastText = '📷 Foto';
-        else if (lastMsg.type === 'image') lastText = '📷 Foto';
+        if (lastMsg.type === 'audio') lastText = 'Audio (' + (lastMsg.duration || '0:14') + ')';
+        else if (lastMsg.type === 'onetime') lastText = 'Foto';
+        else if (lastMsg.type === 'image') lastText = 'Foto';
         else {
           if (chat.type === 'group' && lastMsg.sender !== 'me') {
             const senderContact = getContactById(lastMsg.sender);
@@ -568,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
         avatarMarkup = `<img src="${chat.avatar}" alt="${chat.name}">`;
       } else {
         if (chat.type === 'group') {
-          avatarMarkup = `<span>👥</span>`;
+          avatarMarkup = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
         } else {
           avatarMarkup = `<span>${chat.name.charAt(0).toUpperCase()}</span>`;
         }
@@ -615,19 +678,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const chat = getActiveChat();
     if (chat) {
       chat.unreadCount = 0;
+      noChatScreen.style.display = 'none';
+      activeChatWrapper.style.display = 'flex';
+      renderActiveHeader();
+      renderMessages();
+    } else {
+      noChatScreen.style.display = 'flex';
+      activeChatWrapper.style.display = 'none';
     }
     
     state.mobileView = 'in-chat';
     updateMobileLayoutView();
-
-    renderActiveHeader();
-    renderMessages();
     renderChatList();
   }
 
   function renderActiveHeader() {
     const chat = getActiveChat();
-    if (!chat) return;
+    if (!chat) {
+      noChatScreen.style.display = 'flex';
+      activeChatWrapper.style.display = 'none';
+      return;
+    }
+
+    noChatScreen.style.display = 'none';
+    activeChatWrapper.style.display = 'flex';
 
     headerContactName.textContent = chat.name;
 
@@ -649,12 +723,17 @@ document.addEventListener('DOMContentLoaded', () => {
       headerAvatarLetter.style.display = 'none';
     } else {
       headerAvatarImg.style.display = 'none';
-      headerAvatarLetter.style.display = 'block';
-      headerAvatarLetter.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
+      headerAvatarLetter.style.display = 'flex';
+      if (chat.type === 'group') {
+        headerAvatarLetter.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
+      } else {
+        headerAvatarLetter.textContent = chat.name.charAt(0).toUpperCase();
+      }
     }
 
     chatMenuEditLabel.textContent = chat.type === 'group' ? 'Info / Editar Grupo' : 'Info / Editar Contacto';
     chatMenuPinLabel.textContent = chat.isPinned ? 'Desfijar chat' : 'Fijar chat';
+    chatMenuDeleteLabel.textContent = chat.type === 'group' ? 'Eliminar grupo' : 'Eliminar contacto';
   }
 
   function updateMobileLayoutView() {
@@ -744,15 +823,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Ticks SVG oficiales
+    // Ticks SVG oficiales interactivos (clic para cambiar leído/no leído)
     let tickHtml = '';
     if (msg.sender === 'me') {
       if (msg.ticks === 'blue') {
-        tickHtml = `<span class="tick-icon blue" title="Leído"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon blue" title="Leído (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'grey') {
-        tickHtml = `<span class="tick-icon grey" title="Entregado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 3.316l-7.79 7.79a.75.75 0 0 1-1.06 0l-4.24-4.24a.75.75 0 0 1 1.06-1.06l3.71 3.71 7.26-7.26a.75.75 0 0 1 1.06 1.06zm-3.5 0l-5.69 5.69-1.59-1.59a.75.75 0 0 0-1.06 1.06l2.12 2.12a.75.75 0 0 0 1.06 0l6.22-6.22a.75.75 0 0 0-1.06-1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Entregado (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       } else if (msg.ticks === 'single') {
-        tickHtml = `<span class="tick-icon grey" title="Enviado"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.01 3.316l-6.79 6.79a.75.75 0 0 1-1.06 0l-2.24-2.24a.75.75 0 0 1 1.06-1.06l1.71 1.71 6.26-6.26a.75.75 0 0 1 1.06 1.06z"/></svg></span>`;
+        tickHtml = `<span class="tick-icon grey" title="Enviado (clic para cambiar)"><svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M15.01 1.05a.75.75 0 0 0-1.06 0L5.3 9.76 2.18 6.64a.75.75 0 0 0-1.06 1.06l3.65 3.65a.75.75 0 0 0 1.06 0l9.18-9.18a.75.75 0 0 0 0-1.06z"/></svg></span>`;
       }
     }
 
@@ -764,6 +843,24 @@ document.addEventListener('DOMContentLoaded', () => {
         ${tickHtml}
       </div>
     `;
+
+    // Hacer que el tick sea clickeable para alternar su estado: single -> grey -> blue -> single
+    if (msg.sender === 'me') {
+      const tickEl = bubble.querySelector('.tick-icon');
+      if (tickEl) {
+        tickEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (msg.ticks === 'blue') {
+            msg.ticks = 'grey';
+          } else if (msg.ticks === 'grey') {
+            msg.ticks = 'single';
+          } else {
+            msg.ticks = 'blue';
+          }
+          renderMessages();
+        });
+      }
+    }
 
     if (msg.type === 'audio') {
       setupAudioPlayer(bubble, msg.audioUrl, msg.duration);
@@ -894,30 +991,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!chat) return;
 
     const time = getCurrentTimeString();
-    let senderId = state.sender;
+    const tickState = state.sendTickMode || 'blue';
 
     const newMsg = {
       id: 'm_' + Date.now(),
-      sender: senderId,
+      sender: 'me',
       type: type,
       content: content,
       time: time,
-      ticks: senderId === 'me' ? (chat.autoReply && chat.autoReply.enabled ? 'grey' : 'single') : 'none',
+      ticks: tickState,
       ...customProps
     };
 
     chat.messages.push(newMsg);
     renderMessages();
     renderChatList();
+    playSentPopSound();
 
-    if (senderId === 'me') {
-      playSentPopSound();
-
-      if (chat.autoReply && chat.autoReply.enabled && chat.autoReply.steps && chat.autoReply.steps.length > 0) {
-        triggerStepAutomatedReply(chat);
-      }
-    } else {
-      playReceivedPopSound();
+    if (chat.autoReply && chat.autoReply.enabled && chat.autoReply.steps && chat.autoReply.steps.length > 0) {
+      triggerStepAutomatedReply(chat);
     }
   }
 
@@ -936,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `${senderName} está grabando audio...`
       : `${senderName} está escribiendo...`;
 
-    // 1. A los 400ms: Leer mensajes globales (ticks azules)
+    // 1. A los 400ms: Si los mensajes enviados estaban en gris o single, marcarlos leídos (ticks azules) porque el contacto responderá
     setTimeout(() => {
       chat.messages.forEach(m => {
         if (m.sender === 'me') m.ticks = 'blue';
@@ -1188,36 +1280,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Alternar Emisor (Tú / Contactos)
-  btnChatToggleSender.addEventListener('click', () => {
+  // Marcar todos como leídos (ticks azules)
+  btnChatMarkAllRead.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
-    if (!chat) return;
+    if (chat) {
+      chat.messages.forEach(m => {
+        if (m.sender === 'me') m.ticks = 'blue';
+      });
+      renderMessages();
+    }
+  });
 
-    if (chat.type === 'group' && chat.participantContactIds && chat.participantContactIds.length > 0) {
-      if (state.sender === 'me') {
-        state.sender = chat.participantContactIds[0];
-        const c = getContactById(state.sender);
-        chatSenderToggleLabel.textContent = `Enviar como: ${c ? c.name : 'Contacto'}`;
-      } else {
-        const curIdx = chat.participantContactIds.indexOf(state.sender);
-        if (curIdx !== -1 && curIdx < chat.participantContactIds.length - 1) {
-          state.sender = chat.participantContactIds[curIdx + 1];
-          const c = getContactById(state.sender);
-          chatSenderToggleLabel.textContent = `Enviar como: ${c ? c.name : 'Contacto'}`;
-        } else {
-          state.sender = 'me';
-          chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
-        }
-      }
-    } else {
-      if (state.sender === 'me') {
-        state.sender = 'contact';
-        chatSenderToggleLabel.textContent = 'Enviar como: Contacto (Gris)';
-      } else {
-        state.sender = 'me';
-        chatSenderToggleLabel.textContent = 'Enviar como: Tú (Verde)';
-      }
+  // Marcar todos como no leídos (ticks grises)
+  btnChatMarkAllUnread.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (chat) {
+      chat.messages.forEach(m => {
+        if (m.sender === 'me') m.ticks = 'grey';
+      });
+      renderMessages();
     }
   });
 
@@ -1232,29 +1315,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Restablecer Demo
-  btnChatResetDemo.addEventListener('click', () => {
+  // Eliminar Chat / Contacto / Grupo
+  btnChatDeleteChat.addEventListener('click', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
-    if (chat) {
-      if (chat.type === 'group') {
-        chat.messages = [
-          { id: 'mg1', sender: 'c_fede', type: 'text', content: 'Buenas chavales, quién va hoy a entrenar?', time: '15:30', ticks: 'none' },
-          { id: 'mg2', sender: 'c_pedro', type: 'text', content: 'Yo voy a las 18:30 con José 💪', time: '15:32', ticks: 'none' },
-          { id: 'mg3', sender: 'me', type: 'text', content: 'Me apunto, nos vemos en recepción!', time: '15:34', ticks: 'blue' }
-        ];
-      } else {
-        chat.messages = [
-          { id: 'p1', sender: 'contact', type: 'text', content: 'Hola! Sigues despierto?', time: '15:38', ticks: 'none' },
-          { id: 'p2', sender: 'me', type: 'text', content: 'Sí, dime qué pasó', time: '15:39', ticks: 'blue' },
-          { id: 'p3', sender: 'contact', type: 'text', content: 'Viste lo que subieron al grupo de la uni? 😱', time: '15:40', ticks: 'none' },
-          { id: 'p4', sender: 'me', type: 'text', content: 'No todavía, pásamelo', time: '15:41', ticks: 'blue' }
-        ];
-      }
-      renderMessages();
-      renderChatList();
+    if (!chat) return;
+
+    const label = chat.type === 'group' ? 'este grupo' : `al contacto "${chat.name}"`;
+    if (confirm(`¿Estás seguro de eliminar ${label}? Se borrará por completo.`)) {
+      deleteChatOrContact(chat.id);
     }
   });
+
+  function deleteChatOrContact(idToDelete) {
+    const deletedChat = state.chats.find(c => c.id === idToDelete);
+    if (!deletedChat) return;
+
+    // 1. Quitar de la lista principal
+    state.chats = state.chats.filter(c => c.id !== idToDelete);
+
+    // 2. Si era contacto, quitar de los grupos que lo tuvieran como participante
+    if (deletedChat.type === 'personal') {
+      state.chats.forEach(c => {
+        if (c.type === 'group' && c.participantContactIds) {
+          c.participantContactIds = c.participantContactIds.filter(cid => cid !== idToDelete);
+          if (c.autoReply && c.autoReply.steps) {
+            c.autoReply.steps = c.autoReply.steps.filter(s => s.senderContactId !== idToDelete);
+          }
+        }
+      });
+    }
+
+    // 3. Seleccionar otro chat
+    if (state.chats.length > 0) {
+      selectChat(state.chats[0].id);
+    } else {
+      state.activeChatId = null;
+      renderActiveHeader();
+      renderChatList();
+    }
+  }
 
   // ==========================================
   // ADJUNTAR ARCHIVOS & FOTOS
@@ -1293,6 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
       contactModalTitle.textContent = 'Editar Contacto';
       modalContactName.value = chat.name;
       tempAvatarBase64 = chat.avatar || '';
+      btnDeleteContactModal.style.display = 'inline-block';
 
       if (['en línea', 'escribiendo...', 'grabando audio...', 'últ. vez hoy a las 15:08'].includes(chat.status)) {
         modalContactStatus.value = chat.status;
@@ -1307,6 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       contactModalTitle.textContent = 'Nuevo Contacto';
       modalContactName.value = '';
       tempAvatarBase64 = '';
+      btnDeleteContactModal.style.display = 'none';
       modalContactStatus.value = 'en línea';
       modalContactStatusCustom.style.display = 'none';
       modalContactStatusCustom.value = '';
@@ -1353,6 +1455,13 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
   btnCancelContactModal.addEventListener('click', () => contactModalOverlay.style.display = 'none');
 
+  btnDeleteContactModal.addEventListener('click', () => {
+    if (state.editingChatId && confirm('¿Estás seguro de eliminar este contacto?')) {
+      deleteChatOrContact(state.editingChatId);
+      contactModalOverlay.style.display = 'none';
+    }
+  });
+
   btnSaveContactModal.addEventListener('click', () => {
     const name = modalContactName.value.trim() || 'Contacto';
     let status = modalContactStatus.value;
@@ -1381,7 +1490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoReply: {
           enabled: true,
           steps: [
-            { senderContactId: 'contact', type: 'text', content: 'Hola! Qué tal?', delaySec: 2 }
+            { senderContactId: 'contact', type: 'text', content: 'Hola! Que tal?', delaySec: 2 }
           ],
           currentStepIndex: 0
         }
@@ -1405,12 +1514,14 @@ document.addEventListener('DOMContentLoaded', () => {
       groupModalTitle.textContent = 'Editar Grupo';
       groupNameInput.value = chat.name;
       tempGroupAvatarBase64 = chat.avatar || '';
+      btnDeleteGroupModal.style.display = 'inline-block';
       state.tempGroupMemberIds = [...(chat.participantContactIds || [])];
     } else {
       state.editingChatId = null;
       groupModalTitle.textContent = 'Nuevo Grupo';
       groupNameInput.value = '';
       tempGroupAvatarBase64 = '';
+      btnDeleteGroupModal.style.display = 'none';
       // Seleccionar por defecto hasta 2 contactos existentes si los hay
       const existingContacts = state.chats.filter(c => c.type === 'personal');
       state.tempGroupMemberIds = existingContacts.slice(0, 2).map(c => c.id);
@@ -1438,7 +1549,7 @@ document.addEventListener('DOMContentLoaded', () => {
       availableContacts.forEach(contact => {
         const opt = document.createElement('option');
         opt.value = contact.id;
-        opt.textContent = `👤 ${contact.name}`;
+        opt.textContent = contact.name;
         groupSelectExistingContact.appendChild(opt);
       });
     }
@@ -1485,8 +1596,8 @@ document.addEventListener('DOMContentLoaded', () => {
       groupAvatarPreviewLetter.style.display = 'none';
     } else {
       groupAvatarPreviewImg.style.display = 'none';
-      groupAvatarPreviewLetter.style.display = 'block';
-      groupAvatarPreviewLetter.textContent = '👥';
+      groupAvatarPreviewLetter.style.display = 'flex';
+      groupAvatarPreviewLetter.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
     }
   }
 
@@ -1509,6 +1620,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCloseGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
   btnCancelGroupModal.addEventListener('click', () => groupModalOverlay.style.display = 'none');
+
+  btnDeleteGroupModal.addEventListener('click', () => {
+    if (state.editingChatId && confirm('¿Estás seguro de eliminar este grupo?')) {
+      deleteChatOrContact(state.editingChatId);
+      groupModalOverlay.style.display = 'none';
+    }
+  });
 
   btnSaveGroupModal.addEventListener('click', () => {
     const name = groupNameInput.value.trim() || 'Nuevo Grupo';
@@ -1631,14 +1749,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (contact) {
           const opt = document.createElement('option');
           opt.value = contact.id;
-          opt.textContent = `👤 ${contact.name}`;
+          opt.textContent = contact.name;
           stepSenderSelect.appendChild(opt);
         }
       });
     } else {
       const opt = document.createElement('option');
       opt.value = 'contact';
-      opt.textContent = `👤 ${chat.name}`;
+      opt.textContent = chat.name;
       stepSenderSelect.appendChild(opt);
     }
   }
@@ -1691,8 +1809,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let detailText = '';
       if (step.type === 'text') detailText = `Texto: "${step.content}"`;
-      else if (step.type === 'image') detailText = `📷 Imagen / Foto`;
-      else if (step.type === 'audio') detailText = `🎙️ Nota de voz (${step.duration || '0:12'})`;
+      else if (step.type === 'image') detailText = `Imagen / Foto`;
+      else if (step.type === 'audio') detailText = `Nota de voz (${step.duration || '0:12'})`;
 
       item.innerHTML = `
         <div class="auto-step-meta">
@@ -1791,8 +1909,12 @@ document.addEventListener('DOMContentLoaded', () => {
       letterEl.style.display = 'none';
     } else {
       imgEl.style.display = 'none';
-      letterEl.style.display = 'block';
-      letterEl.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
+      letterEl.style.display = 'flex';
+      if (chat.type === 'group') {
+        letterEl.innerHTML = `<svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
+      } else {
+        letterEl.textContent = chat.name.charAt(0).toUpperCase();
+      }
     }
 
     voiceOverlay.style.display = 'flex';
@@ -1829,8 +1951,12 @@ document.addEventListener('DOMContentLoaded', () => {
       letterEl.style.display = 'none';
     } else {
       imgEl.style.display = 'none';
-      letterEl.style.display = 'block';
-      letterEl.textContent = chat.type === 'group' ? '👥' : chat.name.charAt(0).toUpperCase();
+      letterEl.style.display = 'flex';
+      if (chat.type === 'group') {
+        letterEl.innerHTML = `<svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
+      } else {
+        letterEl.textContent = chat.name.charAt(0).toUpperCase();
+      }
     }
 
     videoOverlay.style.display = 'flex';
@@ -1873,14 +1999,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentFilter = pill.dataset.filter;
       renderChatList();
     });
-  });
-
-  // Atajo de Teclado Alt+S
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey && (e.key === 's' || e.key === 'S')) {
-      e.preventDefault();
-      btnChatToggleSender.click();
-    }
   });
 
   // ==========================================
