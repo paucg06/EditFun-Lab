@@ -1177,53 +1177,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // MODAL INSERTAR SEPARADOR / AVISO
-  // ==========================================
-  btnChatAddSeparator.addEventListener('click', () => {
-    closeAllDropdowns();
-    separatorModalOverlay.style.display = 'flex';
-  });
-
-  btnCloseSeparatorModal.addEventListener('click', () => separatorModalOverlay.style.display = 'none');
-  btnCancelSeparatorModal.addEventListener('click', () => separatorModalOverlay.style.display = 'none');
-
-  separatorTypeSelect.addEventListener('change', () => {
-    if (separatorTypeSelect.value === 'date') {
-      separatorTextGroup.style.display = 'block';
-      separatorTextInput.value = 'AYER';
-      separatorTextInput.placeholder = 'Ej. AYER, HOY, 10 DE SEPTIEMBRE';
-    } else {
-      separatorTextGroup.style.display = 'block';
-      separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
-      separatorTextInput.placeholder = 'Texto del aviso de sistema / cifrado';
-    }
-  });
-
-  btnConfirmAddSeparator.addEventListener('click', () => {
-    const chat = getActiveChat();
-    if (!chat) return;
-
-    const type = separatorTypeSelect.value === 'date' ? 'date_divider' : 'encryption_notice';
-    const content = separatorTextInput.value.trim() || (type === 'date_divider' ? 'HOY' : 'Aviso');
-    const position = separatorPositionSelect.value;
-
-    const newItem = {
-      id: 'sep_' + Date.now(),
-      type: type,
-      content: content
-    };
-
-    if (position === 'start') {
-      chat.messages.unshift(newItem);
-    } else {
-      chat.messages.push(newItem);
-    }
-
-    separatorModalOverlay.style.display = 'none';
-    renderMessages();
-  });
-
-  // ==========================================
   // REPRODUCTOR DE NOTA DE VOZ
   // ==========================================
   function setupAudioPlayer(bubble, audioUrl, durationText) {
