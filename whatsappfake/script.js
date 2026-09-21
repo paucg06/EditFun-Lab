@@ -427,11 +427,181 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getSortedChats() {
-    return [...state.chats].sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return 0;
+    const pinned = state.chats.filter(c => c.isPinned);
+    const nonPinned = state.chats.filter(c => !c.isPinned);
+    return [...pinned, ...nonPinned];
+  }
+
+  let draggedChatId = null;
+  let touchDragItem = null;
+  let touchDragTimer = null;
+  let touchStartY = 0;
+  let touchCurrentTarget = null;
+
+  function setupChatDragAndDrop(item, chat) {
+    if (chat.isPinned) {
+      item.setAttribute('draggable', 'false');
+      return;
+    }
+
+    item.setAttribute('draggable', 'true');
+
+    // Desktop Drag & Drop
+    item.addEventListener('dragstart', (e) => {
+      draggedChatId = chat.id;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', chat.id);
     });
+
+    item.addEventListener('dragend', () => {
+      draggedChatId = null;
+      item.classList.remove('dragging');
+      document.querySelectorAll('.wa-chat-item').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    });
+
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!draggedChatId || draggedChatId === chat.id || chat.isPinned) return;
+      e.dataTransfer.dropEffect = 'move';
+
+      const rect = item.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        item.classList.add('drag-over-top');
+        item.classList.remove('drag-over-bottom');
+      } else {
+        item.classList.add('drag-over-bottom');
+        item.classList.remove('drag-over-top');
+      }
+    });
+
+    item.addEventListener('dragleave', () => {
+      item.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      item.classList.remove('drag-over-top', 'drag-over-bottom');
+      if (!draggedChatId || draggedChatId === chat.id) return;
+
+      const rect = item.getBoundingClientRect();
+      const isBefore = e.clientY < (rect.top + rect.height / 2);
+      reorderChats(draggedChatId, chat.id, isBefore);
+    });
+
+    // Mobile Touch Long-Press Drag
+    item.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      touchStartY = touch.clientY;
+      draggedChatId = null;
+
+      touchDragTimer = setTimeout(() => {
+        draggedChatId = chat.id;
+        touchDragItem = item;
+        item.classList.add('dragging-touch');
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 300);
+    }, { passive: true });
+
+    item.addEventListener('touchmove', (e) => {
+      if (!draggedChatId) {
+        if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
+          clearTimeout(touchDragTimer);
+        }
+        return;
+      }
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      const chatItemTarget = targetEl ? targetEl.closest('.wa-chat-item') : null;
+
+      document.querySelectorAll('.wa-chat-item').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+
+      if (chatItemTarget && chatItemTarget !== item && chatItemTarget.dataset.id) {
+        const targetChat = state.chats.find(c => c.id === chatItemTarget.dataset.id);
+        if (targetChat && !targetChat.isPinned) {
+          touchCurrentTarget = chatItemTarget;
+          const rect = chatItemTarget.getBoundingClientRect();
+          if (touch.clientY < rect.top + rect.height / 2) {
+            chatItemTarget.classList.add('drag-over-top');
+          } else {
+            chatItemTarget.classList.add('drag-over-bottom');
+          }
+        }
+      }
+    }, { passive: false });
+
+    item.addEventListener('touchend', (e) => {
+      clearTimeout(touchDragTimer);
+      if (draggedChatId && touchCurrentTarget) {
+        const targetId = touchCurrentTarget.dataset.id;
+        const rect = touchCurrentTarget.getBoundingClientRect();
+        const touch = e.changedTouches[0];
+        const isBefore = touch.clientY < (rect.top + rect.height / 2);
+        reorderChats(draggedChatId, targetId, isBefore);
+      }
+      item.classList.remove('dragging-touch');
+      document.querySelectorAll('.wa-chat-item').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      draggedChatId = null;
+      touchDragItem = null;
+      touchCurrentTarget = null;
+    });
+
+    item.addEventListener('touchcancel', () => {
+      clearTimeout(touchDragTimer);
+      item.classList.remove('dragging-touch');
+      document.querySelectorAll('.wa-chat-item').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      draggedChatId = null;
+      touchDragItem = null;
+      touchCurrentTarget = null;
+    });
+  }
+
+  function reorderChats(sourceId, targetId, isBefore) {
+    const srcIdx = state.chats.findIndex(c => c.id === sourceId);
+    const tgtIdx = state.chats.findIndex(c => c.id === targetId);
+    if (srcIdx === -1 || tgtIdx === -1) return;
+
+    const [srcChat] = state.chats.splice(srcIdx, 1);
+    let newTgtIdx = state.chats.findIndex(c => c.id === targetId);
+    let insertIdx = isBefore ? newTgtIdx : newTgtIdx + 1;
+
+    // Never place before pinned items
+    const firstNonPinnedIndex = state.chats.findIndex(c => !c.isPinned);
+    if (firstNonPinnedIndex !== -1 && insertIdx < firstNonPinnedIndex) {
+      insertIdx = firstNonPinnedIndex;
+    }
+
+    state.chats.splice(insertIdx, 0, srcChat);
+    saveState();
+    renderChatList();
+  }
+
+  function bringChatToTop(chatId) {
+    const chatIndex = state.chats.findIndex(c => c.id === chatId);
+    if (chatIndex === -1) return;
+    const [chat] = state.chats.splice(chatIndex, 1);
+    if (chat.isPinned) {
+      state.chats.unshift(chat);
+    } else {
+      const firstNonPinnedIndex = state.chats.findIndex(c => !c.isPinned);
+      if (firstNonPinnedIndex === -1) {
+        state.chats.push(chat);
+      } else {
+        state.chats.splice(firstNonPinnedIndex, 0, chat);
+      }
+    }
   }
 
   function renderChatList() {
@@ -538,6 +708,8 @@ document.addEventListener('DOMContentLoaded', () => {
       item.addEventListener('click', () => {
         selectChat(chat.id);
       });
+
+      setupChatDragAndDrop(item, chat);
 
       chatListContainer.appendChild(item);
     });
@@ -1196,6 +1368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     chat.messages.push(newMsg);
+    bringChatToTop(chat.id);
     saveState();
     renderMessages();
     renderChatList();
@@ -1256,6 +1429,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       chat.messages.push(replyMsg);
+      bringChatToTop(chat.id);
       saveState();
       renderMessages();
       renderChatList();
@@ -2409,6 +2583,37 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
+  // MOBILE KEYBOARD & VISUAL VIEWPORT RESIZING
+  // ==========================================
+  function updateViewportHeight() {
+    if (window.visualViewport) {
+      document.documentElement.style.setProperty('--visual-viewport-height', `${window.visualViewport.height}px`);
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      updateViewportHeight();
+      if (document.activeElement === textInput) {
+        setTimeout(() => {
+          messagesArea.scrollTop = messagesArea.scrollHeight;
+          textInput.scrollIntoView({ block: 'nearest' });
+        }, 80);
+      }
+    });
+    window.visualViewport.addEventListener('scroll', updateViewportHeight);
+  }
+  updateViewportHeight();
+
+  textInput.addEventListener('focus', () => {
+    setTimeout(() => {
+      updateViewportHeight();
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+      textInput.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, 250);
+  });
+
+  // ==========================================
   // INICIALIZACIÓN
   // ==========================================
   loadState();
@@ -2417,3 +2622,4 @@ document.addEventListener('DOMContentLoaded', () => {
   selectChat(state.activeChatId);
 
 });
+
