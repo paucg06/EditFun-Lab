@@ -1594,6 +1594,141 @@ body.mode-forced-mobile .wa-bubble {
   transform: scale(1.06);
 }
 
+/* Barra de Grabación de Audio en Vivo (WhatsApp Simulator) */
+.wa-recording-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  gap: 12px;
+  height: 58px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--bg-input-bar);
+  animation: fadeInRec 0.18s ease-out;
+}
+
+@keyframes fadeInRec {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wa-rec-btn-trash {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.wa-rec-btn-trash:hover {
+  color: #ea0038;
+  background-color: rgba(234, 0, 56, 0.12);
+  transform: scale(1.08);
+}
+
+.wa-recording-timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 65px;
+  flex-shrink: 0;
+}
+
+.recording-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ea0038;
+  display: inline-block;
+  animation: recDotPulse 1.2s infinite ease-in-out;
+}
+
+.recording-pulse-dot.paused {
+  animation: none;
+  opacity: 0.6;
+}
+
+@keyframes recDotPulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.5; }
+}
+
+.wa-recording-waves {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  max-width: 220px;
+  height: 24px;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.wa-recording-waves .wave-bar {
+  width: 3px;
+  min-height: 4px;
+  border-radius: 3px;
+  background-color: var(--text-secondary);
+  animation: recWaveMotion 1s ease-in-out infinite alternate;
+}
+
+.wa-recording-waves.paused .wave-bar {
+  animation-play-state: paused;
+}
+
+.wa-recording-waves .wave-bar:nth-child(1) { height: 6px; animation-delay: 0.05s; }
+.wa-recording-waves .wave-bar:nth-child(2) { height: 12px; animation-delay: 0.15s; }
+.wa-recording-waves .wave-bar:nth-child(3) { height: 18px; animation-delay: 0.25s; }
+.wa-recording-waves .wave-bar:nth-child(4) { height: 10px; animation-delay: 0.35s; }
+.wa-recording-waves .wave-bar:nth-child(5) { height: 22px; animation-delay: 0.45s; }
+.wa-recording-waves .wave-bar:nth-child(6) { height: 14px; animation-delay: 0.1s; }
+.wa-recording-waves .wave-bar:nth-child(7) { height: 8px; animation-delay: 0.2s; }
+.wa-recording-waves .wave-bar:nth-child(8) { height: 20px; animation-delay: 0.3s; }
+.wa-recording-waves .wave-bar:nth-child(9) { height: 16px; animation-delay: 0.4s; }
+.wa-recording-waves .wave-bar:nth-child(10) { height: 11px; animation-delay: 0.5s; }
+.wa-recording-waves .wave-bar:nth-child(11) { height: 19px; animation-delay: 0.12s; }
+.wa-recording-waves .wave-bar:nth-child(12) { height: 7px; animation-delay: 0.22s; }
+.wa-recording-waves .wave-bar:nth-child(13) { height: 15px; animation-delay: 0.32s; }
+.wa-recording-waves .wave-bar:nth-child(14) { height: 10px; animation-delay: 0.42s; }
+.wa-recording-waves .wave-bar:nth-child(15) { height: 6px; animation-delay: 0.52s; }
+
+@keyframes recWaveMotion {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1.3); }
+}
+
+.wa-rec-btn-pause {
+  background: transparent;
+  border: none;
+  color: #ea0038;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.wa-rec-btn-pause:hover {
+  background-color: rgba(234, 0, 56, 0.1);
+  transform: scale(1.08);
+}
+
 /* =========================================================
    MENÚS DESPLEGABLES NATIVOS WHATSAPP (DROPDOWNS)
    ========================================================= */
@@ -1835,6 +1970,9 @@ body.mode-forced-mobile .wa-bubble {
 .wa-form-input,
 .wa-form-select,
 .wa-form-textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--bg-search);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -1844,6 +1982,12 @@ body.mode-forced-mobile .wa-bubble {
   font-size: 14.5px;
   outline: none;
   transition: border-color 0.15s ease;
+}
+
+.wa-form-textarea {
+  min-height: 64px;
+  resize: vertical;
+  display: block;
 }
 
 .wa-form-select {
@@ -1871,6 +2015,25 @@ body.theme-light .wa-form-select {
 .wa-form-select:focus,
 .wa-form-textarea:focus {
   border-color: var(--wa-green-deep);
+}
+
+.wa-info-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.wa-info-icon-btn:hover {
+  color: var(--wa-green-deep);
+  background: rgba(0, 168, 132, 0.15);
 }
 
 .wa-info-notice {
@@ -2041,12 +2204,24 @@ input:checked + .ios-slider:before {
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 13px;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .auto-step-meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.auto-step-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .step-sender-name {
@@ -2056,18 +2231,32 @@ input:checked + .ios-slider:before {
 .step-detail-text {
   color: var(--text-secondary);
   font-size: 12px;
+  word-break: break-word;
 }
 
+.step-edit-btn,
 .step-remove-btn {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.step-edit-btn:hover {
+  color: var(--wa-green-deep);
+  background: rgba(0, 168, 132, 0.15);
 }
 
 .step-remove-btn:hover {
   color: var(--wa-red-hangup);
+  background: rgba(234, 0, 56, 0.15);
 }
 
 .add-step-builder-card {
@@ -2078,6 +2267,8 @@ input:checked + .ios-slider:before {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .step-builder-title {
@@ -2089,6 +2280,15 @@ input:checked + .ios-slider:before {
 .step-builder-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.step-builder-row > .wa-form-group {
+  flex: 1 1 180px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* =========================================================

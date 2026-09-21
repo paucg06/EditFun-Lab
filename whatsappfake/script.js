@@ -147,18 +147,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMenuAttachAudio = document.getElementById('btn-menu-attach-audio');
   const btnMenuAttachOneTime = document.getElementById('btn-menu-attach-onetime');
   const fileAttachInput = document.getElementById('chat-attach-file-input');
-  const fileAudioInput = document.getElementById('chat-audio-file-input');
   const btnInputCamera = document.getElementById('btn-input-camera');
   const btnSidebarCamera = document.getElementById('btn-sidebar-camera');
   const btnMobileFab = document.getElementById('btn-mobile-fab');
 
-  // Modal Audio
+  // Barra de Escritura y Grabación en Vivo
+  const waInputRow = document.querySelector('.wa-input-row');
+  const waRecordingBar = document.getElementById('wa-recording-bar');
+  const btnRecordingTrash = document.getElementById('btn-recording-trash');
+  const recordingTimerText = document.getElementById('recording-timer-text');
+  const recordingPulseDot = document.getElementById('recording-pulse-dot');
+  const recordingWaves = document.getElementById('recording-waves');
+  const btnRecordingPause = document.getElementById('btn-recording-pause');
+  const iconRecPause = document.getElementById('icon-rec-pause');
+  const iconRecPlay = document.getElementById('icon-rec-play');
+  const btnRecordingSend = document.getElementById('btn-recording-send');
+
+  let recordingInterval = null;
+  let recordingSeconds = 0;
+  let isRecordingPaused = false;
+  let isRecordingActive = false;
+  let micHoldTimer = null;
+  let isMicHeld = false;
+
+  // Modal Audio Personalizado
   const audioModalOverlay = document.getElementById('audio-modal-overlay');
   const btnCloseAudioModal = document.getElementById('btn-close-audio-modal');
   const btnCancelAudioModal = document.getElementById('btn-cancel-audio-modal');
-  const btnConfirmAudioSend = document.getElementById('btn-confirm-audio-send');
+  const btnSaveAudioModal = document.getElementById('btn-save-audio-modal');
+  const fileAudioInput = document.getElementById('audio-file-input');
   const audioUploadBtnText = document.getElementById('audio-upload-btn-text');
-  const audioSimSeconds = document.getElementById('audio-sim-seconds');
+  const audioDurationInput = document.getElementById('audio-duration-input');
   let tempAudioUrl = '';
   let tempAudioDuration = '0:14';
 
@@ -166,11 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const separatorModalOverlay = document.getElementById('separator-modal-overlay');
   const btnCloseSeparatorModal = document.getElementById('btn-close-separator-modal');
   const btnCancelSeparatorModal = document.getElementById('btn-cancel-separator-modal');
-  const btnConfirmAddSeparator = document.getElementById('btn-confirm-add-separator');
+  const btnSaveSeparatorModal = document.getElementById('btn-save-separator-modal');
   const separatorTypeSelect = document.getElementById('separator-type-select');
   const separatorTextInput = document.getElementById('separator-text-input');
-  const separatorTextGroup = document.getElementById('separator-text-group');
-  const separatorPositionSelect = document.getElementById('separator-position-select');
 
   // Modal Contacto
   const contactModalOverlay = document.getElementById('contact-modal-overlay');
@@ -212,7 +229,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelAutoModal = document.getElementById('btn-cancel-automation-modal');
   const btnSaveAutoModal = document.getElementById('btn-save-automation-modal');
   const autoReplyCheckbox = document.getElementById('auto-reply-checkbox');
+  const btnToggleAutoInfo = document.getElementById('btn-toggle-auto-info');
+  const autoInfoNotice = document.getElementById('auto-info-notice');
   const autoStepsContainer = document.getElementById('auto-steps-container');
+  const stepBuilderTitle = document.getElementById('step-builder-title');
+  const btnCancelStepEdit = document.getElementById('btn-cancel-step-edit');
   const stepSenderSelect = document.getElementById('step-sender-select');
   const stepTypeSelect = document.getElementById('step-type-select');
   const stepInputTextWrap = document.getElementById('step-input-text-wrap');
@@ -229,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let tempStepImageBase64 = '';
   let tempStepAudioUrl = '';
   let tempWorkingSteps = [];
+  let editingStepIndex = null;
 
   // Llamadas
   const btnVoiceCall = document.getElementById('btn-trigger-voicecall');
@@ -1438,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // INPUT TEXTAREA & MORPHING MIC/SEND BUTTON
+  // INPUT TEXTAREA & MORPHING MIC/SEND BUTTON & LIVE AUDIO RECORDING
   // ==========================================
   textInput.addEventListener('input', () => {
     const val = textInput.value.trim();
@@ -1449,10 +1471,81 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       iconSendMic.style.display = 'block';
       iconSendArrow.style.display = 'none';
-      btnSend.title = 'Grabar nota de voz';
+      btnSend.title = 'Mantén pulsado para grabar audio o haz clic para subir archivo';
     }
   });
 
+  // SIMULACIÓN DE GRABACIÓN DE AUDIO EN VIVO REALISTA
+  function startLiveRecording() {
+    isRecordingActive = true;
+    isRecordingPaused = false;
+    recordingSeconds = 0;
+    recordingTimerText.textContent = '0:00';
+    recordingPulseDot.classList.remove('paused');
+    recordingWaves.classList.remove('paused');
+    iconRecPause.style.display = 'block';
+    iconRecPlay.style.display = 'none';
+
+    if (navigator.vibrate) navigator.vibrate(40);
+
+    waInputRow.style.display = 'none';
+    waRecordingBar.style.display = 'flex';
+
+    if (recordingInterval) clearInterval(recordingInterval);
+    recordingInterval = setInterval(() => {
+      if (!isRecordingPaused) {
+        recordingSeconds++;
+        const mins = Math.floor(recordingSeconds / 60);
+        const secs = recordingSeconds % 60;
+        recordingTimerText.textContent = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+      }
+    }, 1000);
+  }
+
+  function stopLiveRecording(send = false) {
+    if (recordingInterval) clearInterval(recordingInterval);
+    recordingInterval = null;
+
+    if (send && isRecordingActive) {
+      const durSecs = Math.max(1, recordingSeconds);
+      const mins = Math.floor(durSecs / 60);
+      const secs = durSecs % 60;
+      const formattedDuration = `${mins}:${secs < 10 ? '0' + secs : secs}`;
+
+      sendMessage('', 'audio', {
+        duration: formattedDuration,
+        audioUrl: ''
+      });
+    }
+
+    isRecordingActive = false;
+    isRecordingPaused = false;
+    waRecordingBar.style.display = 'none';
+    waInputRow.style.display = 'flex';
+  }
+
+  function togglePauseRecording() {
+    isRecordingPaused = !isRecordingPaused;
+    if (isRecordingPaused) {
+      recordingPulseDot.classList.add('paused');
+      recordingWaves.classList.add('paused');
+      iconRecPause.style.display = 'none';
+      iconRecPlay.style.display = 'block';
+    } else {
+      recordingPulseDot.classList.remove('paused');
+      recordingWaves.classList.remove('paused');
+      iconRecPause.style.display = 'block';
+      iconRecPlay.style.display = 'none';
+    }
+  }
+
+  btnRecordingTrash.addEventListener('click', () => stopLiveRecording(false));
+  btnRecordingPause.addEventListener('click', togglePauseRecording);
+  btnRecordingSend.addEventListener('click', () => stopLiveRecording(true));
+
+  // Botón Micrófono / Enviar:
+  // Clic corto -> Abre modal de subir/editar audio
+  // Mantener pulsado -> Graba audio en vivo con contador y ondas de audio
   btnSend.addEventListener('click', () => {
     const text = textInput.value.trim();
     if (text.length > 0) {
@@ -1461,10 +1554,45 @@ document.addEventListener('DOMContentLoaded', () => {
       textInput.style.height = 'auto';
       iconSendMic.style.display = 'block';
       iconSendArrow.style.display = 'none';
-    } else {
+    } else if (!isRecordingActive && !isMicHeld) {
       openAudioModal();
     }
   });
+
+  btnSend.addEventListener('mousedown', () => {
+    if (textInput.value.trim().length === 0) {
+      isMicHeld = false;
+      micHoldTimer = setTimeout(() => {
+        isMicHeld = true;
+        micHoldTimer = null;
+        startLiveRecording();
+      }, 260);
+    }
+  });
+
+  btnSend.addEventListener('touchstart', () => {
+    if (textInput.value.trim().length === 0) {
+      isMicHeld = false;
+      micHoldTimer = setTimeout(() => {
+        isMicHeld = true;
+        micHoldTimer = null;
+        startLiveRecording();
+      }, 260);
+    }
+  }, { passive: true });
+
+  const cancelMicHold = () => {
+    if (micHoldTimer) {
+      clearTimeout(micHoldTimer);
+      micHoldTimer = null;
+    }
+    setTimeout(() => { isMicHeld = false; }, 100);
+  };
+
+  btnSend.addEventListener('mouseup', cancelMicHold);
+  btnSend.addEventListener('mouseleave', cancelMicHold);
+  btnSend.addEventListener('touchend', cancelMicHold);
+  btnSend.addEventListener('touchcancel', cancelMicHold);
 
   textInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1480,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tempAudioUrl = '';
     tempAudioDuration = '0:14';
     audioUploadBtnText.textContent = 'Seleccionar archivo de audio';
-    audioSimSeconds.value = '14';
+    audioDurationInput.value = '14';
     audioModalOverlay.style.display = 'flex';
   }
 
@@ -1499,21 +1627,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
         tempAudioDuration = `${m}:${s < 10 ? '0' + s : s}`;
-        audioSimSeconds.value = sec;
+        audioDurationInput.value = sec;
       });
     }
   });
 
-  btnConfirmAudioSend.addEventListener('click', () => {
+  btnSaveAudioModal.addEventListener('click', () => {
     let dur = tempAudioDuration;
     if (!tempAudioUrl) {
-      const sec = parseInt(audioSimSeconds.value) || 14;
+      const sec = parseInt(audioDurationInput.value) || 14;
       const m = Math.floor(sec / 60);
       const s = sec % 60;
       dur = `${m}:${s < 10 ? '0' + s : s}`;
     }
 
-    sendMessage('audio_note', 'audio', {
+    sendMessage('', 'audio', {
       audioUrl: tempAudioUrl,
       duration: dur
     });
@@ -1787,15 +1915,16 @@ document.addEventListener('DOMContentLoaded', () => {
     closeAllDropdowns();
     const chat = getActiveChat();
     if (!chat) return;
-    separatorTypeSelect.value = 'encryption';
-    separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
-    separatorPositionSelect.value = 'end';
+    separatorTypeSelect.value = 'date';
+    separatorTextInput.value = 'HOY';
     separatorModalOverlay.style.display = 'flex';
   });
 
   separatorTypeSelect.addEventListener('change', () => {
     if (separatorTypeSelect.value === 'encryption') {
       separatorTextInput.value = 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos.';
+    } else if (separatorTypeSelect.value === 'custom') {
+      separatorTextInput.value = 'Cambiaste el código de seguridad de este contacto.';
     } else {
       separatorTextInput.value = 'HOY';
     }
@@ -1809,13 +1938,12 @@ document.addEventListener('DOMContentLoaded', () => {
     separatorModalOverlay.style.display = 'none';
   });
 
-  btnConfirmAddSeparator.addEventListener('click', () => {
+  btnSaveSeparatorModal.addEventListener('click', () => {
     const chat = getActiveChat();
     if (!chat) return;
 
     const type = separatorTypeSelect.value;
     const text = separatorTextInput.value.trim();
-    const position = separatorPositionSelect.value;
 
     const sepItem = {
       id: (type === 'encryption' ? 'enc-' : 'sep-') + Date.now(),
@@ -1823,12 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
       content: text || (type === 'encryption' ? 'Los mensajes y las llamadas están cifrados de extremo a extremo.' : 'HOY')
     };
 
-    if (position === 'start') {
-      chat.messages.unshift(sepItem);
-    } else {
-      chat.messages.push(sepItem);
-    }
-
+    chat.messages.push(sepItem);
     saveState();
     separatorModalOverlay.style.display = 'none';
     renderMessages();
@@ -2291,22 +2414,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // MODAL RESPUESTAS AUTOMÁTICAS & STEP BUILDER
   // ==========================================
-  btnChatAutoReply.addEventListener('click', () => {
-    closeAllDropdowns();
-    const chat = getActiveChat();
-    if (!chat) return;
+  btnToggleAutoInfo.addEventListener('click', () => {
+    const isHidden = autoInfoNotice.style.display === 'none';
+    autoInfoNotice.style.display = isHidden ? 'block' : 'none';
+  });
 
-    if (!chat.autoReply) {
-      chat.autoReply = { enabled: true, steps: [], currentStepIndex: 0 };
-    }
-
-    autoReplyCheckbox.checked = chat.autoReply.enabled;
-    tempWorkingSteps = JSON.parse(JSON.stringify(chat.autoReply.steps || []));
-
-    populateStepSenderOptions(chat);
-    renderAutoStepsList();
-
-    // Reset Formulario
+  function resetStepBuilder() {
+    editingStepIndex = null;
+    stepBuilderTitle.textContent = '+ Añadir Paso al Guion';
+    btnAddStepToList.textContent = 'Añadir al Guion';
+    btnCancelStepEdit.style.display = 'none';
     stepTypeSelect.value = 'text';
     stepInputTextWrap.style.display = 'block';
     stepInputImageWrap.style.display = 'none';
@@ -2317,8 +2434,38 @@ document.addEventListener('DOMContentLoaded', () => {
     stepImageBtnText.textContent = 'Subir imagen';
     stepAudioBtnText.textContent = 'Subir .mp3/.wav';
     stepDelayInput.value = '2';
+  }
+
+  btnCancelStepEdit.addEventListener('click', resetStepBuilder);
+
+  btnChatAutoReply.addEventListener('click', () => {
+    closeAllDropdowns();
+    const chat = getActiveChat();
+    if (!chat) return;
+
+    if (!chat.autoReply) {
+      chat.autoReply = { enabled: true, steps: [], currentStepIndex: 0 };
+    }
+
+    autoReplyCheckbox.checked = chat.autoReply.enabled;
+    autoInfoNotice.style.display = 'none';
+    tempWorkingSteps = JSON.parse(JSON.stringify(chat.autoReply.steps || []));
+
+    populateStepSenderOptions(chat);
+    renderAutoStepsList();
+    resetStepBuilder();
 
     autoModalOverlay.style.display = 'flex';
+  });
+
+  autoReplyCheckbox.addEventListener('change', () => {
+    const chat = getActiveChat();
+    if (chat) {
+      if (!chat.autoReply) chat.autoReply = { currentStepIndex: 0 };
+      chat.autoReply.enabled = autoReplyCheckbox.checked;
+      chat.autoReply.steps = tempWorkingSteps;
+      saveState();
+    }
   });
 
   function populateStepSenderOptions(chat) {
@@ -2336,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       const opt = document.createElement('option');
       opt.value = 'contact';
-      opt.textContent = chat.name;
+      opt.textContent = chat.name || 'Contacto';
       stepSenderSelect.appendChild(opt);
     }
   }
@@ -2397,11 +2544,52 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="step-sender-name" style="color: var(--wa-green-deep);">${idx + 1}. [${escapeHTML(senderName)}]</span>
           <span class="step-detail-text">${escapeHTML(detailText)} (${step.delaySec || 2}s de espera)</span>
         </div>
-        <button type="button" class="step-remove-btn" data-idx="${idx}">&times;</button>
+        <div class="auto-step-actions">
+          <button type="button" class="step-edit-btn" data-idx="${idx}" title="Editar mensaje">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button type="button" class="step-remove-btn" data-idx="${idx}" title="Eliminar paso">&times;</button>
+        </div>
       `;
+
+      item.querySelector('.step-edit-btn').addEventListener('click', () => {
+        editingStepIndex = idx;
+        stepSenderSelect.value = step.senderContactId || 'contact';
+        stepTypeSelect.value = step.type || 'text';
+        stepTypeSelect.dispatchEvent(new Event('change'));
+
+        if (step.type === 'text') {
+          stepTextInput.value = step.content || '';
+        } else if (step.type === 'image') {
+          tempStepImageBase64 = step.content || '';
+          stepImageBtnText.textContent = step.content ? 'Foto cargada' : 'Subir imagen';
+        } else if (step.type === 'audio') {
+          tempStepAudioUrl = step.audioUrl || '';
+          stepAudioBtnText.textContent = step.audioUrl ? 'Audio cargado' : 'Subir .mp3/.wav';
+          if (step.duration) {
+            const parts = step.duration.split(':');
+            if (parts.length === 2) {
+              stepAudioDurationInput.value = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            }
+          }
+        }
+
+        stepDelayInput.value = step.delaySec || 2;
+        stepBuilderTitle.textContent = `✏️ Editando Paso #${idx + 1}`;
+        btnAddStepToList.textContent = 'Actualizar Paso';
+        btnCancelStepEdit.style.display = 'inline-block';
+        document.getElementById('step-builder-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
 
       item.querySelector('.step-remove-btn').addEventListener('click', () => {
         tempWorkingSteps.splice(idx, 1);
+        if (editingStepIndex === idx) resetStepBuilder();
+        const chat = getActiveChat();
+        if (chat) {
+          if (!chat.autoReply) chat.autoReply = { currentStepIndex: 0 };
+          chat.autoReply.steps = tempWorkingSteps;
+          saveState();
+        }
         renderAutoStepsList();
       });
 
@@ -2436,23 +2624,29 @@ document.addEventListener('DOMContentLoaded', () => {
       duration = `${m}:${s < 10 ? '0' + s : s}`;
     }
 
-    tempWorkingSteps.push({
+    const stepData = {
       senderContactId,
       type,
       content,
       audioUrl,
       duration,
       delaySec
-    });
+    };
+
+    if (editingStepIndex !== null && editingStepIndex < tempWorkingSteps.length) {
+      tempWorkingSteps[editingStepIndex] = stepData;
+    } else {
+      tempWorkingSteps.push(stepData);
+    }
+
+    // Auto-guardado inmediato en el estado
+    if (!chat.autoReply) chat.autoReply = { currentStepIndex: 0 };
+    chat.autoReply.enabled = autoReplyCheckbox.checked;
+    chat.autoReply.steps = tempWorkingSteps;
+    saveState();
 
     renderAutoStepsList();
-
-    // Resetear campos
-    stepTextInput.value = '';
-    stepImageBtnText.textContent = 'Subir imagen';
-    stepAudioBtnText.textContent = 'Subir .mp3/.wav';
-    tempStepImageBase64 = '';
-    tempStepAudioUrl = '';
+    resetStepBuilder();
   });
 
   btnCloseAutoModal.addEventListener('click', () => autoModalOverlay.style.display = 'none');

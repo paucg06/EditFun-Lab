@@ -236,11 +236,11 @@
                 <div class="wa-contact-info-header" id="btn-open-chat-info-modal" title="Ver / editar información del chat">
                   <div class="wa-header-avatar" id="header-avatar-box">
                     <img src="" id="header-avatar-img" style="display:none;" alt="Avatar">
-                    <span id="header-avatar-letter">A</span>
+                    <span id="header-avatar-letter">C</span>
                   </div>
                   <div class="wa-header-meta">
                     <div class="wa-header-name-row">
-                      <span class="wa-header-name" id="header-contact-name">Aanano</span>
+                      <span class="wa-header-name" id="header-contact-name">Contacto</span>
                     </div>
                     <span class="wa-header-status" id="header-contact-status">en línea</span>
                   </div>
@@ -381,9 +381,44 @@
                   </button>
 
                   <!-- Botón Acción: Micrófono (si vacío) o Flecha Enviar (si hay texto) -->
-                  <button class="wa-send-action-btn btn-state-mic" id="btn-send-message" title="Grabar nota de voz o enviar">
+                  <button class="wa-send-action-btn btn-state-mic" id="btn-send-message" title="Mantén pulsado para grabar audio o haz clic para subir archivo">
                     <svg id="icon-send-mic" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                     <svg id="icon-send-arrow" style="display:none;" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  </button>
+                </div>
+
+                <!-- BARRA DE GRABACIÓN DE AUDIO EN VIVO REALISTA (SIMULACIÓN WHATSAPP) -->
+                <div class="wa-recording-bar" id="wa-recording-bar" style="display: none;">
+                  <button class="wa-rec-btn-trash" id="btn-recording-trash" title="Cancelar y descartar audio">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                  <div class="wa-recording-timer-wrap">
+                    <span class="recording-pulse-dot" id="recording-pulse-dot"></span>
+                    <span class="recording-timer-text" id="recording-timer-text">0:00</span>
+                  </div>
+                  <div class="wa-recording-waves" id="recording-waves">
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                    <span class="wave-bar"></span>
+                  </div>
+                  <button class="wa-rec-btn-pause" id="btn-recording-pause" title="Pausar / Reanudar">
+                    <svg id="icon-rec-pause" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    <svg id="icon-rec-play" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
+                  </button>
+                  <button class="wa-send-action-btn btn-state-send" id="btn-recording-send" title="Enviar nota de voz">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                   </button>
                 </div>
               </div>
@@ -398,7 +433,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL: AÑADIR SEPARADOR -->
+    <!-- MODAL NATIVO WHATSAPP: AÑADIR SEPARADOR -->
     <!-- ========================================== -->
     <div class="wa-modal-overlay" id="separator-modal-overlay" style="display: none;">
       <div class="wa-modal-card">
@@ -406,37 +441,32 @@
           <h3 class="wa-modal-title">Añadir separador</h3>
           <button class="wa-modal-close-btn" id="btn-close-separator-modal">&times;</button>
         </div>
+
         <div class="wa-modal-body">
           <div class="wa-form-group">
-            <label class="wa-form-label">Tipo</label>
+            <label class="wa-form-label">Tipo de separador</label>
             <select id="separator-type-select" class="wa-form-select">
-              <option value="encryption">Aviso del sistema</option>
-              <option value="date">Separador</option>
+              <option value="date">Separador de fecha (ej. HOY, AYER)</option>
+              <option value="encryption">Aviso de cifrado extremo a extremo</option>
+              <option value="custom">Aviso del sistema personalizado</option>
             </select>
           </div>
 
-          <div class="wa-form-group" id="separator-text-group">
+          <div class="wa-form-group" style="margin-top: 12px;">
             <label class="wa-form-label">Texto del separador</label>
-            <textarea id="separator-text-input" class="wa-form-textarea" rows="3" placeholder="Escribe el texto del aviso o fecha"></textarea>
-          </div>
-
-          <div class="wa-form-group">
-            <label class="wa-form-label">Posición en el chat</label>
-            <select id="separator-position-select" class="wa-form-select">
-              <option value="end">Al final del chat (después del último mensaje)</option>
-              <option value="start">Al principio del chat</option>
-            </select>
+            <textarea id="separator-text-input" class="wa-form-textarea" rows="3">HOY</textarea>
           </div>
         </div>
+
         <div class="wa-modal-footer">
           <button class="btn-wa-cancel" id="btn-cancel-separator-modal">Cancelar</button>
-          <button class="btn-wa-save" id="btn-confirm-add-separator">Insertar Separador</button>
+          <button class="btn-wa-save" id="btn-save-separator-modal">Insertar separador</button>
         </div>
       </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL: SUBIR / CONFIGURAR NOTA DE VOZ -->
+    <!-- MODAL NATIVO WHATSAPP: NOTA DE VOZ / AUDIO -->
     <!-- ========================================== -->
     <div class="wa-modal-overlay" id="audio-modal-overlay" style="display: none;">
       <div class="wa-modal-card">
@@ -444,25 +474,26 @@
           <h3 class="wa-modal-title">Nota de Voz / Audio</h3>
           <button class="wa-modal-close-btn" id="btn-close-audio-modal">&times;</button>
         </div>
+
         <div class="wa-modal-body">
           <div class="wa-form-group">
-            <label class="wa-form-label">Opción 1: Subir archivo de audio real (.mp3, .wav, .m4a)</label>
-            <label class="btn-wa-action" for="chat-audio-file-input">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <label class="wa-form-label">Archivo de Audio (.mp3, .wav, .m4a)</label>
+            <label class="btn-wa-action" for="audio-file-input">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
               <span id="audio-upload-btn-text">Seleccionar archivo de audio</span>
             </label>
+            <input type="file" id="audio-file-input" accept="audio/*" style="display:none;">
           </div>
 
-          <div class="dropdown-divider" style="margin: 8px 0;"></div>
-
-          <div class="wa-form-group">
-            <label class="wa-form-label">Opción 2: Duración simulada (en segundos)</label>
-            <input type="number" id="audio-sim-seconds" class="wa-form-input" value="14" min="1" max="600">
+          <div class="wa-form-group" style="margin-top: 12px;">
+            <label class="wa-form-label">Duración aproximada (segundos)</label>
+            <input type="number" id="audio-duration-input" class="wa-form-input" value="14" min="1" max="3600">
           </div>
         </div>
+
         <div class="wa-modal-footer">
           <button class="btn-wa-cancel" id="btn-cancel-audio-modal">Cancelar</button>
-          <button class="btn-wa-save" id="btn-confirm-audio-send">Enviar Nota de Voz</button>
+          <button class="btn-wa-save" id="btn-save-audio-modal">Enviar Audio</button>
         </div>
       </div>
     </div>
@@ -482,7 +513,7 @@
           <div class="contact-avatar-picker-wrap">
             <div class="contact-avatar-large" id="modal-avatar-preview">
               <img src="" id="modal-avatar-img" style="display:none;" alt="Avatar">
-              <span id="modal-avatar-letter">A</span>
+              <span id="modal-avatar-letter">C</span>
             </div>
             <div class="avatar-upload-buttons">
               <label class="btn-wa-action" for="modal-avatar-file-input">
@@ -497,7 +528,7 @@
           <!-- Nombre -->
           <div class="wa-form-group">
             <label class="wa-form-label">Nombre del Contacto</label>
-            <input type="text" id="modal-contact-name-input" class="wa-form-input" placeholder="Ej. Aanano">
+            <input type="text" id="modal-contact-name-input" class="wa-form-input" placeholder="Nombre del contacto...">
           </div>
 
           <!-- Estado en cabecera -->
@@ -510,7 +541,7 @@
               <option value="últ. vez hoy a las 15:08">últ. vez hoy a las 15:08</option>
               <option value="custom">Personalizado...</option>
             </select>
-            <input type="text" id="modal-contact-status-custom" class="wa-form-input" style="display:none; margin-top:8px;" placeholder="Ej. disponible">
+            <input type="text" id="modal-contact-status-custom" class="wa-form-input" style="display:none; margin-top:8px;" placeholder="Escribe un estado...">
           </div>
         </div>
 
@@ -554,7 +585,7 @@
           <!-- Nombre del Grupo -->
           <div class="wa-form-group">
             <label class="wa-form-label">Asunto / Nombre del Grupo</label>
-            <input type="text" id="group-name-input" class="wa-form-input" placeholder="Ej. Los Panas, Proyecto Uni">
+            <input type="text" id="group-name-input" class="wa-form-input" placeholder="Nombre del grupo...">
           </div>
 
           <!-- Miembros del Grupo (Seleccionados de tus Contactos) -->
@@ -592,16 +623,22 @@
         </div>
 
         <div class="wa-modal-body">
-          <div class="wa-info-notice">
-            Al enviar un mensaje tú, los miembros del grupo o contacto leerán los mensajes (ticks azules) y responderán en secuencia según los pasos programados a continuación.
-          </div>
-
-          <div class="wa-switch-row">
-            <span>Activar Respuestas Automáticas</span>
+          <div class="wa-switch-row" style="margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>Activar Respuestas Automáticas</span>
+              <button type="button" class="wa-info-icon-btn" id="btn-toggle-auto-info" title="Cómo funciona">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              </button>
+            </div>
             <label class="ios-switch">
               <input type="checkbox" id="auto-reply-checkbox" checked>
               <span class="ios-slider"></span>
             </label>
+          </div>
+
+          <!-- Panel explicativo colapsable -->
+          <div class="wa-info-notice" id="auto-info-notice" style="display: none; margin-bottom: 12px;">
+            Al enviar un mensaje tú, los miembros del grupo o contacto leerán los mensajes (ticks azules) y responderán en secuencia según los pasos programados a continuación.
           </div>
 
           <!-- Lista de Pasos Programados -->
@@ -612,17 +649,20 @@
             </div>
           </div>
 
-          <!-- Constructor de Nuevo Paso -->
-          <div class="add-step-builder-card">
-            <span class="step-builder-title">+ Añadir Paso al Guion</span>
+          <!-- Constructor de Paso (Añadir / Editar) -->
+          <div class="add-step-builder-card" id="step-builder-card">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="step-builder-title" id="step-builder-title">+ Añadir Paso al Guion</span>
+              <button type="button" class="btn-wa-danger-link" id="btn-cancel-step-edit" style="display: none; font-size: 11.5px;">Cancelar edición</button>
+            </div>
             
             <div class="step-builder-row">
-              <div class="wa-form-group" style="flex: 1;">
+              <div class="wa-form-group">
                 <label class="wa-form-label">Remitente</label>
                 <select id="step-sender-select" class="wa-form-select"></select>
               </div>
 
-              <div class="wa-form-group" style="flex: 1;">
+              <div class="wa-form-group">
                 <label class="wa-form-label">Tipo de Mensaje</label>
                 <select id="step-type-select" class="wa-form-select">
                   <option value="text">Texto</option>
@@ -633,12 +673,12 @@
             </div>
 
             <!-- Contenido según tipo -->
-            <div class="wa-form-group" id="step-input-text-wrap">
+            <div class="wa-form-group" id="step-input-text-wrap" style="width: 100%;">
               <label class="wa-form-label">Texto del Mensaje</label>
-              <textarea id="step-text-input" class="wa-form-textarea" rows="2" placeholder="Ej. Dale, nos vemos a las 8"></textarea>
+              <textarea id="step-text-input" class="wa-form-textarea" rows="2" placeholder="Escribe el mensaje..."></textarea>
             </div>
 
-            <div class="wa-form-group" id="step-input-image-wrap" style="display: none;">
+            <div class="wa-form-group" id="step-input-image-wrap" style="display: none; width: 100%;">
               <label class="wa-form-label">Imagen adjunta</label>
               <label class="btn-wa-action" for="step-image-file-input">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -647,9 +687,9 @@
               <input type="file" id="step-image-file-input" accept="image/*" style="display:none;">
             </div>
 
-            <div class="wa-form-group" id="step-input-audio-wrap" style="display: none;">
+            <div class="wa-form-group" id="step-input-audio-wrap" style="display: none; width: 100%;">
               <label class="wa-form-label">Archivo de Audio o Duración</label>
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <label class="btn-wa-action" for="step-audio-file-input">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                   <span id="step-audio-btn-text">Subir .mp3/.wav</span>
@@ -659,19 +699,19 @@
               </div>
             </div>
 
-            <div class="step-builder-row" style="align-items: center; margin-top: 4px;">
-              <div class="wa-form-group" style="flex: 1;">
-                <label class="wa-form-label">Espera antes de enviar (segundos)</label>
+            <div class="step-builder-row" style="align-items: flex-end; margin-top: 4px;">
+              <div class="wa-form-group" style="flex: 1; min-width: 140px;">
+                <label class="wa-form-label">Espera (segundos)</label>
                 <input type="number" id="step-delay-input" class="wa-form-input" value="2" min="0.5" max="30" step="0.5">
               </div>
-              <button type="button" class="btn-wa-save" id="btn-add-step-to-list" style="margin-top: 18px;">Añadir al Guion</button>
+              <button type="button" class="btn-wa-save" id="btn-add-step-to-list" style="margin-top: 0; min-height: 38px;">Añadir al Guion</button>
             </div>
           </div>
 
         </div>
 
         <div class="wa-modal-footer">
-          <button class="btn-wa-cancel" id="btn-cancel-automation-modal">Cancelar</button>
+          <button class="btn-wa-cancel" id="btn-cancel-automation-modal">Cerrar</button>
           <button class="btn-wa-save" id="btn-save-automation-modal">Guardar Guion</button>
         </div>
       </div>
@@ -685,14 +725,14 @@
             <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
             <span>Cifrado de extremo a extremo</span>
           </div>
-          <h3 class="call-contact-name" id="call-name-display">Aanano</h3>
+          <h3 class="call-contact-name" id="call-name-display">Contacto</h3>
           <span class="call-status-label" id="call-status-text">Llamando...</span>
         </div>
 
         <div class="call-avatar-wrap">
           <div class="call-avatar-circle" id="call-avatar-circle">
             <img src="" id="call-avatar-img" style="display:none;" alt="Avatar">
-            <span id="call-avatar-letter">A</span>
+            <span id="call-avatar-letter">C</span>
           </div>
         </div>
 
@@ -716,10 +756,10 @@
         <div class="videocall-bg-placeholder" id="videocall-bg-placeholder">
           <div class="videocall-caller-circle" id="videocall-avatar-circle">
             <img src="" id="videocall-avatar-img" style="display:none;" alt="Avatar">
-            <span id="videocall-avatar-letter">A</span>
+            <span id="videocall-avatar-letter">C</span>
           </div>
-          <div class="videocall-caller-info">
-            <h3 id="videocall-name-display">Aanano</h3>
+          <div class="videocall-caller-name">
+            <h3 id="videocall-name-display">Contacto</h3>
             <span id="videocall-status-text">Conectando...</span>
           </div>
         </div>
