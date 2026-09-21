@@ -2190,8 +2190,7 @@ document.addEventListener('DOMContentLoaded', () => {
       groupNameInput.value = '';
       tempGroupAvatarBase64 = '';
       btnDeleteGroupModal.style.display = 'none';
-      const existingContacts = state.chats.filter(c => c.type === 'personal');
-      state.tempGroupMemberIds = existingContacts.slice(0, 2).map(c => c.id);
+      state.tempGroupMemberIds = [];
     }
 
     renderGroupMembersList();
@@ -2778,7 +2777,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateViewportHeight();
       if (document.activeElement === textInput) {
         setTimeout(() => {
-          messagesArea.scrollTop = messagesArea.scrollHeight;
+          messagesViewport.scrollTop = messagesViewport.scrollHeight;
           textInput.scrollIntoView({ block: 'nearest' });
         }, 80);
       }
@@ -2790,7 +2789,7 @@ document.addEventListener('DOMContentLoaded', () => {
   textInput.addEventListener('focus', () => {
     setTimeout(() => {
       updateViewportHeight();
-      messagesArea.scrollTop = messagesArea.scrollHeight;
+      messagesViewport.scrollTop = messagesViewport.scrollHeight;
       textInput.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 250);
   });

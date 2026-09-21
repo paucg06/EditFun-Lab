@@ -852,7 +852,7 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   z-index: 5;
   width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .wa-contact-info-header {
