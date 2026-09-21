@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/whatsappfake/style.css?v=3.3">
+  <link rel="stylesheet" href="/whatsappfake/style.css?v=3.4">
 </head>
 <body class="theme-dark mode-auto">
 
@@ -758,7 +758,7 @@
             <img src="" id="videocall-avatar-img" style="display:none;" alt="Avatar">
             <span id="videocall-avatar-letter">C</span>
           </div>
-          <div class="videocall-caller-name">
+          <div class="videocall-caller-info">
             <h3 id="videocall-name-display">Contacto</h3>
             <span id="videocall-status-text">Conectando...</span>
           </div>
@@ -788,14 +788,13 @@
   <input type="file" id="chat-audio-file-input" accept="audio/*" style="display: none;">
   <input type="file" id="chat-import-json-input" accept=".whts,.json,application/json" style="display: none;">
 
-  <!-- ========================================== -->
-  <!-- MODAL PERSONALIZADO (CONFIRMAR / ALERT / PROMPT) -->
-  <!-- ========================================== -->
-  <div class="wa-modal-overlay" id="custom-dialog-overlay" style="display: none; z-index: 999;">
-    <div class="wa-modal-card" style="max-width: 400px;">
+  <!-- MODALES DE CONFIGURACIÓN & EDICIÓN -->
+
+  <!-- DIÁLOGO PERSONALIZADO DE CONFIRMACIÓN / PROMPT (Reemplazo de confirm() y prompt() nativos) -->
+  <div class="wa-modal-overlay" id="custom-dialog-overlay" style="display: none; z-index: 9999;">
+    <div class="wa-modal-card" style="max-width: 380px;">
       <div class="wa-modal-header">
-        <h3 class="wa-modal-title" id="custom-dialog-title">Confirmar acción</h3>
-        <button class="wa-modal-close-btn" id="custom-dialog-close-btn">&times;</button>
+        <h3 class="wa-modal-title" id="custom-dialog-title">Confirmar</h3>
       </div>
       <div class="wa-modal-body" style="padding-top: 10px;">
         <p id="custom-dialog-message" style="font-size: 14px; line-height: 1.5; color: var(--text-primary);"></p>
@@ -811,7 +810,7 @@
   </div>
 
   <!-- SCRIPT PRINCIPAL -->
-  <script src="/whatsappfake/script.js?v=3.3"></script>
+  <script src="/whatsappfake/script.js?v=3.4"></script>
 
 </body>
 </html>

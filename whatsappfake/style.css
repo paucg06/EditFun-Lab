@@ -555,25 +555,80 @@ body.mode-forced-mobile .wa-app-layout.mobile-in-list .wa-chat-area {
   background-color: var(--bg-active);
 }
 
-.wa-chat-item.dragging {
-  opacity: 0.45;
-  background-color: var(--bg-active);
+/* Reordenación de Chats con Flechas */
+.wa-reorder-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-hover);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  animation: fadeInMenu 0.15s ease;
 }
 
-.wa-chat-item.dragging-touch {
-  opacity: 0.88;
-  background-color: var(--bg-active);
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  z-index: 10;
+.btn-reorder-done {
+  background: var(--wa-green-deep);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.wa-chat-item.drag-over-top {
-  border-top: 2px solid var(--wa-green-deep);
+.btn-reorder-done:hover {
+  background: var(--wa-green-hover);
 }
 
-.wa-chat-item.drag-over-bottom {
-  border-bottom: 2px solid var(--wa-green-deep);
+.wa-chat-item.in-reorder-mode {
+  transition: background-color 0.15s ease;
+}
+
+.wa-chat-reorder-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.wa-reorder-btn {
+  width: 28px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.wa-reorder-btn.single-arrow {
+  height: 28px;
+  border-radius: 6px;
+}
+
+.wa-reorder-btn:hover {
+  background: var(--wa-green-deep);
+  color: #ffffff;
+  border-color: var(--wa-green-deep);
+  transform: scale(1.06);
+}
+
+.wa-reorder-btn:active {
+  transform: scale(0.92);
 }
 
 .wa-chat-avatar {
@@ -2516,4 +2571,94 @@ input:checked + .ios-slider:before {
   align-items: center;
   justify-content: center;
   gap: 24px;
+}
+
+/* =========================================================
+   TEMA CLARO EN LLAMADAS Y VIDEOLLAMADAS
+   ========================================================= */
+body.theme-light .call-overlay {
+  background: rgba(240, 242, 245, 0.96);
+}
+
+body.theme-light .call-security-badge {
+  color: #667781;
+}
+
+body.theme-light .call-contact-name {
+  color: #111b21;
+}
+
+body.theme-light .call-status-label {
+  color: #667781;
+}
+
+body.theme-light .call-avatar-circle {
+  background: #dfe5e7;
+  color: #54656f;
+  box-shadow: 0 0 30px rgba(0, 128, 105, 0.2);
+}
+
+body.theme-light .call-dock-btn {
+  background: #ffffff;
+  color: #111b21;
+  border: 1px solid #e9edef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .call-dock-btn:hover {
+  background: #e9edef;
+}
+
+body.theme-light .videocall-overlay {
+  background: rgba(240, 242, 245, 0.96);
+}
+
+body.theme-light .videocall-screen {
+  background: #efeae2;
+}
+
+body.theme-light .videocall-bg-placeholder {
+  background: radial-gradient(circle, #f0f2f5 0%, #d1d7db 100%);
+}
+
+body.theme-light .videocall-caller-info h3,
+body.theme-light .videocall-caller-name h3 {
+  color: #111b21 !important;
+}
+
+body.theme-light .videocall-caller-info span,
+body.theme-light .videocall-caller-name span {
+  color: #667781 !important;
+}
+
+body.theme-light .videocall-avatar-circle {
+  background: #dfe5e7;
+  color: #54656f;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+body.theme-light .videocall-self-pip {
+  background: #ffffff;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+body.theme-light .videocall-self-pip .pip-inner {
+  color: #54656f;
+}
+
+body.theme-light .videocall-controls-bar {
+  background: rgba(240, 242, 245, 0.95);
+  border-top: 1px solid #e9edef;
+}
+
+body.theme-light .videocall-controls-bar .call-dock-btn {
+  background: #ffffff;
+  color: #111b21;
+  border: 1px solid #e9edef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .videocall-controls-bar .call-dock-btn:hover {
+  background: #e9edef;
 }

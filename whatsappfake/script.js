@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editingChatId: null,
     isSelectionMode: false,
     selectedMessageIds: new Set(),
+    isReorderingChats: false,
     tempGroupMemberIds: [], // IDs de contactos individuales seleccionados
     chats: []
   };
@@ -471,160 +472,119 @@ document.addEventListener('DOMContentLoaded', () => {
     return [...pinned, ...nonPinned];
   }
 
-  let draggedChatId = null;
-  let touchDragItem = null;
-  let touchDragTimer = null;
-  let touchStartY = 0;
-  let touchCurrentTarget = null;
+  function moveChatUp(chatId) {
+    const nonPinned = state.chats.filter(c => !c.isPinned);
+    const npIdx = nonPinned.findIndex(c => c.id === chatId);
+    if (npIdx <= 0) return;
+    const targetId = nonPinned[npIdx - 1].id;
 
-  function setupChatDragAndDrop(item, chat) {
-    if (chat.isPinned) {
-      item.setAttribute('draggable', 'false');
-      return;
-    }
+    const idxA = state.chats.findIndex(c => c.id === chatId);
+    const idxB = state.chats.findIndex(c => c.id === targetId);
+    if (idxA === -1 || idxB === -1) return;
 
-    item.setAttribute('draggable', 'true');
+    const temp = state.chats[idxA];
+    state.chats[idxA] = state.chats[idxB];
+    state.chats[idxB] = temp;
 
-    // Desktop Drag & Drop
-    item.addEventListener('dragstart', (e) => {
-      draggedChatId = chat.id;
-      item.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', chat.id);
-    });
+    saveState();
+    renderChatList();
+  }
 
-    item.addEventListener('dragend', () => {
-      draggedChatId = null;
-      item.classList.remove('dragging');
-      document.querySelectorAll('.wa-chat-item').forEach(el => {
-        el.classList.remove('drag-over-top', 'drag-over-bottom');
-      });
-    });
+  function moveChatDown(chatId) {
+    const nonPinned = state.chats.filter(c => !c.isPinned);
+    const npIdx = nonPinned.findIndex(c => c.id === chatId);
+    if (npIdx === -1 || npIdx >= nonPinned.length - 1) return;
+    const targetId = nonPinned[npIdx + 1].id;
 
-    item.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!draggedChatId || draggedChatId === chat.id || chat.isPinned) return;
-      e.dataTransfer.dropEffect = 'move';
+    const idxA = state.chats.findIndex(c => c.id === chatId);
+    const idxB = state.chats.findIndex(c => c.id === targetId);
+    if (idxA === -1 || idxB === -1) return;
 
-      const rect = item.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        item.classList.add('drag-over-top');
-        item.classList.remove('drag-over-bottom');
-      } else {
-        item.classList.add('drag-over-bottom');
-        item.classList.remove('drag-over-top');
-      }
-    });
+    const temp = state.chats[idxA];
+    state.chats[idxA] = state.chats[idxB];
+    state.chats[idxB] = temp;
 
-    item.addEventListener('dragleave', () => {
-      item.classList.remove('drag-over-top', 'drag-over-bottom');
-    });
+    saveState();
+    renderChatList();
+  }
 
-    item.addEventListener('drop', (e) => {
-      e.preventDefault();
-      item.classList.remove('drag-over-top', 'drag-over-bottom');
-      if (!draggedChatId || draggedChatId === chat.id) return;
+  function setupChatLongPress(item, chat) {
+    if (chat.isPinned) return;
 
-      const rect = item.getBoundingClientRect();
-      const isBefore = e.clientY < (rect.top + rect.height / 2);
-      reorderChats(draggedChatId, chat.id, isBefore);
-    });
+    let pressTimer = null;
+    let startX = 0;
+    let startY = 0;
 
-    // Mobile Touch Long-Press Drag
+    // Mobile Touch
     item.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
-      touchStartY = touch.clientY;
-      draggedChatId = null;
+      startX = touch.clientX;
+      startY = touch.clientY;
 
-      touchDragTimer = setTimeout(() => {
-        draggedChatId = chat.id;
-        touchDragItem = item;
-        item.classList.add('dragging-touch');
+      pressTimer = setTimeout(() => {
+        state.isReorderingChats = true;
         if (navigator.vibrate) navigator.vibrate(30);
-      }, 300);
+        renderChatList();
+      }, 400);
     }, { passive: true });
 
     item.addEventListener('touchmove', (e) => {
-      if (!draggedChatId) {
-        if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
-          clearTimeout(touchDragTimer);
-        }
-        return;
-      }
-      e.preventDefault();
-
+      if (!pressTimer) return;
       const touch = e.touches[0];
-      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
-      const chatItemTarget = targetEl ? targetEl.closest('.wa-chat-item') : null;
-
-      document.querySelectorAll('.wa-chat-item').forEach(el => {
-        el.classList.remove('drag-over-top', 'drag-over-bottom');
-      });
-
-      if (chatItemTarget && chatItemTarget !== item && chatItemTarget.dataset.id) {
-        const targetChat = state.chats.find(c => c.id === chatItemTarget.dataset.id);
-        if (targetChat && !targetChat.isPinned) {
-          touchCurrentTarget = chatItemTarget;
-          const rect = chatItemTarget.getBoundingClientRect();
-          if (touch.clientY < rect.top + rect.height / 2) {
-            chatItemTarget.classList.add('drag-over-top');
-          } else {
-            chatItemTarget.classList.add('drag-over-bottom');
-          }
-        }
+      if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
       }
-    }, { passive: false });
+    }, { passive: true });
 
-    item.addEventListener('touchend', (e) => {
-      clearTimeout(touchDragTimer);
-      if (draggedChatId && touchCurrentTarget) {
-        const targetId = touchCurrentTarget.dataset.id;
-        const rect = touchCurrentTarget.getBoundingClientRect();
-        const touch = e.changedTouches[0];
-        const isBefore = touch.clientY < (rect.top + rect.height / 2);
-        reorderChats(draggedChatId, targetId, isBefore);
+    item.addEventListener('touchend', () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
       }
-      item.classList.remove('dragging-touch');
-      document.querySelectorAll('.wa-chat-item').forEach(el => {
-        el.classList.remove('drag-over-top', 'drag-over-bottom');
-      });
-      draggedChatId = null;
-      touchDragItem = null;
-      touchCurrentTarget = null;
     });
 
     item.addEventListener('touchcancel', () => {
-      clearTimeout(touchDragTimer);
-      item.classList.remove('dragging-touch');
-      document.querySelectorAll('.wa-chat-item').forEach(el => {
-        el.classList.remove('drag-over-top', 'drag-over-bottom');
-      });
-      draggedChatId = null;
-      touchDragItem = null;
-      touchCurrentTarget = null;
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
     });
-  }
 
-  function reorderChats(sourceId, targetId, isBefore) {
-    const srcIdx = state.chats.findIndex(c => c.id === sourceId);
-    const tgtIdx = state.chats.findIndex(c => c.id === targetId);
-    if (srcIdx === -1 || tgtIdx === -1) return;
+    // Desktop Mouse Long-Press
+    item.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
 
-    const [srcChat] = state.chats.splice(srcIdx, 1);
-    let newTgtIdx = state.chats.findIndex(c => c.id === targetId);
-    let insertIdx = isBefore ? newTgtIdx : newTgtIdx + 1;
+      pressTimer = setTimeout(() => {
+        state.isReorderingChats = true;
+        renderChatList();
+      }, 450);
+    });
 
-    // Never place before pinned items
-    const firstNonPinnedIndex = state.chats.findIndex(c => !c.isPinned);
-    if (firstNonPinnedIndex !== -1 && insertIdx < firstNonPinnedIndex) {
-      insertIdx = firstNonPinnedIndex;
-    }
+    item.addEventListener('mousemove', (e) => {
+      if (!pressTimer) return;
+      if (Math.abs(e.clientX - startX) > 6 || Math.abs(e.clientY - startY) > 6) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    });
 
-    state.chats.splice(insertIdx, 0, srcChat);
-    saveState();
-    renderChatList();
+    item.addEventListener('mouseup', () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    });
+
+    item.addEventListener('mouseleave', () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    });
   }
 
   function bringChatToTop(chatId) {
@@ -647,6 +607,21 @@ document.addEventListener('DOMContentLoaded', () => {
     chatListContainer.innerHTML = '';
     const query = (searchInput.value || '').trim().toLowerCase();
     const sorted = getSortedChats();
+
+    if (state.isReorderingChats) {
+      const banner = document.createElement('div');
+      banner.className = 'wa-reorder-banner';
+      banner.innerHTML = `
+        <span>Reordenar chats</span>
+        <button class="btn-reorder-done" id="btn-reorder-done">Listo</button>
+      `;
+      banner.querySelector('#btn-reorder-done').addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.isReorderingChats = false;
+        renderChatList();
+      });
+      chatListContainer.appendChild(banner);
+    }
 
     const filtered = sorted.filter(c => {
       const msgs = c.messages.filter(m => m.type !== 'date_divider' && m.type !== 'encryption_notice');
@@ -680,9 +655,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const nonPinnedFiltered = filtered.filter(c => !c.isPinned);
+
     filtered.forEach(chat => {
       const item = document.createElement('div');
-      item.className = `wa-chat-item ${chat.id === state.activeChatId ? 'active' : ''}`;
+      item.className = `wa-chat-item ${chat.id === state.activeChatId ? 'active' : ''} ${state.isReorderingChats ? 'in-reorder-mode' : ''}`;
       item.dataset.id = chat.id;
 
       const msgs = chat.messages.filter(m => m.type !== 'date_divider' && m.type !== 'encryption_notice');
@@ -744,11 +721,49 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
+      // Flechas de reordenación en modo reordenar
+      if (state.isReorderingChats && !chat.isPinned) {
+        const npIdx = nonPinnedFiltered.findIndex(c => c.id === chat.id);
+        const hasUp = npIdx > 0;
+        const hasDown = npIdx >= 0 && npIdx < nonPinnedFiltered.length - 1;
+
+        if (hasUp || hasDown) {
+          const arrowsWrap = document.createElement('div');
+          arrowsWrap.className = 'wa-chat-reorder-arrows';
+
+          if (hasUp) {
+            const btnUp = document.createElement('button');
+            btnUp.className = `wa-reorder-btn btn-reorder-up ${!hasDown ? 'single-arrow' : ''}`;
+            btnUp.title = 'Subir posición';
+            btnUp.innerHTML = `<svg viewBox="0 0 18 18" width="16" height="16" fill="currentColor" style="transform: rotate(180deg);"><path d="M3.3 5.3a1 1 0 0 1 1.4 0L9 9.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4z"/></svg>`;
+            btnUp.addEventListener('click', (e) => {
+              e.stopPropagation();
+              moveChatUp(chat.id);
+            });
+            arrowsWrap.appendChild(btnUp);
+          }
+
+          if (hasDown) {
+            const btnDown = document.createElement('button');
+            btnDown.className = `wa-reorder-btn btn-reorder-down ${!hasUp ? 'single-arrow' : ''}`;
+            btnDown.title = 'Bajar posición';
+            btnDown.innerHTML = `<svg viewBox="0 0 18 18" width="16" height="16" fill="currentColor"><path d="M3.3 5.3a1 1 0 0 1 1.4 0L9 9.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4z"/></svg>`;
+            btnDown.addEventListener('click', (e) => {
+              e.stopPropagation();
+              moveChatDown(chat.id);
+            });
+            arrowsWrap.appendChild(btnDown);
+          }
+
+          item.appendChild(arrowsWrap);
+        }
+      }
+
       item.addEventListener('click', () => {
         selectChat(chat.id);
       });
 
-      setupChatDragAndDrop(item, chat);
+      setupChatLongPress(item, chat);
 
       chatListContainer.appendChild(item);
     });
