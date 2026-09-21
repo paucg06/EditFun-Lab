@@ -51,6 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (saved) {
         const data = JSON.parse(saved);
         if (data && Array.isArray(data.chats)) {
+          // Limpiar URLs blob temporales expiradas de sesiones previas
+          data.chats.forEach(chat => {
+            if (Array.isArray(chat.messages)) {
+              chat.messages.forEach(msg => {
+                if (msg.audioUrl && typeof msg.audioUrl === 'string' && msg.audioUrl.startsWith('blob:')) {
+                  msg.audioUrl = '';
+                }
+              });
+            }
+            if (chat.autoReply && Array.isArray(chat.autoReply.steps)) {
+              chat.autoReply.steps.forEach(st => {
+                if (st.audioUrl && typeof st.audioUrl === 'string' && st.audioUrl.startsWith('blob:')) {
+                  st.audioUrl = '';
+                }
+              });
+            }
+          });
           state.chats = data.chats;
         }
         if (data && data.theme) {
@@ -1189,11 +1206,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioElement = null;
     let animInterval = null;
 
-    if (audioUrl) {
-      audioElement = new Audio(audioUrl);
-      audioElement.addEventListener('ended', () => {
-        stopPlayback();
-      });
+    if (audioUrl && typeof audioUrl === 'string' && !audioUrl.startsWith('blob:')) {
+      try {
+        audioElement = new Audio(audioUrl);
+        audioElement.onerror = () => {
+          audioElement = null;
+        };
+        audioElement.addEventListener('ended', () => {
+          stopPlayback();
+        });
+      } catch (e) {
+        audioElement = null;
+      }
     }
 
     function stopPlayback() {
@@ -1572,16 +1596,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files[0];
     if (file) {
       audioUploadBtnText.textContent = `Archivo: ${file.name}`;
-      tempAudioUrl = URL.createObjectURL(file);
-
-      const tempAudio = new Audio(tempAudioUrl);
-      tempAudio.addEventListener('loadedmetadata', () => {
-        const sec = Math.round(tempAudio.duration);
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        tempAudioDuration = `${m}:${s < 10 ? '0' + s : s}`;
-        audioDurationInput.value = sec;
-      });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempAudioUrl = event.target.result;
+        try {
+          const tempAudio = new Audio(tempAudioUrl);
+          tempAudio.addEventListener('loadedmetadata', () => {
+            const sec = Math.round(tempAudio.duration);
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            tempAudioDuration = `${m}:${s < 10 ? '0' + s : s}`;
+            audioDurationInput.value = sec;
+          });
+        } catch (err) {}
+      };
+      reader.readAsDataURL(file);
     }
   });
 
@@ -2464,12 +2493,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files[0];
     if (file) {
       stepAudioBtnText.textContent = `Audio: ${file.name}`;
-      tempStepAudioUrl = URL.createObjectURL(file);
-      const tempAudio = new Audio(tempStepAudioUrl);
-      tempAudio.addEventListener('loadedmetadata', () => {
-        const sec = Math.round(tempAudio.duration);
-        stepAudioDurationInput.value = sec;
-      });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        tempStepAudioUrl = event.target.result;
+        try {
+          const tempAudio = new Audio(tempStepAudioUrl);
+          tempAudio.addEventListener('loadedmetadata', () => {
+            const sec = Math.round(tempAudio.duration);
+            stepAudioDurationInput.value = sec;
+          });
+        } catch (err) {}
+      };
+      reader.readAsDataURL(file);
     }
   });
 
