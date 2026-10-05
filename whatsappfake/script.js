@@ -850,19 +850,9 @@ document.addEventListener('DOMContentLoaded', () => {
     messagesContainer.innerHTML = '';
 
     chat.messages.forEach(item => {
-      if (item.type === 'date_divider') {
-        const div = document.createElement('div');
-        div.className = 'wa-date-divider';
-        div.innerHTML = `<span>${escapeHTML(item.content)}</span>`;
-        messagesContainer.appendChild(div);
-      } else if (item.type === 'encryption_notice') {
-        const notice = document.createElement('div');
-        notice.className = 'wa-encryption-notice';
-        notice.innerHTML = `
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-          <span>${escapeHTML(item.content)}</span>
-        `;
-        messagesContainer.appendChild(notice);
+      if (item.type === 'date_divider' || item.type === 'encryption_notice') {
+        const sepRow = createSeparatorElement(item, chat);
+        messagesContainer.appendChild(sepRow);
       } else {
         const msgRow = createMessageElement(item, chat);
         messagesContainer.appendChild(msgRow);
@@ -870,6 +860,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     scrollToBottom();
+  }
+
+  function createSeparatorElement(item, chat) {
+    if (!item.id) {
+      item.id = 'sep_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    }
+    const row = document.createElement('div');
+    const isSelected = state.selectedMessageIds.has(item.id);
+    row.className = `wa-separator-row ${state.isSelectionMode ? 'selection-mode' : ''} ${isSelected ? 'selected' : ''}`;
+    row.id = `msg-${item.id}`;
+
+    // Checkbox de Selección
+    const checkWrap = document.createElement('div');
+    checkWrap.className = 'msg-select-checkbox-wrap';
+    checkWrap.innerHTML = '<div class="msg-select-checkbox"></div>';
+    checkWrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMessageSelection(item.id);
+    });
+
+    const isEncryption = item.type === 'encryption_notice';
+    const pill = document.createElement('div');
+    pill.className = isEncryption ? 'wa-encryption-notice-box' : 'wa-date-divider-pill';
+
+    const chevronBtn = document.createElement('button');
+    chevronBtn.className = 'wa-separator-chevron-btn';
+    chevronBtn.title = 'Opciones del separador';
+    chevronBtn.innerHTML = `<svg viewBox="0 0 18 18" width="14" height="14" fill="currentColor"><path d="M3.3 5.3a1 1 0 0 1 1.4 0L9 9.6l4.3-4.3a1 1 0 0 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4z"/></svg>`;
+    chevronBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openMessageContextMenu(e, item, chat);
+    });
+
+    if (isEncryption) {
+      pill.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="flex-shrink:0; color:#ffd279;"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        <span>${escapeHTML(item.content)}</span>
+      `;
+    } else {
+      pill.innerHTML = `<span>${escapeHTML(item.content)}</span>`;
+    }
+    pill.appendChild(chevronBtn);
+
+    pill.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      openMessageContextMenu(e, item, chat);
+    });
+
+    row.addEventListener('click', () => {
+      if (state.isSelectionMode) {
+        toggleMessageSelection(item.id);
+      }
+    });
+
+    row.appendChild(checkWrap);
+    row.appendChild(pill);
+    return row;
   }
 
   function createMessageElement(msg, chat) {
@@ -1071,8 +1118,9 @@ document.addEventListener('DOMContentLoaded', () => {
     menu.className = 'wa-msg-context-menu';
 
     const isSent = msg.sender === 'me';
+    const isSeparator = msg.type === 'date_divider' || msg.type === 'encryption_notice';
     let tickOptionsHtml = '';
-    if (isSent) {
+    if (isSent && !isSeparator) {
       tickOptionsHtml = `
         <button class="dropdown-item" data-action="toggle-ticks">
           <svg viewBox="0 0 16 11" width="16" height="11" fill="currentColor"><path d="M11.07 1.05a.75.75 0 0 0-1.06 0L5.3 5.76 3.18 3.64a.75.75 0 0 0-1.06 1.06l2.65 2.65a.75.75 0 0 0 1.06 0l5.24-5.24a.75.75 0 0 0 0-1.06zm4 0a.75.75 0 0 0-1.06 0l-5.24 5.24-.53-.53a.75.75 0 0 0-1.06 1.06l1.06 1.06a.75.75 0 0 0 1.06 0l5.77-5.77a.75.75 0 0 0 0-1.06z"/></svg>

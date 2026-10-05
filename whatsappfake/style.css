@@ -1030,15 +1030,45 @@ body.mode-forced-mobile .wa-messages-container {
   padding: 12px 10px;
 }
 
-/* Divisores de Fecha & Aviso Cifrado */
-.wa-date-divider {
-  align-self: center;
-  margin: 12px 0 8px 0;
+/* Divisores de Fecha & Aviso Cifrado (Separadores Interactivos y Eliminables) */
+.wa-separator-row {
   display: flex;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+  margin: 6px 0;
+  position: relative;
+  transition: background-color 0.15s ease;
 }
 
-.wa-date-divider span {
+.wa-separator-row.selected {
+  background-color: rgba(0, 168, 132, 0.08);
+}
+
+.wa-separator-row.selection-mode .msg-select-checkbox-wrap {
+  display: flex;
+}
+
+.wa-separator-row.selected .msg-select-checkbox {
+  background-color: var(--wa-green-deep);
+  border-color: var(--wa-green-deep);
+}
+
+.wa-separator-row.selected .msg-select-checkbox::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.wa-date-divider-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background-color: var(--bubble-received);
   color: var(--text-secondary);
   font-size: 12px;
@@ -1048,10 +1078,21 @@ body.mode-forced-mobile .wa-messages-container {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
 }
 
-.wa-encryption-notice {
-  align-self: center;
+.wa-date-divider-pill:hover {
+  background-color: var(--bg-hover);
+}
+
+.wa-encryption-notice-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   max-width: 520px;
   background-color: var(--bubble-system-bg);
   color: var(--bubble-system-text);
@@ -1060,17 +1101,45 @@ body.mode-forced-mobile .wa-messages-container {
   padding: 8px 16px;
   border-radius: 8px;
   text-align: center;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.15s ease;
 }
 
-.wa-encryption-notice svg {
+.wa-encryption-notice-box:hover {
+  filter: brightness(1.06);
+}
+
+.wa-encryption-notice-box svg {
   flex-shrink: 0;
   color: #ffd279;
+}
+
+.wa-separator-chevron-btn {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 0;
+  margin-left: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.wa-date-divider-pill:hover .wa-separator-chevron-btn,
+.wa-encryption-notice-box:hover .wa-separator-chevron-btn {
+  display: inline-flex;
+}
+
+.wa-separator-chevron-btn:hover {
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
 }
 
 /* =========================================================
