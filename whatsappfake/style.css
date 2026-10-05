@@ -2283,6 +2283,40 @@ input:checked + .ios-slider:before {
   font-weight: 600;
 }
 
+.step-trigger-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  font-family: var(--font-family);
+}
+
+.step-trigger-toggle-btn:hover {
+  border-color: var(--wa-green-deep);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.step-trigger-toggle-btn.active {
+  background: rgba(0, 168, 132, 0.18);
+  border-color: var(--wa-green-deep);
+  color: var(--wa-green-deep);
+  font-weight: 600;
+}
+
+.step-trigger-toggle-btn svg {
+  flex-shrink: 0;
+}
+
 .step-detail-text {
   color: var(--text-secondary);
   font-size: 12px;

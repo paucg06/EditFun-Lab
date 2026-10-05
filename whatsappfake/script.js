@@ -264,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const stepAudioBtnText = document.getElementById('step-audio-btn-text');
   const stepAudioDurationInput = document.getElementById('step-audio-duration-input');
   const stepDelayInput = document.getElementById('step-delay-input');
+  const stepAutoTriggerCheckbox = document.getElementById('step-auto-trigger-checkbox');
   const btnAddStepToList = document.getElementById('btn-add-step-to-list');
   let tempStepImageBase64 = '';
   let tempStepAudioUrl = '';
@@ -1448,6 +1449,15 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMessages();
       renderChatList();
       playReceivedPopSound();
+
+      // Disparo automático consecutivo del siguiente paso si está configurado como autoTrigger
+      if (auto.enabled && auto.steps && auto.steps.length > 0) {
+        const nextStepIndex = auto.currentStepIndex % auto.steps.length;
+        const nextStep = auto.steps[nextStepIndex];
+        if (nextStep && nextStep.autoTrigger) {
+          triggerStepAutomatedReply(chat);
+        }
+      }
     }, delayMs);
   }
 
@@ -2430,6 +2440,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stepImageBtnText.textContent = 'Subir imagen';
     stepAudioBtnText.textContent = 'Subir .mp3/.wav';
     stepDelayInput.value = '2';
+    if (stepAutoTriggerCheckbox) stepAutoTriggerCheckbox.checked = false;
   }
 
   btnCancelStepEdit.addEventListener('click', resetStepBuilder);
@@ -2541,9 +2552,17 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (step.type === 'image') detailText = `Imagen / Foto`;
       else if (step.type === 'audio') detailText = `Nota de voz (${step.duration || '0:12'})`;
 
+      const isAuto = !!step.autoTrigger;
+
       item.innerHTML = `
         <div class="auto-step-meta">
-          <span class="step-sender-name" style="color: var(--wa-green-deep);">${idx + 1}. [${escapeHTML(senderName)}]</span>
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span class="step-sender-name" style="color: var(--wa-green-deep);">${idx + 1}. [${escapeHTML(senderName)}]</span>
+            <button type="button" class="step-trigger-toggle-btn ${isAuto ? 'active' : ''}" data-idx="${idx}" title="${isAuto ? 'Modo automático: se enviará tras la espera sin esperar a que el usuario escriba' : 'Modo respuesta: espera a que el usuario escriba para contestar'}">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>${isAuto ? 'Automático' : 'Espera usuario'}</span>
+            </button>
+          </div>
           <span class="step-detail-text">${escapeHTML(detailText)} (${step.delaySec || 2}s de espera)</span>
         </div>
         <div class="auto-step-actions">
@@ -2553,6 +2572,18 @@ document.addEventListener('DOMContentLoaded', () => {
           <button type="button" class="step-remove-btn" data-idx="${idx}" title="Eliminar paso">&times;</button>
         </div>
       `;
+
+      item.querySelector('.step-trigger-toggle-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        step.autoTrigger = !step.autoTrigger;
+        const chat = getActiveChat();
+        if (chat) {
+          if (!chat.autoReply) chat.autoReply = { currentStepIndex: 0 };
+          chat.autoReply.steps = tempWorkingSteps;
+          saveState();
+        }
+        renderAutoStepsList();
+      });
 
       item.querySelector('.step-edit-btn').addEventListener('click', () => {
         editingStepIndex = idx;
@@ -2577,6 +2608,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         stepDelayInput.value = step.delaySec || 2;
+        if (stepAutoTriggerCheckbox) stepAutoTriggerCheckbox.checked = !!step.autoTrigger;
         stepBuilderTitle.textContent = `✏️ Editando Paso #${idx + 1}`;
         btnAddStepToList.textContent = 'Actualizar Paso';
         btnCancelStepEdit.style.display = 'inline-block';
@@ -2606,6 +2638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const senderContactId = stepSenderSelect.value;
     const type = stepTypeSelect.value;
     const delaySec = parseFloat(stepDelayInput.value) || 2;
+    const autoTrigger = stepAutoTriggerCheckbox ? stepAutoTriggerCheckbox.checked : false;
     let content = '';
     let audioUrl = '';
     let duration = '0:12';
@@ -2632,7 +2665,8 @@ document.addEventListener('DOMContentLoaded', () => {
       content,
       audioUrl,
       duration,
-      delaySec
+      delaySec,
+      autoTrigger
     };
 
     if (editingStepIndex !== null && editingStepIndex < tempWorkingSteps.length) {
