@@ -69,6 +69,14 @@
         </svg>
         <span>Fondo</span>
       </button>
+      <button class="tab-btn" data-tab="tab-export">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Descargar</span>
+      </button>
     </div>
 
     <!-- Contenido del Panel -->
@@ -432,6 +440,109 @@
         </div>
       </div>
 
+      <!-- TAB 4: DESCARGAR SECUENCIA PNG (ZIP) -->
+      <div class="tab-content" id="tab-export">
+        
+        <!-- Duración -->
+        <div class="setting-row">
+          <div class="setting-label-wrap">
+            <span class="setting-label">Duración de la captura</span>
+            <span class="setting-value" id="val-export-duration">5 seg</span>
+          </div>
+          <input type="range" id="param-export-duration" min="1" max="30" step="1" value="5">
+          <div class="export-preset-chips">
+            <button type="button" class="chip-btn" data-duration="3">3s</button>
+            <button type="button" class="chip-btn active" data-duration="5">5s</button>
+            <button type="button" class="chip-btn" data-duration="10">10s</button>
+            <button type="button" class="chip-btn" data-duration="15">15s</button>
+            <button type="button" class="chip-btn" data-duration="30">30s</button>
+          </div>
+        </div>
+
+        <!-- FPS -->
+        <div class="setting-row">
+          <span class="setting-label">Fotogramas por segundo (FPS)</span>
+          <div class="pill-selector" id="fps-selector">
+            <button type="button" class="pill-opt" data-fps="15">15 fps</button>
+            <button type="button" class="pill-opt" data-fps="24">24 fps</button>
+            <button type="button" class="pill-opt active" data-fps="30">30 fps</button>
+            <button type="button" class="pill-opt" data-fps="60">60 fps</button>
+          </div>
+        </div>
+
+        <!-- Fondo -->
+        <div class="setting-row">
+          <span class="setting-label">Fondo de los fotogramas PNG</span>
+          <div class="pill-selector" id="export-bg-selector">
+            <button type="button" class="pill-opt active" data-bg-mode="transparent">
+              Transparente (Alfa)
+            </button>
+            <button type="button" class="pill-opt" data-bg-mode="current">
+              Fondo Actual
+            </button>
+          </div>
+        </div>
+
+        <!-- Resolución -->
+        <div class="setting-row">
+          <span class="setting-label">Resolución de renderizado</span>
+          <select class="custom-select" id="param-export-res">
+            <option value="screen" selected>Pantalla actual (Nativo)</option>
+            <option value="1920x1080">Full HD 1080p (1920 × 1080)</option>
+            <option value="1080x1920">Vertical 9:16 (1080 × 1920 - Reels/TikTok)</option>
+            <option value="1280x720">HD 720p (1280 × 720)</option>
+          </select>
+        </div>
+
+        <!-- Opciones de ejecución -->
+        <div class="setting-row">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" id="param-export-restart" class="custom-checkbox-input" checked>
+            <span class="custom-checkbox-box">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span class="custom-checkbox-label">Reiniciar animación al empezar</span>
+          </label>
+        </div>
+
+        <div class="setting-row" style="margin-top: -6px;">
+          <label class="custom-checkbox-row">
+            <input type="checkbox" id="param-export-mute" class="custom-checkbox-input" checked>
+            <span class="custom-checkbox-box">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span class="custom-checkbox-label">Silenciar sonido durante la descarga</span>
+          </label>
+        </div>
+
+        <!-- Tarjeta resumen -->
+        <div class="export-summary-card">
+          <div class="export-summary-line">
+            <span class="summary-key">Total fotogramas:</span>
+            <span class="summary-val" id="summary-frames-count">150 PNGs</span>
+          </div>
+          <div class="export-summary-line">
+            <span class="summary-key">Formato de salida:</span>
+            <span class="summary-val">Secuencia PNG en .zip</span>
+          </div>
+        </div>
+
+        <!-- Botón de acción principal -->
+        <button type="button" class="btn-export-action" id="btn-start-export">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Iniciar Descarga (.zip)</span>
+        </button>
+
+      </div>
+
     </div>
 
     <!-- Pie del Panel -->
@@ -463,6 +574,34 @@
       </div>
     </div>
   </aside>
+
+  <!-- BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN -->
+  <div id="export-banner" class="export-banner hidden">
+    <div class="export-banner-inner">
+      <div class="export-banner-header">
+        <div class="export-banner-status">
+          <div class="export-spinner" id="export-spinner"></div>
+          <div class="export-text-group">
+            <div class="export-banner-title" id="export-status-title">Capturando fotogramas...</div>
+            <div class="export-banner-sub" id="export-status-sub">Fotograma 0 / 150 (0%)</div>
+          </div>
+        </div>
+        <button type="button" class="btn-export-cancel" id="btn-cancel-export" title="Cancelar">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span id="btn-cancel-export-text">Cancelar</span>
+        </button>
+      </div>
+      <div class="export-progress-track">
+        <div class="export-progress-bar" id="export-progress-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRERÍA JSZIP LOCAL -->
+  <script src="/popfx/jszip.min.js"></script>
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="/popfx/script.js"></script>

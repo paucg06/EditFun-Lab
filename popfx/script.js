@@ -48,6 +48,7 @@
     }
 
     function playPopSound(low = false) {
+      if (!soundEnabled) return;
       const cascadeSound = document.getElementById('param-cascade-sound');
       const popupSound = document.getElementById('param-play-sound');
       const isEnabled = (currentMode === 'cascade' && cascadeSound && cascadeSound.checked) ||
@@ -1363,3 +1364,304 @@
 
     // Inicializar UI de sonido customizado
     updateCustomSoundUI();
+
+    /* ========================================================
+       SISTEMA DE EXPORTACIÓN SECUENCIA PNG (.ZIP)
+       ======================================================== */
+    let selectedExportFps = 30;
+    let selectedExportBgMode = 'transparent';
+    let isExporting = false;
+    let exportZipInstance = null;
+
+    const durationSlider = document.getElementById('param-export-duration');
+    const durationLabel = document.getElementById('val-export-duration');
+    const summaryFramesLabel = document.getElementById('summary-frames-count');
+    const durationChips = document.querySelectorAll('.chip-btn');
+    const fpsButtons = document.querySelectorAll('#fps-selector .pill-opt');
+    const exportBgButtons = document.querySelectorAll('#export-bg-selector .pill-opt');
+    const btnStartExport = document.getElementById('btn-start-export');
+    const btnCancelExport = document.getElementById('btn-cancel-export');
+
+    function updateExportSummary() {
+      const dur = parseInt(durationSlider.value) || 5;
+      const total = dur * selectedExportFps;
+      if (summaryFramesLabel) {
+        summaryFramesLabel.textContent = total + ' PNGs';
+      }
+    }
+
+    if (durationSlider) {
+      durationSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (durationLabel) durationLabel.textContent = val + ' seg';
+        durationChips.forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.duration === val);
+        });
+        updateExportSummary();
+      });
+    }
+
+    durationChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const val = chip.dataset.duration;
+        durationSlider.value = val;
+        if (durationLabel) durationLabel.textContent = val + ' seg';
+        durationChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        updateExportSummary();
+      });
+    });
+
+    fpsButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        fpsButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedExportFps = parseInt(btn.dataset.fps) || 30;
+        updateExportSummary();
+      });
+    });
+
+    exportBgButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        exportBgButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedExportBgMode = btn.dataset.bgMode;
+      });
+    });
+
+    function getExportBgColor() {
+      if (selectedExportBgMode === 'transparent') return null;
+      if (document.body.classList.contains('bg-croma-green')) return '#00ff00';
+      if (document.body.classList.contains('bg-croma-blue')) return '#0033cc';
+      if (document.body.classList.contains('bg-dark')) return '#0f0f11';
+      if (document.body.classList.contains('bg-light')) return '#f4f4f6';
+      return null;
+    }
+
+    function getTargetResolution(choice) {
+      if (choice === '1920x1080') return { width: 1920, height: 1080 };
+      if (choice === '1080x1920') return { width: 1080, height: 1920 };
+      if (choice === '1280x720') return { width: 1280, height: 720 };
+      return { width: window.innerWidth, height: window.innerHeight };
+    }
+
+    function drawStageToCanvas(ctx, targetW, targetH, isTransparent, bgColor) {
+      ctx.clearRect(0, 0, targetW, targetH);
+
+      if (!isTransparent && bgColor) {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, targetW, targetH);
+      }
+
+      const scaleX = targetW / Math.max(1, window.innerWidth);
+      const scaleY = targetH / Math.max(1, window.innerHeight);
+
+      const items = Array.from(stage.children);
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const img = item.querySelector('img');
+        if (!img) continue;
+
+        const style = window.getComputedStyle(item);
+        const opacity = parseFloat(style.opacity || '1');
+        if (opacity <= 0.001) continue;
+
+        ctx.save();
+        ctx.scale(scaleX, scaleY);
+        ctx.globalAlpha = opacity;
+
+        // Filtro de sombra
+        const imgStyle = window.getComputedStyle(img);
+        if (imgStyle.filter && imgStyle.filter !== 'none') {
+          try {
+            ctx.filter = imgStyle.filter;
+          } catch (e) {}
+        }
+
+        const itemLeft = item.offsetLeft;
+        const itemTop = item.offsetTop;
+        let itemWidth = item.offsetWidth;
+        let itemHeight = item.offsetHeight;
+
+        if (!itemHeight && img.naturalWidth && img.naturalHeight) {
+          itemHeight = itemWidth * (img.naturalHeight / img.naturalWidth);
+        }
+        if (!itemWidth) itemWidth = 300;
+        if (!itemHeight) itemHeight = itemWidth * 0.7;
+
+        const transformStr = style.transform;
+        if (transformStr && transformStr !== 'none') {
+          try {
+            const domMatrix = new DOMMatrix(transformStr);
+            ctx.translate(itemLeft, itemTop);
+            ctx.transform(domMatrix.a, domMatrix.b, domMatrix.c, domMatrix.d, domMatrix.e, domMatrix.f);
+            ctx.drawImage(img, 0, 0, itemWidth, itemHeight);
+          } catch (e) {
+            ctx.drawImage(img, itemLeft, itemTop, itemWidth, itemHeight);
+          }
+        } else {
+          ctx.drawImage(img, itemLeft, itemTop, itemWidth, itemHeight);
+        }
+
+        ctx.restore();
+      }
+    }
+
+    async function startPngSequenceExport() {
+      if (imagesList.length === 0) {
+        showToast('Añade al menos una imagen antes de exportar');
+        return;
+      }
+
+      if (typeof JSZip === 'undefined') {
+        alert('La librería JSZip no se ha cargado. Por favor, refresca la página.');
+        return;
+      }
+
+      const durationSec = parseInt(durationSlider.value) || 5;
+      const fps = selectedExportFps;
+      const totalFrames = durationSec * fps;
+      const isTransparent = selectedExportBgMode === 'transparent';
+      const bgColor = getExportBgColor();
+      const resSelect = document.getElementById('param-export-res');
+      const { width, height } = getTargetResolution(resSelect ? resSelect.value : 'screen');
+      const shouldRestart = document.getElementById('param-export-restart').checked;
+      const shouldMute = document.getElementById('param-export-mute').checked;
+
+      isExporting = true;
+      exportZipInstance = new JSZip();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { alpha: true });
+
+      const prevSoundState = soundEnabled;
+      if (shouldMute) {
+        soundEnabled = false;
+      }
+
+      hidePanel();
+
+      const banner = document.getElementById('export-banner');
+      const bannerTitle = document.getElementById('export-status-title');
+      const bannerSub = document.getElementById('export-status-sub');
+      const bannerFill = document.getElementById('export-progress-fill');
+      const bannerSpinner = document.getElementById('export-spinner');
+      const btnCancelText = document.getElementById('btn-cancel-export-text');
+
+      bannerTitle.textContent = 'Iniciando captura de pantalla...';
+      bannerSub.textContent = `Fotograma 0 / ${totalFrames} (0%)`;
+      bannerFill.style.width = '0%';
+      bannerSpinner.className = 'export-spinner';
+      bannerSpinner.innerHTML = '';
+      btnCancelText.textContent = 'Cancelar';
+      banner.classList.remove('hidden');
+
+      if (shouldRestart) {
+        resetStage();
+      }
+
+      if (!isPlaying) {
+        togglePlayback();
+      }
+
+      const frameDelayMs = 1000 / fps;
+      let capturedFrames = 0;
+
+      // Breve margen para que el navegador monte los elementos iniciales
+      await new Promise(r => setTimeout(r, 60));
+
+      for (let f = 1; f <= totalFrames; f++) {
+        if (!isExporting) break;
+
+        drawStageToCanvas(ctx, width, height, isTransparent, bgColor);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!isExporting) break;
+
+        const frameNum = String(f).padStart(4, '0');
+        exportZipInstance.file(`frame_${frameNum}.png`, blob);
+
+        capturedFrames++;
+        const pct = Math.round((capturedFrames / totalFrames) * 100);
+        bannerTitle.textContent = `Capturando fotogramas (${fps} FPS)...`;
+        bannerSub.textContent = `Fotograma ${capturedFrames} / ${totalFrames} (${pct}%)`;
+        bannerFill.style.width = `${pct}%`;
+
+        await new Promise(r => setTimeout(r, frameDelayMs));
+      }
+
+      soundEnabled = prevSoundState;
+
+      if (!isExporting) {
+        bannerTitle.textContent = 'Exportación cancelada';
+        bannerSub.textContent = 'Proceso interrumpido por el usuario';
+        setTimeout(() => {
+          banner.classList.add('hidden');
+        }, 1800);
+        return;
+      }
+
+      if (isPlaying) {
+        togglePlayback();
+      }
+
+      bannerTitle.textContent = 'Generando archivo ZIP...';
+      bannerSub.textContent = `Empaquetando ${capturedFrames} fotogramas PNG...`;
+
+      try {
+        const zipBlob = await exportZipInstance.generateAsync({
+          type: 'blob',
+          compression: 'STORE'
+        }, (meta) => {
+          const zipPct = Math.round(meta.percent);
+          bannerSub.textContent = `Comprimiendo ZIP: ${zipPct}%`;
+          bannerFill.style.width = `${zipPct}%`;
+        });
+
+        const filename = `popfx_${currentMode}_${fps}fps_${capturedFrames}frames.zip`;
+        const downloadUrl = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(downloadUrl);
+        }, 1500);
+
+        bannerTitle.textContent = '¡Descarga completada!';
+        bannerSub.textContent = `Guardado ${filename}`;
+        bannerFill.style.width = '100%';
+        bannerSpinner.className = 'export-spinner success';
+        bannerSpinner.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        btnCancelText.textContent = 'Cerrar';
+
+        setTimeout(() => {
+          banner.classList.add('hidden');
+          isExporting = false;
+        }, 4000);
+      } catch (err) {
+        console.error('Error generando zip:', err);
+        bannerTitle.textContent = 'Error al empaquetar';
+        bannerSub.textContent = err.message || 'Error desconocido';
+        isExporting = false;
+      }
+    }
+
+    if (btnStartExport) {
+      btnStartExport.addEventListener('click', startPngSequenceExport);
+    }
+
+    if (btnCancelExport) {
+      btnCancelExport.addEventListener('click', () => {
+        isExporting = false;
+        const banner = document.getElementById('export-banner');
+        if (banner) banner.classList.add('hidden');
+      });
+    }
+
+    // Inicializar resumen de fotogramas
+    updateExportSummary();

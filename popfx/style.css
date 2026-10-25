@@ -315,19 +315,19 @@
 
     .tab-btn {
       flex: 1;
-      padding: 10px 10px;
+      padding: 10px 6px;
       background: transparent;
       border: none;
       border-bottom: 2.5px solid transparent;
       color: #a1a1aa;
-      font-size: 12.5px;
+      font-size: 11.5px;
       font-weight: 700;
       font-family: inherit;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 5px;
       transition: all 0.15s ease;
     }
 
@@ -1198,4 +1198,225 @@
         width: auto;
         max-height: calc(100vh - 62px);
       }
+    }
+
+    /* ========================================================
+       PESTAÑA DESCARGAR (EXPORTAR SECUENCIA PNG ZIP)
+       ======================================================== */
+    .export-preset-chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip-btn {
+      flex: 1;
+      padding: 5px 0;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #a1a1aa;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      color: #ffffff;
+      background: #3f3f46;
+    }
+
+    .chip-btn.active {
+      background: #3f3f46;
+      color: #ffffff;
+      border-color: #71717a;
+    }
+
+    .export-summary-card {
+      background: #141416;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .export-summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .summary-key {
+      color: #a1a1aa;
+    }
+
+    .summary-val {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .btn-export-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      background: #27272a;
+      border: 1.5px solid #3f3f46;
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      margin-top: 6px;
+    }
+
+    .btn-export-action:hover {
+      background: #3f3f46;
+      border-color: #71717a;
+      transform: translateY(-1px);
+    }
+
+    .btn-export-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-export-action svg {
+      flex-shrink: 0;
+    }
+
+    /* BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN */
+    .export-banner {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 440px;
+      max-width: calc(100vw - 32px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .export-banner.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -20px);
+    }
+
+    .export-banner-inner {
+      background: #18181b;
+      border: 1.5px solid #3f3f46;
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .export-banner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .export-banner-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .export-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #3f3f46;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: exportSpin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .export-spinner.success {
+      animation: none;
+      border: none;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes exportSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .export-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .export-banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .export-banner-sub {
+      font-size: 11.5px;
+      color: #a1a1aa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-export-cancel {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      color: #e4e4e7;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-export-cancel:hover {
+      background: #3f3f46;
+      color: #ffffff;
+    }
+
+    .export-progress-track {
+      width: 100%;
+      height: 5px;
+      background: #27272a;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .export-progress-bar {
+      height: 100%;
+      background: #ffffff;
+      border-radius: 3px;
+      transition: width 0.08s linear;
     }
