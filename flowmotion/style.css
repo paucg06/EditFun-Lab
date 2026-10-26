@@ -69,10 +69,6 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   z-index: 15;
 }
 
-.stage-svg-layer * {
-  pointer-events: stroke;
-}
-
 .nodes-container {
   position: absolute;
   top: 0;
@@ -261,7 +257,7 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   max-height: calc(100vh - 270px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .panel-body::-webkit-scrollbar {
@@ -275,7 +271,7 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
 .tab-content {
   display: none;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .tab-content.active {
@@ -283,8 +279,18 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
 }
 
 /* ========================================================
-   HERRAMIENTAS DE BLOQUES Y SELECTORES
+   SUB-TABS [BLOQUES] Y [FLECHAS]
    ======================================================== */
+.subtab-view {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subtab-view.active {
+  display: flex;
+}
+
 .ai-action-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -355,26 +361,14 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   color: #ffffff;
 }
 
-.shortcuts-legend-card {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  background: rgba(39, 39, 42, 0.4);
-  border: 1px solid #27272a;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 11px;
-  color: #a1a1aa;
-}
-
 /* ========================================================
-   LISTAS DE BLOQUES Y CONEXIONES EN EL PANEL
+   LISTAS DE BLOQUES Y FLECHAS
    ======================================================== */
 .section-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .section-counter {
@@ -416,7 +410,7 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 150px;
+  max-height: 190px;
   overflow-y: auto;
   padding: 4px;
   background: rgba(18, 18, 20, 0.6);
@@ -441,7 +435,8 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   border-radius: 8px;
   padding: 6px 10px;
   gap: 8px;
-  transition: border-color 0.15s ease;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .block-row-card.is-selected {
@@ -452,7 +447,7 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
 .block-row-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   flex: 1;
 }
@@ -468,16 +463,25 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   flex-shrink: 0;
 }
 
+.block-shape-mini-btn,
 .block-type-mini-badge {
   font-size: 9.5px;
   font-weight: 800;
   font-family: monospace;
-  padding: 1px 5px;
+  padding: 2px 5px;
   border-radius: 4px;
   background: #3f3f46;
+  border: 1px solid #52525b;
   color: #d4d4d8;
   flex-shrink: 0;
+  cursor: pointer;
   text-transform: uppercase;
+}
+
+.block-shape-mini-btn:hover,
+.block-type-mini-badge:hover {
+  background: #52525b;
+  color: #ffffff;
 }
 
 .block-name-input {
@@ -530,8 +534,96 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
 }
 
 /* ========================================================
-   PESTAÑA DE ANIMACIÓN Y TIMELINE (ORDEN SECUENCIAL)
+   ANIMACIÓN: BARRA DE CONTROL, SCRUBBER Y TIMELINE
    ======================================================== */
+.anim-control-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #141416;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.anim-control-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-step-nav {
+  width: 32px;
+  height: 32px;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-step-nav:hover {
+  background: #3f3f46;
+  color: #ffffff;
+}
+
+#btn-play-inline {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 12.5px;
+}
+
+.anim-scrubber-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.anim-scrubber-text {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a1a1aa;
+  flex-shrink: 0;
+  min-width: 44px;
+  text-align: right;
+}
+
+.timeline-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-timeline-add,
+.btn-timeline-rebuild {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: #e4e4e7;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-timeline-add:hover,
+.btn-timeline-rebuild:hover {
+  background: #3f3f46;
+  color: #ffffff;
+}
+
 .timeline-list-container {
   display: flex;
   flex-direction: column;
@@ -580,12 +672,28 @@ body.bg-light { background-color: #f4f4f6 !important; background-image: none !im
   flex-shrink: 0;
 }
 
+.step-type-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .step-label-text {
   font-weight: 600;
   color: #e4e4e7;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.step-color-picker {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 3px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .step-row-actions {
@@ -812,7 +920,7 @@ select.custom-select {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .pill-opt:hover {
@@ -1094,7 +1202,7 @@ select.custom-select {
 }
 
 /* ========================================================
-   NODOS EN EL LIENZO Y TIPOS DE ELEMENTOS
+   NODOS EN EL LIENZO Y FORMAS (RECTÁNGULO, CUADRADO, PÍLDORA)
    ======================================================== */
 .diagram-node {
   position: absolute;
@@ -1120,7 +1228,7 @@ select.custom-select {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* Estado SELECCIONADO */
+/* Selección */
 .diagram-node.is-selected {
   outline: 2.5px solid #ffffff !important;
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.35), 0 14px 36px rgba(0, 0, 0, 0.8) !important;
@@ -1142,17 +1250,21 @@ select.custom-select {
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5) !important;
 }
 
-/* --- TIPO 1: PROCESO (NORMAL) --- */
-.diagram-node.type-process {
+/* --- FORMAS GEOMÉTRICAS DE NODOS --- */
+.diagram-node.shape-rect {
   border-radius: 12px;
 }
 
-/* --- TIPO 2: BUCLE FOR / WHILE --- */
-.diagram-node.type-loop {
-  border-radius: 12px;
-  border-style: solid;
-  position: relative;
+.diagram-node.shape-square {
+  border-radius: 14px;
 }
+
+.diagram-node.shape-pill {
+  border-radius: 99px !important;
+  padding: 10px 22px;
+}
+
+/* --- TIPOS DE CONTENIDO --- */
 .diagram-node.type-loop::before {
   content: 'FOR LOOP';
   position: absolute;
@@ -1168,11 +1280,6 @@ select.custom-select {
   letter-spacing: 0.5px;
 }
 
-/* --- TIPO 3: CONDICIÓN IF / ELSE (ROMBO) --- */
-.diagram-node.type-decision {
-  border-radius: 6px;
-  position: relative;
-}
 .diagram-node.type-decision::before {
   content: 'IF / ELSE';
   position: absolute;
@@ -1188,7 +1295,6 @@ select.custom-select {
   letter-spacing: 0.5px;
 }
 
-/* --- TIPO 4: BLOQUE DE CÓDIGO / TERMINAL --- */
 .diagram-node.type-code {
   background: #0d1117;
   border-radius: 10px;
@@ -1204,6 +1310,25 @@ select.custom-select {
   font-size: 8px;
   letter-spacing: 3px;
   color: #52525b;
+}
+
+/* Manejador de Redimensionado */
+.node-resize-handle {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  cursor: se-resize;
+  border-right: 2px solid #71717a;
+  border-bottom: 2px solid #71717a;
+  border-radius: 1px;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.diagram-node:hover .node-resize-handle {
+  opacity: 1;
 }
 
 .node-header {
@@ -1255,6 +1380,14 @@ select.custom-select {
   cursor: text;
 }
 
+/* Caja de edición doble de textos */
+.node-edit-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
 .node-inline-input {
   background: #27272a;
   border: 1px solid #52525b;
@@ -1263,14 +1396,17 @@ select.custom-select {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 3px 6px;
   width: 100%;
   outline: none;
 }
 
+.node-inline-input:focus {
+  border-color: #38bdf8;
+}
+
 /* ========================================================
-   PUERTOS DE CONEXIÓN ("PUNCHITOS"):
-   SOLO SE MUESTRAN SI TIENEN CONEXIÓN O AL HACER HOVER
+   PUERTOS DE CONEXIÓN ("PUNCHITOS")
    ======================================================== */
 .node-port {
   position: absolute;
@@ -1282,20 +1418,19 @@ select.custom-select {
   cursor: crosshair;
   z-index: 30;
   transition: transform 0.15s ease, background-color 0.15s ease;
-  display: none; /* Por defecto oculto */
+  display: none;
 }
 
-/* Regla del usuario: Solo se muestran si tienen una flecha conectada */
+/* Solo se muestran si tienen una flecha conectada */
 .node-port.has-connection {
   display: block !important;
 }
 
-/* Al pasar el ratón por encima del nodo, se muestran los 4 para poder conectar */
+/* Al pasar el ratón por encima del nodo, se muestran los 4 */
 .diagram-node:hover .node-port {
   display: block !important;
 }
 
-/* Durante el modo unir nodos o al arrastrar puerto se muestran todos */
 body.is-connecting-mode .node-port,
 body.is-dragging-port .node-port {
   display: block !important;
@@ -1377,11 +1512,20 @@ body.is-dragging-port .node-port {
 /* ========================================================
    FLECHAS Y CONEXIONES (SVG BEZIER)
    ======================================================== */
+.connection-hitbox {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18px;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
 .connection-curve {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
   cursor: pointer;
+  pointer-events: stroke;
   transition: stroke-width 0.15s ease, stroke 0.15s ease;
 }
 
@@ -1389,7 +1533,6 @@ body.is-dragging-port .node-port {
   stroke-width: 5px;
 }
 
-/* Flecha SELECCIONADA */
 .connection-curve.is-selected {
   stroke: #ffffff !important;
   stroke-width: 5px !important;
@@ -1397,8 +1540,6 @@ body.is-dragging-port .node-port {
 }
 
 .connection-curve.animating {
-  stroke-dasharray: 2000;
-  stroke-dashoffset: 2000;
   animation: drawStroke linear forwards;
 }
 
@@ -1417,7 +1558,6 @@ body.is-dragging-port .node-port {
   pointer-events: auto;
 }
 
-/* Botón flotante para desconectar flecha seleccionada */
 .conn-disconnect-badge {
   position: absolute;
   background: #ef4444;

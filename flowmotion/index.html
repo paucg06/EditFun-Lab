@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <!-- Botón 3 Puntos Arriba a la Derecha (Idéntico a PopFX) -->
+  <!-- Botón 3 Puntos Arriba a la Derecha -->
   <button class="top-menu-btn" id="menu-btn" title="Configurar FlowMotion">
     <svg viewBox="0 0 24 24">
       <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -113,17 +113,6 @@
           </button>
         </div>
 
-        <!-- Selector de Tipo de Bloque (Código / Bucle / Decisión / Proceso) -->
-        <div class="setting-row">
-          <span class="setting-label">Tipo de Bloque</span>
-          <div class="pill-selector" id="block-type-selector">
-            <button type="button" class="pill-opt active" data-type="process" title="Bloque de proceso normal">Proceso</button>
-            <button type="button" class="pill-opt" data-type="loop" title="Bucle For / Repetición">Bucle For</button>
-            <button type="button" class="pill-opt" data-type="decision" title="Condición If / Else">Condición If</button>
-            <button type="button" class="pill-opt" data-type="code" title="Snippet de código / Terminal">Código</button>
-          </div>
-        </div>
-
         <!-- Herramientas Principales: Añadir Bloque y Unir Nodos -->
         <div class="block-tools-row">
           <button type="button" class="btn-tool-action" id="btn-add-block">
@@ -136,61 +125,80 @@
           </button>
         </div>
 
-        <!-- Atajos de Edición -->
-        <div class="shortcuts-legend-card">
-          <span><kbd class="keyboard-badge">Ctrl+C</kbd> Copiar</span>
-          <span><kbd class="keyboard-badge">Ctrl+V</kbd> Pegar</span>
-          <span><kbd class="keyboard-badge">Ctrl+D</kbd> Duplicar</span>
-          <span><kbd class="keyboard-badge">Ctrl+Z</kbd> Deshacer</span>
-          <span><kbd class="keyboard-badge">Supr</kbd> Eliminar</span>
-        </div>
-
-        <!-- Lista de Bloques Activos -->
-        <div class="section-header-row">
-          <div class="section-counter">
-            <span>Bloques activos:</span>
+        <!-- Subtabs limpios: [ Bloques (N) ] y [ Flechas (N) ] -->
+        <div class="pill-selector" id="subtab-selector">
+          <button type="button" class="pill-opt active" data-subtab="subtab-nodes">
+            <span>Bloques</span>
             <span class="badge-count" id="nodes-badge-count">0</span>
-          </div>
-          <button type="button" class="btn-clear-all" id="btn-clear-blocks">Limpiar todos</button>
-        </div>
-
-        <div class="items-list-container" id="blocks-list">
-          <!-- Se llena dinámicamente -->
-        </div>
-
-        <!-- Lista de Flechas / Conexiones -->
-        <div class="section-header-row" style="margin-top: 6px;">
-          <div class="section-counter">
-            <span>Flechas y Conexiones:</span>
+          </button>
+          <button type="button" class="pill-opt" data-subtab="subtab-conns">
+            <span>Flechas</span>
             <span class="badge-count" id="connections-badge-count">0</span>
-          </div>
-          <button type="button" class="btn-clear-all" id="btn-clear-connections">Limpiar flechas</button>
+          </button>
         </div>
 
-        <div class="items-list-container" id="connections-list">
-          <!-- Se llena dinámicamente -->
+        <!-- Subtab 1: Bloques -->
+        <div class="subtab-view active" id="subtab-nodes">
+          <div class="section-header-row">
+            <span class="section-counter">Listado de bloques:</span>
+            <button type="button" class="btn-clear-all" id="btn-clear-blocks">Limpiar todos</button>
+          </div>
+          <div class="items-list-container" id="blocks-list"></div>
+        </div>
+
+        <!-- Subtab 2: Flechas -->
+        <div class="subtab-view" id="subtab-conns" style="display: none;">
+          <div class="section-header-row">
+            <span class="section-counter">Listado de flechas:</span>
+            <button type="button" class="btn-clear-all" id="btn-clear-connections">Limpiar flechas</button>
+          </div>
+          <div class="items-list-container" id="connections-list"></div>
         </div>
 
       </div>
 
-      <!-- TAB 2: ANIMACIÓN Y TIMELINE DE ORDEN -->
+      <!-- TAB 2: ANIMACIÓN Y STORYBOARD SECUENCIAL -->
       <div class="tab-content" id="tab-settings">
         
-        <!-- Timeline y Orden de Animación -->
-        <div class="setting-row">
-          <div class="setting-label-wrap">
-            <span class="setting-label">Orden Secuencial de Pasos</span>
-            <button type="button" class="btn-clear-all" id="btn-rebuild-timeline" title="Regenerar secuencia lógica">Auto-ordenar</button>
+        <!-- Barra de Reproducción y Scrubber Paso a Paso -->
+        <div class="anim-control-bar">
+          <div class="anim-control-buttons">
+            <button type="button" class="btn-step-nav" id="btn-step-prev" title="Paso anterior (◀)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <button type="button" class="btn-main-play" id="btn-play-inline">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span id="play-text-inline">Reproducir</span>
+            </button>
+            <button type="button" class="btn-step-nav" id="btn-step-next" title="Paso siguiente (▶)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
           </div>
-          <div class="timeline-list-container" id="timeline-list">
-            <!-- Se llena dinámicamente -->
+          <div class="anim-scrubber-wrap">
+            <input type="range" id="param-anim-scrubber" min="0" max="0" value="0" step="1">
+            <span class="anim-scrubber-text" id="val-anim-scrubber">0 / 0</span>
           </div>
         </div>
+
+        <!-- Acciones del Timeline -->
+        <div class="timeline-actions-row">
+          <button type="button" class="btn-timeline-add" id="btn-add-color-step">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <span>+ Cambio de Color</span>
+          </button>
+          <button type="button" class="btn-timeline-rebuild" id="btn-rebuild-timeline" title="Regenerar secuencia lógica">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Auto-ordenar</span>
+          </button>
+        </div>
+
+        <!-- Lista del Timeline -->
+        <div class="timeline-list-container" id="timeline-list"></div>
 
         <!-- Intervalo entre Pasos -->
         <div class="setting-row">
           <div class="setting-label-wrap">
-            <span class="setting-label">Intervalo de aparición</span>
+            <span class="setting-label">Velocidad de paso</span>
             <span class="setting-value" id="val-step-speed">0.50 s</span>
           </div>
           <input type="range" id="param-step-speed" min="0.15" max="1.5" step="0.05" value="0.5">
@@ -198,7 +206,7 @@
 
         <!-- Efecto de Entrada -->
         <div class="setting-row">
-          <span class="setting-label">Efecto de entrada</span>
+          <span class="setting-label">Efecto de aparición</span>
           <select class="custom-select" id="param-anim-effect">
             <option value="bounce" selected>Rebote Elástico (Pop Bounce)</option>
             <option value="drop">Caída Rápida (Drop In)</option>
@@ -372,7 +380,7 @@
 
     </div>
 
-    <!-- Pie del Panel (Idéntico a PopFX) -->
+    <!-- Pie del Panel -->
     <div class="panel-footer">
       <div class="footer-btn-row">
         <button type="button" class="btn-main-play" id="btn-play">
@@ -402,7 +410,7 @@
     </div>
   </aside>
 
-  <!-- BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN (IDÉNTICO A POPFX) -->
+  <!-- BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN -->
   <div id="export-banner" class="export-banner hidden">
     <div class="export-banner-inner">
       <div class="export-banner-header">
@@ -448,25 +456,22 @@
         </p>
         <textarea id="ai-code-input" class="ai-textarea" placeholder='{
   "nodes": [
-    { "id": "inicio", "type": "process", "title": "INICIO", "subtitle": "PROCESO", "color": "#38bdf8", "x": 380, "y": 540 },
-    { "id": "loop1", "type": "loop", "title": "FOR I = 0..5", "subtitle": "BUCLE", "color": "#a855f7", "x": 780, "y": 540 },
-    { "id": "cond1", "type": "decision", "title": "¿ES VÁLIDO?", "subtitle": "CONDICIÓN", "color": "#f59e0b", "x": 1180, "y": 540 },
-    { "id": "code1", "type": "code", "title": "EJECUTAR", "subtitle": "socket.emit()", "color": "#10b981", "x": 1580, "y": 540 }
+    { "id": "inicio", "type": "process", "shape": "rect", "title": "INICIO", "subtitle": "PROCESO", "color": "#38bdf8", "x": 380, "y": 540 },
+    { "id": "loop1", "type": "loop", "shape": "rect", "title": "FOR I = 0..5", "subtitle": "BUCLE", "color": "#a855f7", "x": 780, "y": 540 },
+    { "id": "cond1", "type": "decision", "shape": "diamond", "title": "¿ES VÁLIDO?", "subtitle": "CONDICIÓN", "color": "#f59e0b", "x": 1180, "y": 540 },
+    { "id": "code1", "type": "code", "shape": "rect", "title": "EJECUTAR", "subtitle": "socket.emit()", "color": "#10b981", "x": 1580, "y": 540 }
   ],
   "connections": [
     { "from": "inicio", "fromPort": "right", "to": "loop1", "toPort": "left", "color": "#38bdf8", "label": "START" },
     { "from": "loop1", "fromPort": "right", "to": "cond1", "toPort": "left", "color": "#a855f7", "label": "TICK" },
-    { "from": "cond1", "fromPort": "right", "to": "code1", "toPort": "left", "color": "#10b981", "label": "SI" },
-    { "from": "cond1", "fromPort": "bottom", "to": "loop1", "toPort": "bottom", "color": "#ef4444", "label": "REINTENTAR" }
+    { "from": "cond1", "fromPort": "right", "to": "code1", "toPort": "left", "color": "#10b981", "label": "SI" }
   ],
   "sequence": [
     { "type": "popup", "target": "inicio" },
     { "type": "arrow", "from": "inicio", "to": "loop1" },
     { "type": "popup", "target": "loop1" },
-    { "type": "arrow", "from": "loop1", "to": "cond1" },
-    { "type": "popup", "target": "cond1" },
-    { "type": "arrow", "from": "cond1", "to": "code1" },
-    { "type": "popup", "target": "code1" }
+    { "type": "color", "target": "loop1", "color": "#10b981" },
+    { "type": "arrow", "from": "loop1", "to": "cond1" }
   ]
 }'></textarea>
       </div>
@@ -508,6 +513,7 @@ ESPECIFICACIÓN JSON ESTRICTA:
 1. "nodes": lista de objetos con:
    - "id": string único (ej: "loop_main", "check_hp").
    - "type": "process" (proceso normal), "loop" (bucle for/while), "decision" (condición rombo if/else), o "code" (snippet de código/terminal).
+   - "shape": "rect" (rectángulo estándar), "square" (cuadrado), o "pill" (redondeado píldora).
    - "title": título principal en mayúsculas (ej: "FOR I = 0..5", "¿COLISIÓN?", "CALCULAR FÍSICAS").
    - "subtitle": subtítulo o comando breve (ej: "BUCLE 60 TICKS", "VERIFICAR", "socket.emit()").
    - "color": color hexadecimal plano (#38bdf8, #10b981, #f59e0b, #ef4444, #a855f7, #ec4899).
@@ -523,6 +529,7 @@ ESPECIFICACIÓN JSON ESTRICTA:
 3. "sequence": lista del orden temporal paso a paso:
    - { "type": "popup", "target": "id_del_nodo" }
    - { "type": "arrow", "from": "id_origen", "to": "id_destino" }
+   - { "type": "color", "target": "id_del_nodo", "color": "#10b981" }
 4. Devuelve EXCLUSIVAMENTE el JSON dentro de ```json ... ``` sin comentarios ni relleno.</textarea>
       </div>
       <div class="modal-footer">
