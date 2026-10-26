@@ -25,7 +25,7 @@ const server = http.createServer((req, res) => {
   let reqPath = decodeURI(req.url.split('?')[0]);
   if (reqPath === '/') reqPath = '/index.html';
 
-  const filePath = path.normalize(path.join(PUBLIC_DIR, reqPath));
+  let filePath = path.normalize(path.join(PUBLIC_DIR, reqPath));
 
   // Seguridad contra Directory Traversal
   if (!filePath.startsWith(PUBLIC_DIR)) {
@@ -34,21 +34,36 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('404 Not Found');
-      return;
-    }
-
-    const ext = path.extname(filePath).toLowerCase();
+  function serveFile(targetPath) {
+    const ext = path.extname(targetPath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
     res.writeHead(200, {
       'Content-Type': contentType,
       'Access-Control-Allow-Origin': '*'
     });
-    fs.createReadStream(filePath).pipe(res);
+    fs.createReadStream(targetPath).pipe(res);
+  }
+
+  fs.stat(filePath, (err, stats) => {
+    if (!err && stats.isFile()) {
+      return serveFile(filePath);
+    }
+
+    if (!err && stats.isDirectory()) {
+      const indexPath = path.join(filePath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        return serveFile(indexPath);
+      }
+    }
+
+    const htmlPath = filePath + '.html';
+    if (fs.existsSync(htmlPath)) {
+      return serveFile(htmlPath);
+    }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('404 Not Found');
   });
 });
 

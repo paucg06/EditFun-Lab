@@ -946,3 +946,70 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Tarjeta 8: FlowMotion (Diagramas Animados y Mazmorras con IA) */
+    .card-flowmotion {
+      background-color: #0f172a;
+      border: 3px solid #38bdf8;
+      box-shadow: 0 4px 0 #0284c7;
+      color: #ffffff;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 22px 18px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      min-height: 160px;
+    }
+
+    .flowmotion-card-title {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: clamp(34px, 4.2vw, 44px) !important;
+      font-weight: 900;
+      letter-spacing: -1.2px;
+      display: inline-flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0px;
+      line-height: 1;
+      margin: 0;
+      color: #ffffff;
+      -webkit-text-stroke: 3px #000000;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 3px 0 #000000) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.45));
+    }
+
+    .flowmotion-card-title .flow-word {
+      color: #38bdf8;
+    }
+
+    .flowmotion-card-title .motion-word {
+      color: #ffffff;
+    }
+
+    .flowmotion-preview-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 380px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .flowmotion-mini-badge {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 99px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      color: #ffffff;
+      border: 1.5px solid #38bdf8;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    }
