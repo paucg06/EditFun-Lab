@@ -13,24 +13,24 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlowMotion - Diagramas y Mazmorras Animadas</title>
+  <title>FlowMotion</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/flowmotion/style.css">
 </head>
 <body class="bg-transparent">
 
-  <!-- Mensaje de bienvenida inicial en el centro -->
+  <!-- Mensaje de bienvenida inicial en el centro (Idéntico a PopFX) -->
   <div id="welcome-hint" class="welcome-hint" title="Haz clic o pulsa H para abrir el panel">
-    <div class="welcome-hint-title">Crea tu diagrama animado</div>
+    <div class="welcome-hint-title">Crea tu diagrama animado FlowMotion</div>
     <div class="welcome-hint-sub">
       Pulsa <kbd class="keyboard-badge">H</kbd> o toca los tres puntos arriba para configurar
     </div>
   </div>
 
-  <!-- Botón 3 Puntos Arriba a la Derecha -->
+  <!-- Botón 3 Puntos Arriba a la Derecha (Idéntico a PopFX) -->
   <button class="top-menu-btn" id="menu-btn" title="Configurar FlowMotion">
     <svg viewBox="0 0 24 24">
       <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -42,57 +42,24 @@
     <!-- Capa SVG para conexiones y flechas -->
     <svg id="stage-connections-svg" class="stage-svg-layer">
       <defs>
-        <!-- Marcadores de flechas para cada color -->
-        <marker id="arrowhead-sky" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#38bdf8"/>
-        </marker>
-        <marker id="arrowhead-amber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#f59e0b"/>
-        </marker>
-        <marker id="arrowhead-emerald" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981"/>
-        </marker>
-        <marker id="arrowhead-rose" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#ef4444"/>
-        </marker>
-        <marker id="arrowhead-violet" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#a855f7"/>
-        </marker>
-        <marker id="arrowhead-white" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1 L 9 5 L 0 9 z" fill="#ffffff"/>
+        <!-- Marcador genérico dinámico -->
+        <marker id="arrowhead-dyn" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8"/>
         </marker>
       </defs>
-      <!-- Grupo de líneas dinámicas -->
       <g id="connections-group"></g>
-      <!-- Línea temporal al arrastrar para conectar punta a punta -->
-      <path id="drag-connect-path" class="drag-connect-path" d="" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6,6" style="display: none;"/>
+      <!-- Línea temporal al arrastrar puerto punta a punta -->
+      <path id="drag-connect-path" d="" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6,6" style="display: none;"/>
     </svg>
 
-    <!-- Contenedor interactivo de bloques / nodos -->
+    <!-- Contenedor de Bloques / Nodos -->
     <div id="nodes-container" class="nodes-container"></div>
-
-    <!-- Contenedor para el modo Mazmorra / Cuadrícula 5x5 Procedural -->
-    <div id="dungeon-container" class="dungeon-container" style="display: none;">
-      <div class="dungeon-wrapper">
-        <div class="dungeon-header">
-          <span class="dungeon-title">MAZMORRA PROCEDURAL 5x5</span>
-          <span class="dungeon-sub" id="dungeon-step-info">Paso 0 / 25</span>
-        </div>
-        <div id="dungeon-grid" class="dungeon-grid"></div>
-        <div class="dungeon-legend">
-          <span class="legend-item"><span class="legend-color legend-start"></span> Inicio</span>
-          <span class="legend-item"><span class="legend-color legend-good"></span> Camino Válido</span>
-          <span class="legend-item"><span class="legend-color legend-bad"></span> Trampa / Bloqueo</span>
-          <span class="legend-item"><span class="legend-color legend-goal"></span> Meta</span>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- PANEL DE CONTROL FLOTANTE (ESTILO POPFX) -->
+  <!-- PANEL DE CONTROL FLOTANTE A LA DERECHA (ESTRUCTURA EXACTA DE POPFX) -->
   <aside class="control-panel hidden" id="control-panel">
     
-    <!-- Pestañas de Selección (Iconos vectoriales limpios sin emojis) -->
+    <!-- Pestañas de Selección (Iconos vectoriales idénticos a PopFX) -->
     <div class="panel-tabs">
       <button class="tab-btn active" data-tab="tab-blocks">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -130,20 +97,20 @@
     <!-- Contenido del Panel -->
     <div class="panel-body">
       
-      <!-- TAB 1: BLOQUES, CONEXIONES Y PRESETS CON IA -->
+      <!-- TAB 1: BLOQUES Y CONEXIONES -->
       <div class="tab-content active" id="tab-blocks">
         
-        <!-- Botones Principales de IA -->
+        <!-- Dos botones superiores exclusivos: Importar Código IA y Prompt Maestro -->
         <div class="ai-action-bar">
-          <button type="button" class="btn-ai-import" id="btn-open-ai-modal">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="btn-ai-action primary" id="btn-open-ai-modal">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6"></polyline>
               <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
             <span>Importar Código IA</span>
           </button>
-          <button type="button" class="btn-ai-prompt" id="btn-open-prompt-modal" title="Copiar prompt maestro para ChatGPT, Claude o Gemini">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="btn-ai-action" id="btn-open-prompt-modal" title="Copiar prompt maestro para ChatGPT, Claude o Gemini">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
@@ -151,141 +118,90 @@
           </button>
         </div>
 
-        <!-- Presets Rápidos -->
-        <div class="presets-title">PRESETS INSTANTÁNEOS:</div>
-        <div class="preset-btn-group">
-          <button type="button" class="preset-btn" id="btn-preset-castlecat">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Ciclo de Juego (RPG)
+        <!-- Herramientas Principales: Añadir Bloque y Unir Nodos -->
+        <div class="block-tools-row">
+          <button type="button" class="btn-tool-action" id="btn-add-block">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Añadir Bloque</span>
           </button>
-          <button type="button" class="preset-btn" id="btn-preset-server">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-            Estructura Servidor
-          </button>
-          <button type="button" class="preset-btn" id="btn-preset-dungeon">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Mazmorra 5x5
-          </button>
-          <button type="button" class="preset-btn" id="btn-preset-tree">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m-7 4l4.5-4m10 0l-4.5 4"/></svg>
-            Árbol Habilidades
-          </button>
-        </div>
-
-        <!-- Acciones de Bloques -->
-        <div class="block-actions-row">
-          <button type="button" class="btn-block-action" id="btn-add-block">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Añadir Bloque
-          </button>
-          <button type="button" class="btn-block-action" id="btn-toggle-connect-mode">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <button type="button" class="btn-tool-action" id="btn-toggle-connect-mode">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             <span id="connect-mode-label">Unir Nodos</span>
           </button>
         </div>
 
-        <div class="tip-box-compact">
-          Tip: Arrastra los bloques con el ratón o tira del punto lateral de un bloque hacia otro para conectarlos punta a punta.
-        </div>
-
-        <!-- Lista de Bloques en Escena -->
-        <div class="gallery-header">
-          <div class="gallery-counter">
+        <!-- Lista de Bloques Activos -->
+        <div class="section-header-row">
+          <div class="section-counter">
             <span>Bloques activos:</span>
             <span class="badge-count" id="nodes-badge-count">0</span>
           </div>
           <button type="button" class="btn-clear-all" id="btn-clear-blocks">Limpiar todos</button>
         </div>
 
-        <div class="blocks-list" id="blocks-list">
-          <!-- Se genera dinámicamente -->
+        <div class="items-list-container" id="blocks-list">
+          <!-- Se llena dinámicamente -->
         </div>
 
-        <!-- Lista de Conexiones -->
-        <div class="gallery-header" style="margin-top: 14px;">
-          <div class="gallery-counter">
-            <span>Flechas / Conexiones:</span>
+        <!-- Lista de Flechas / Conexiones -->
+        <div class="section-header-row" style="margin-top: 6px;">
+          <div class="section-counter">
+            <span>Flechas y Conexiones:</span>
             <span class="badge-count" id="connections-badge-count">0</span>
           </div>
+          <button type="button" class="btn-clear-all" id="btn-clear-connections">Limpiar flechas</button>
         </div>
 
-        <div class="connections-list" id="connections-list">
-          <!-- Se genera dinámicamente -->
+        <div class="items-list-container" id="connections-list">
+          <!-- Se llena dinámicamente -->
         </div>
 
       </div>
 
-      <!-- TAB 2: ANIMACIÓN Y MODOS -->
+      <!-- TAB 2: ANIMACIÓN Y TIMELINE DE ORDEN -->
       <div class="tab-content" id="tab-settings">
         
-        <!-- Selector de Modo Principal -->
-        <div class="setting-row">
-          <span class="setting-label">Modo de Visualización</span>
-          <div class="pill-selector">
-            <button type="button" class="pill-opt active" id="mode-diagram" data-mode="diagram">
-              Diagrama de Nodos
-            </button>
-            <button type="button" class="pill-opt" id="mode-dungeon" data-mode="dungeon">
-              Mazmorra 5x5
-            </button>
-          </div>
-        </div>
-
-        <!-- Controles específicos de Mazmorra 5x5 -->
-        <div id="dungeon-controls" style="display: none; flex-direction: column; gap: 12px; background: #18181b; padding: 12px; border-radius: 10px; border: 1px solid #27272a;">
-          <div class="setting-row">
-            <span class="setting-label">Herramienta de Celdas</span>
-            <div class="pill-selector" id="dungeon-tool-selector">
-              <button type="button" class="pill-opt active" data-tool="good">Camino Verde</button>
-              <button type="button" class="pill-opt" data-tool="bad">Trampa Roja</button>
-              <button type="button" class="pill-opt" data-tool="empty">Neutro</button>
-            </div>
-          </div>
-          <button type="button" class="preset-btn" id="btn-regen-dungeon" style="width: 100%;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            Generar Nueva Mazmorra Aleatoria
-          </button>
-        </div>
-
-        <!-- Velocidad de Animación / Intervalo de Pasos -->
+        <!-- Timeline y Orden de Animación -->
         <div class="setting-row">
           <div class="setting-label-wrap">
-            <span class="setting-label">Velocidad del Flujo (Paso a paso)</span>
-            <span class="setting-value" id="val-step-speed">0.5 seg</span>
+            <span class="setting-label">Orden Secuencial de Pasos</span>
+            <button type="button" class="btn-clear-all" id="btn-rebuild-timeline" title="Regenerar secuencia lógica">Auto-ordenar</button>
+          </div>
+          <div class="timeline-list-container" id="timeline-list">
+            <!-- Se llena dinámicamente con los pasos de la animación -->
+          </div>
+        </div>
+
+        <!-- Intervalo entre Pasos -->
+        <div class="setting-row">
+          <div class="setting-label-wrap">
+            <span class="setting-label">Intervalo de aparición</span>
+            <span class="setting-value" id="val-step-speed">0.50 s</span>
           </div>
           <input type="range" id="param-step-speed" min="0.15" max="1.5" step="0.05" value="0.5">
         </div>
 
-        <!-- Efecto de Entrada de los Bloques -->
+        <!-- Efecto de Entrada -->
         <div class="setting-row">
-          <span class="setting-label">Efecto de Entrada</span>
+          <span class="setting-label">Efecto de entrada</span>
           <select class="custom-select" id="param-anim-effect">
-            <option value="bounce" selected>Pop Elástico (Bounce)</option>
-            <option value="lift">Elevación 3D (Lift)</option>
-            <option value="zoom">Zoom Suave</option>
+            <option value="bounce" selected>Rebote Elástico (Pop Bounce)</option>
+            <option value="drop">Caída Rápida (Drop In)</option>
+            <option value="zoom">Zoom</option>
             <option value="fade">Desvanecimiento (Fade)</option>
           </select>
-        </div>
-
-        <!-- Tamaño de Bloques -->
-        <div class="setting-row">
-          <div class="setting-label-wrap">
-            <span class="setting-label">Escala de Bloques</span>
-            <span class="setting-value" id="val-block-scale">1.0x</span>
-          </div>
-          <input type="range" id="param-block-scale" min="0.7" max="1.6" step="0.05" value="1.0">
         </div>
 
         <!-- Grosor de Flechas -->
         <div class="setting-row">
           <div class="setting-label-wrap">
-            <span class="setting-label">Grosor de Flechas</span>
+            <span class="setting-label">Grosor de flechas</span>
             <span class="setting-value" id="val-arrow-width">3 px</span>
           </div>
           <input type="range" id="param-arrow-width" min="2" max="8" step="1" value="3">
         </div>
 
-        <!-- Sonido de Animación (pupupup) -->
+        <!-- Sonido de Animación (Web Audio pupupup) -->
         <div class="sound-control-wrap">
           <label class="custom-checkbox-row">
             <input type="checkbox" id="param-sound-enabled" class="custom-checkbox-input" checked>
@@ -294,12 +210,12 @@
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span class="custom-checkbox-label">Sonido pop "pupupup" sincronizado</span>
+            <span class="custom-checkbox-label">Reproducir sonido "pupupup"</span>
           </label>
         </div>
 
-        <!-- Bucle automático -->
-        <div class="setting-row" style="margin-top: -4px;">
+        <!-- Repetir en Bucle -->
+        <div class="setting-row" style="margin-top: -6px;">
           <label class="custom-checkbox-row">
             <input type="checkbox" id="param-loop-enabled" class="custom-checkbox-input">
             <span class="custom-checkbox-box">
@@ -307,13 +223,13 @@
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span class="custom-checkbox-label">Repetir en bucle</span>
+            <span class="custom-checkbox-label">Repetir animación en bucle</span>
           </label>
         </div>
 
       </div>
 
-      <!-- TAB 3: FONDO Y PANTALLA CROMA -->
+      <!-- TAB 3: FONDO Y PANTALLA CROMA (IDÉNTICO A POPFX) -->
       <div class="tab-content" id="tab-screen">
         <div class="setting-row">
           <span class="setting-label">Color de Fondo para Edición (Chroma Key)</span>
@@ -326,25 +242,24 @@
           </div>
         </div>
 
-        <div style="background: #18181b; border: 1px solid #27272a; padding: 14px; border-radius: 10px; font-size: 12.5px; color: #d4d4d8; line-height: 1.6;">
-          <strong style="color: #ffffff; display: block; margin-bottom: 5px;">Atajos de Teclado:</strong>
-          Pulsa <kbd class="keyboard-badge">H</kbd> para ocultar o mostrar este panel.<br>
-          Pulsa <kbd class="keyboard-badge">Espacio</kbd> para iniciar o pausar.<br>
-          Pulsa <kbd class="keyboard-badge">R</kbd> para reiniciar al fotograma cero.<br>
-          Pulsa <kbd class="keyboard-badge">F11</kbd> para pantalla completa.
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid #27272a; padding: 14px; border-radius: 10px; font-size: 12.5px; color: #d4d4d8; line-height: 1.6;">
+          <strong style="color: #ffffff; display: block; margin-bottom: 5px;">Tips de grabación:</strong>
+          Pulsa <kbd class="keyboard-badge">H</kbd> para ocultar el panel y <kbd class="keyboard-badge">F11</kbd> para pantalla completa.<br>
+          Pulsa <kbd class="keyboard-badge">Espacio</kbd> para iniciar o pausar y <kbd class="keyboard-badge">R</kbd> para reiniciar al principio.<br>
+          Doble clic sobre cualquier bloque en pantalla para renombrarlo al instante.
         </div>
       </div>
 
-      <!-- TAB 4: DESCARGAR SECUENCIA PNG (ZIP) -->
+      <!-- TAB 4: DESCARGAR SECUENCIA PNG (ZIP) (IDÉNTICO A POPFX) -->
       <div class="tab-content" id="tab-export">
         
         <!-- Duración -->
         <div class="setting-row">
           <div class="setting-label-wrap">
-            <span class="setting-label">Duración de la secuencia</span>
+            <span class="setting-label">Duración de la captura</span>
             <span class="setting-value" id="val-export-duration">5 seg</span>
           </div>
-          <input type="range" id="param-export-duration" min="2" max="30" step="1" value="5">
+          <input type="range" id="param-export-duration" min="1" max="30" step="1" value="5">
           <div class="export-preset-chips">
             <button type="button" class="chip-btn" data-duration="3">3s</button>
             <button type="button" class="chip-btn active" data-duration="5">5s</button>
@@ -370,7 +285,7 @@
           <span class="setting-label">Fondo de los fotogramas PNG</span>
           <div class="pill-selector" id="export-bg-selector">
             <button type="button" class="pill-opt active" data-bg-mode="transparent">
-              Transparente (Canal Alfa)
+              Transparente (Alfa)
             </button>
             <button type="button" class="pill-opt" data-bg-mode="current">
               Fondo Actual
@@ -383,9 +298,9 @@
           <span class="setting-label">Resolución de renderizado</span>
           <select class="custom-select" id="param-export-res">
             <option value="1920x1080" selected>Full HD 1080p (1920 × 1080)</option>
-            <option value="1080x1920">Vertical 9:16 (1080 × 1920 - Shorts)</option>
+            <option value="1080x1920">Vertical 9:16 (1080 × 1920 - Reels/Shorts)</option>
             <option value="1280x720">HD 720p (1280 × 720)</option>
-            <option value="screen">Pantalla Actual</option>
+            <option value="screen">Pantalla actual (Nativo)</option>
           </select>
         </div>
 
@@ -414,7 +329,7 @@
           </label>
         </div>
 
-        <!-- Tarjeta resumen -->
+        <!-- Resumen -->
         <div class="export-summary-card">
           <div class="export-summary-line">
             <span class="summary-key">Total fotogramas:</span>
@@ -440,7 +355,7 @@
 
     </div>
 
-    <!-- Pie del Panel -->
+    <!-- Pie del Panel (Idéntico a PopFX) -->
     <div class="panel-footer">
       <div class="footer-btn-row">
         <button type="button" class="btn-main-play" id="btn-play">
@@ -449,11 +364,11 @@
           </svg>
           <span id="play-text">Iniciar Animación</span>
         </button>
-        <button type="button" class="btn-main-reset" id="btn-reset" title="Reiniciar (R)">
+        <button type="button" class="btn-main-reset" id="btn-reset" title="Limpiar Lienzo (R)">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
           </svg>
-          <span>Reiniciar</span>
+          <span>Limpiar</span>
         </button>
       </div>
 
@@ -470,7 +385,7 @@
     </div>
   </aside>
 
-  <!-- BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN -->
+  <!-- BANNER FLOTANTE DE PROGRESO DE EXPORTACIÓN (IDÉNTICO A POPFX) -->
   <div id="export-banner" class="export-banner hidden">
     <div class="export-banner-inner">
       <div class="export-banner-header">
@@ -512,20 +427,26 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">
-          Pega aquí el bloque JSON o FlowScript generado por ChatGPT, Claude, Gemini o Antigravity:
+          Pega el bloque JSON generado por ChatGPT, Claude, Gemini o Antigravity:
         </p>
         <textarea id="ai-code-input" class="ai-textarea" placeholder='{
   "nodes": [
-    { "id": "cliente", "title": "CLIENTE", "subtitle": "NAVEGADOR", "color": "#38bdf8", "x": 400, "y": 540 },
+    { "id": "cliente", "title": "CLIENTE", "subtitle": "NAVEGADOR", "color": "#38bdf8", "x": 420, "y": 540 },
     { "id": "servidor", "title": "SERVIDOR", "subtitle": "API REST", "color": "#10b981", "x": 960, "y": 540 },
-    { "id": "db", "title": "BASE DATOS", "subtitle": "POSTGRES", "color": "#f59e0b", "x": 1520, "y": 540 }
+    { "id": "db", "title": "BASE DE DATOS", "subtitle": "POSTGRESQL", "color": "#f59e0b", "x": 1500, "y": 540 }
+  ],
+  "connections": [
+    { "from": "cliente", "fromPort": "right", "to": "servidor", "toPort": "left", "color": "#38bdf8", "label": "REQUEST" },
+    { "from": "servidor", "fromPort": "right", "to": "db", "toPort": "left", "color": "#10b981", "label": "QUERY" },
+    { "from": "servidor", "fromPort": "bottom", "to": "cliente", "toPort": "bottom", "color": "#38bdf8", "label": "RESPONSE" }
   ],
   "sequence": [
     { "type": "popup", "target": "cliente" },
-    { "type": "arrow", "from": "cliente", "to": "servidor", "color": "#38bdf8" },
+    { "type": "arrow", "from": "cliente", "to": "servidor" },
     { "type": "popup", "target": "servidor" },
-    { "type": "arrow", "from": "servidor", "to": "db", "color": "#10b981" },
-    { "type": "popup", "target": "db" }
+    { "type": "arrow", "from": "servidor", "to": "db" },
+    { "type": "popup", "target": "db" },
+    { "type": "arrow", "from": "servidor", "to": "cliente" }
   ]
 }'></textarea>
       </div>
@@ -536,7 +457,7 @@
     </div>
   </div>
 
-  <!-- MODAL: PROMPT MAESTRO PARA IA -->
+  <!-- MODAL: PROMPT MAESTRO COMPLETO PARA IA -->
   <div id="modal-master-prompt" class="modal-overlay hidden">
     <div class="modal-box">
       <div class="modal-header">
@@ -545,7 +466,7 @@
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
           </svg>
-          <span>Prompt Maestro para Copiar a la IA</span>
+          <span>Prompt Maestro Detallado para la IA</span>
         </div>
         <button type="button" class="modal-close-btn" id="btn-close-prompt-modal">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -553,17 +474,37 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">
-          Copia este prompt y envíaselo a ChatGPT, Claude o Gemini para que te diseñe cualquier diagrama animado:
+          Copia y envía este prompt completo y exhaustivo a cualquier IA (ChatGPT, Claude, Gemini o Antigravity) para que genere el diagrama exacto:
         </p>
-        <textarea id="master-prompt-text" class="ai-textarea" readonly>Actúa como un diseñador de diagramas de flujo animados para FlowMotion Studio.
-Genera un bloque de código en formato JSON según esta estructura exacta para el siguiente flujo:
-[ESCRIBE AQUÍ TU IDEA, EJEMPLO: "Estructura de un juego online: cliente envía input al servidor, el servidor calcula la física y sincroniza con la base de datos"]
+        <textarea id="master-prompt-text" class="ai-textarea" readonly>Actúa como un Diseñador y Desarrollador Experto de Diagramas de Flujo Animados para FlowMotion Studio.
+Tu objetivo es transformar la siguiente idea en un diagrama visual profesional estructurado en formato JSON:
 
-Especificaciones obligatorias:
-1. Resolución estándar: 1920x1080.
-2. Cada nodo tiene: "id", "title", "subtitle", "color" (hex plano: #38bdf8, #10b981, #f59e0b, #ef4444, #a855f7), "badge" opcional (1 letra o icono) y coordenadas aproximadas ("x", "y") distribuidas en el lienzo de 1920x1080.
-3. La lista "sequence" define el orden temporal exacto de la animación con "type" ("popup", "arrow", "loop"), "duration" y los nodos conectados.
-4. Devuelve ÚNICAMENTE el bloque de código JSON dentro de un bloque markdown ```json ... ``` sin textos de relleno.</textarea>
+IDEA A REPRESENTAR:
+[ESCRIBE AQUÍ TU IDEA EN DETALLE. Ejemplos:
+- "Arquitectura de juego multijugador: Cliente envía input al servidor WebSocket, el servidor ejecuta la simulación de físicas a 60 ticks y sincroniza con Redis y la base de datos PostgreSQL."
+- "Ciclo de combate de un RPG: Iniciar combate -> Elegir habilidad (Ataque o Curación) -> Cálculo de daño -> Enemigo responde -> Repetir hasta victoria."]
+
+REGLAS OBLIGATORIAS DE GENERACIÓN:
+1. Resolución base del lienzo: 1920x1080 píxeles.
+2. Cada nodo en la lista "nodes" debe incluir:
+   - "id": identificador único en minúsculas sin espacios (ej: "cliente", "servidor", "db").
+   - "title": título principal en mayúsculas breves (ej: "CLIENTE", "SERVIDOR", "MAPA").
+   - "subtitle": función o descripción corta en mayúsculas (ej: "INPUT", "API GATEWAY", "DATABASE").
+   - "color": color hexadecimal plano de alto contraste (ej: "#38bdf8", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#ec4899").
+   - "badge": 1 o 2 letras mayúsculas distintivas para el icono (ej: "C", "S", "DB").
+   - "x": coordenada X numérica (entre 200 y 1720) distribuidas espacialmente para que no se superpongan.
+   - "y": coordenada Y numérica (entre 180 y 900).
+3. Cada conexión en "connections" une dos nodos mediante puertos:
+   - "from": id del nodo origen.
+   - "fromPort": puerto de salida ("right", "left", "top", "bottom").
+   - "to": id del nodo destino.
+   - "toPort": puerto de llegada ("right", "left", "top", "bottom").
+   - "color": color hexadecimal de la flecha.
+   - "label": texto descriptivo opcional centrado en la flecha (ej: "HTTP POST", "CALLBACK", "REPETIR").
+4. La lista "sequence" define el orden temporal paso a paso de la animación:
+   - Paso de nodo: { "type": "popup", "target": "id_del_nodo" }
+   - Paso de flecha: { "type": "arrow", "from": "id_origen", "to": "id_destino" }
+5. Responde ÚNICAMENTE con el bloque JSON dentro de ```json ... ``` sin ningún texto antes ni después.</textarea>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-modal-primary" id="btn-copy-prompt">Copiar Prompt al Portapapeles</button>

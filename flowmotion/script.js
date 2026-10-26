@@ -1,9 +1,27 @@
 /* ========================================================
-   FLOWMOTION STUDIO — MOTOR DE DIAGRAMAS Y MAZMORRAS ANIMADAS
+   FLOWMOTION STUDIO — MOTOR DE DIAGRAMAS ANIMADOS
    ======================================================== */
 
 (function () {
   'use strict';
+
+  // --- Paleta de colores planos para bloques nuevos ---
+  const FLAT_COLORS = [
+    '#38bdf8', // Celeste / Sky
+    '#10b981', // Verde esmeralda
+    '#f59e0b', // Ámbar / Dorado
+    '#ef4444', // Rojo
+    '#a855f7', // Púrpura
+    '#ec4899', // Rosa
+    '#06b6d4', // Cian
+    '#84cc16'  // Lima
+  ];
+  let colorIndex = 0;
+  function getNextColor() {
+    const c = FLAT_COLORS[colorIndex % FLAT_COLORS.length];
+    colorIndex++;
+    return c;
+  }
 
   // --- Elementos del DOM ---
   const stage = document.getElementById('stage');
@@ -14,13 +32,11 @@
   const connectionsGroup = document.getElementById('connections-group');
   const dragConnectPath = document.getElementById('drag-connect-path');
   const nodesContainer = document.getElementById('nodes-container');
-  const dungeonContainer = document.getElementById('dungeon-container');
-  const dungeonGrid = document.getElementById('dungeon-grid');
-  const dungeonControls = document.getElementById('dungeon-controls');
 
-  // Listas de UI
+  // Listas de UI en el panel
   const blocksList = document.getElementById('blocks-list');
   const connectionsList = document.getElementById('connections-list');
+  const timelineList = document.getElementById('timeline-list');
   const nodesBadgeCount = document.getElementById('nodes-badge-count');
   const connectionsBadgeCount = document.getElementById('connections-badge-count');
 
@@ -30,8 +46,10 @@
   const btnReset = document.getElementById('btn-reset');
   const btnAddBlock = document.getElementById('btn-add-block');
   const btnClearBlocks = document.getElementById('btn-clear-blocks');
+  const btnClearConnections = document.getElementById('btn-clear-connections');
   const btnToggleConnectMode = document.getElementById('btn-toggle-connect-mode');
   const connectModeLabel = document.getElementById('connect-mode-label');
+  const btnRebuildTimeline = document.getElementById('btn-rebuild-timeline');
 
   // Modales
   const modalAiCode = document.getElementById('modal-ai-code');
@@ -56,47 +74,41 @@
   const valExportDuration = document.getElementById('val-export-duration');
   const summaryFramesCount = document.getElementById('summary-frames-count');
 
-  // --- Estado Global ---
-  let currentMode = 'diagram'; // 'diagram' | 'dungeon'
+  // --- Dimensiones fijas de nodo en píxeles ---
+  const NODE_WIDTH = 220;
+  const NODE_HEIGHT = 80;
+
+  // --- Estado Global de Datos ---
+  let nodes = [];
+  let connections = [];
+  let sequence = []; // Lista ordenada de pasos de animación
   let isPlaying = false;
+  let currentStepIndex = 0;
+  let playbackTimer = null;
+
+  // Modos de interacción
   let isConnectingMode = false;
   let connectSourceNodeId = null;
   let isDraggingNode = false;
   let draggedNodeId = null;
   let dragOffset = { x: 0, y: 0 };
-  let isDraggingPort = false;
-  let portSourceNodeId = null;
 
-  let nodes = [];
-  let connections = [];
-  let sequence = [];
-  let animationStep = 0;
-  let playbackTimer = null;
+  // Arrastre desde puerto (punta a punta)
+  let isDraggingPort = false;
+  let portSource = { nodeId: null, port: null };
 
   // Parámetros de animación
   let stepSpeed = 0.5; // segundos por paso
   let animEffect = 'bounce';
-  let blockScale = 1.0;
   let arrowWidth = 3;
   let soundEnabled = true;
   let loopEnabled = false;
 
-  // Mazmorra 5x5
-  const DUNGEON_SIZE = 5;
-  let dungeonCells = []; // Array de 25 celdas
-  let dungeonSelectedTool = 'good'; // 'good' | 'bad' | 'empty'
-  let dungeonAnimationTimer = null;
-  let dungeonCurrentStep = 0;
-
-  // Exportación
+  // Parámetros de exportación
   let isExporting = false;
   let exportZipInstance = null;
   let selectedExportFps = 30;
   let selectedExportBgMode = 'transparent';
-
-  // Coordenadas base normalizadas (1920x1080)
-  const CANVAS_WIDTH = 1920;
-  const CANVAS_HEIGHT = 1080;
 
   /* ========================================================
      SÍNTESIS DE SONIDO (WEB AUDIO API - "PUPUPUP")
@@ -117,11 +129,11 @@
     return audioCtx;
   }
 
-  function playPupSound(type = 'normal') {
+  function playPopSound(type = 'normal') {
     if (!soundEnabled) return;
 
     const nowPerf = performance.now();
-    if (nowPerf - lastSoundTime < 28) return; // Anti-saturación
+    if (nowPerf - lastSoundTime < 30) return;
     lastSoundTime = nowPerf;
 
     try {
@@ -132,21 +144,13 @@
       const gain = ctx.createGain();
       const now = ctx.currentTime;
 
-      let startFreq = 540 + (Math.random() * 80 - 40);
+      let startFreq = 520 + (Math.random() * 80 - 40);
       let endFreq = 120;
       let duration = 0.055;
 
-      if (type === 'good') {
-        startFreq = 740 + (Math.random() * 60);
-        endFreq = 260;
-        duration = 0.065;
-      } else if (type === 'bad') {
-        startFreq = 260;
-        endFreq = 75;
-        duration = 0.08;
-      } else if (type === 'arrow') {
-        startFreq = 420;
-        endFreq = 620;
+      if (type === 'arrow') {
+        startFreq = 380;
+        endFreq = 640;
         duration = 0.045;
       }
 
@@ -154,7 +158,7 @@
       osc.frequency.setValueAtTime(startFreq, now);
       osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
 
-      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.setValueAtTime(0.25, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
       osc.connect(gain);
@@ -168,24 +172,74 @@
   }
 
   /* ========================================================
-     SISTEMA DE COORDENADAS Y ESCALA
+     CÁLCULO EXACTO DE COORDENADAS DE PUERTOS
      ======================================================== */
-  function getStageScale() {
-    const stageWidth = stage.clientWidth || window.innerWidth;
-    const stageHeight = stage.clientHeight || window.innerHeight;
-    const scaleX = stageWidth / CANVAS_WIDTH;
-    const scaleY = stageHeight / CANVAS_HEIGHT;
-    return { scaleX, scaleY, stageWidth, stageHeight };
+  function getNodePortCoords(node, port) {
+    const halfW = NODE_WIDTH / 2;
+    const halfH = NODE_HEIGHT / 2;
+
+    switch (port) {
+      case 'left':
+        return { x: node.x - halfW, y: node.y };
+      case 'right':
+        return { x: node.x + halfW, y: node.y };
+      case 'top':
+        return { x: node.x, y: node.y - halfH };
+      case 'bottom':
+        return { x: node.x, y: node.y + halfH };
+      default:
+        return { x: node.x + halfW, y: node.y };
+    }
   }
 
-  function canvasToScreen(x, y) {
-    const { scaleX, scaleY } = getStageScale();
-    return { x: x * scaleX, y: y * scaleY };
+  // Si no se especifica puerto, elige el más natural entre dos nodos
+  function getBestNaturalPorts(sourceNode, targetNode) {
+    const dx = targetNode.x - sourceNode.x;
+    const dy = targetNode.y - sourceNode.y;
+
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      return {
+        fromPort: dx >= 0 ? 'right' : 'left',
+        toPort: dx >= 0 ? 'left' : 'right'
+      };
+    } else {
+      return {
+        fromPort: dy >= 0 ? 'bottom' : 'top',
+        toPort: dy >= 0 ? 'top' : 'bottom'
+      };
+    }
   }
 
-  function screenToCanvas(screenX, screenY) {
-    const { scaleX, scaleY } = getStageScale();
-    return { x: screenX / scaleX, y: screenY / scaleY };
+  /* ========================================================
+     CÁLCULO DE CURVAS BEZIER Y TANGENTES
+     ======================================================== */
+  function getBezierPath(p1, fromPort, p2, toPort) {
+    const x1 = p1.x;
+    const y1 = p1.y;
+    const x2 = p2.x;
+    const y2 = p2.y;
+
+    const dist = Math.hypot(x2 - x1, y2 - y1);
+    const offset = Math.max(dist * 0.4, 40);
+
+    let cp1x = x1, cp1y = y1;
+    let cp2x = x2, cp2y = y2;
+
+    switch (fromPort) {
+      case 'right':  cp1x = x1 + offset; break;
+      case 'left':   cp1x = x1 - offset; break;
+      case 'bottom': cp1y = y1 + offset; break;
+      case 'top':    cp1y = y1 - offset; break;
+    }
+
+    switch (toPort) {
+      case 'left':   cp2x = x2 - offset; break;
+      case 'right':  cp2x = x2 + offset; break;
+      case 'top':    cp2y = y2 - offset; break;
+      case 'bottom': cp2y = y2 + offset; break;
+    }
+
+    return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
   }
 
   /* ========================================================
@@ -193,12 +247,18 @@
      ======================================================== */
   function addNode(data = {}) {
     const id = data.id || 'nodo_' + Math.random().toString(36).substring(2, 7);
-    const title = data.title || 'NUEVO BLOQUE';
+    const title = data.title || ('NODO ' + (nodes.length + 1));
     const subtitle = data.subtitle || 'PROCESO';
-    const color = data.color || '#38bdf8';
+    const color = data.color || getNextColor();
     const badge = data.badge || title.charAt(0).toUpperCase();
-    const x = typeof data.x === 'number' ? data.x : 960;
-    const y = typeof data.y === 'number' ? data.y : 540;
+
+    // Posición centrada o aleatoria dispersa si no se especifica
+    let x = typeof data.x === 'number' ? data.x : (window.innerWidth / 2 + (Math.random() * 200 - 100));
+    let y = typeof data.y === 'number' ? data.y : (window.innerHeight / 2 + (Math.random() * 160 - 80));
+
+    // Asegurar márgenes de pantalla
+    x = Math.max(130, Math.min(window.innerWidth - 130, x));
+    y = Math.max(60, Math.min(window.innerHeight - 60, y));
 
     const node = {
       id,
@@ -206,15 +266,31 @@
       subtitle,
       color,
       badge,
-      x,
-      y,
+      x: Math.round(x),
+      y: Math.round(y),
       visible: true
     };
 
     nodes.push(node);
     renderNodes();
+    rebuildTimelineAuto();
     updateUILists();
     return node;
+  }
+
+  function duplicateNode(id) {
+    const original = nodes.find(n => n.id === id);
+    if (!original) return;
+
+    addNode({
+      title: original.title + ' (COPIA)',
+      subtitle: original.subtitle,
+      color: original.color,
+      badge: original.badge,
+      x: original.x + 40,
+      y: original.y + 40
+    });
+    playPopSound('normal');
   }
 
   function removeNode(id) {
@@ -222,33 +298,57 @@
     connections = connections.filter(c => c.from !== id && c.to !== id);
     renderNodes();
     renderConnections();
+    rebuildTimelineAuto();
     updateUILists();
   }
 
-  function addConnection(fromId, toId, color = null, label = '') {
+  /* ========================================================
+     GESTIÓN DE FLECHAS Y CONEXIONES
+     ======================================================== */
+  function addConnection(fromId, toId, fromPort = null, toPort = null, color = null, label = '') {
     if (fromId === toId) return;
-    const exists = connections.some(c => c.from === fromId && c.to === toId);
+
+    const source = nodes.find(n => n.id === fromId);
+    const target = nodes.find(n => n.id === toId);
+    if (!source || !target) return;
+
+    // Determinar puertos si no vienen dados
+    let fPort = fromPort;
+    let tPort = toPort;
+    if (!fPort || !tPort) {
+      const best = getBestNaturalPorts(source, target);
+      if (!fPort) fPort = best.fromPort;
+      if (!tPort) tPort = best.toPort;
+    }
+
+    // Comprobar si ya existe una conexión idéntica
+    const exists = connections.some(c => c.from === fromId && c.to === toId && c.fromPort === fPort && c.toPort === tPort);
     if (exists) return;
 
-    const sourceNode = nodes.find(n => n.id === fromId);
-    const connColor = color || (sourceNode ? sourceNode.color : '#38bdf8');
+    const connColor = color || source.color || '#38bdf8';
 
-    connections.push({
-      id: 'conn_' + fromId + '_' + toId,
+    const conn = {
+      id: 'conn_' + Math.random().toString(36).substring(2, 7),
       from: fromId,
+      fromPort: fPort,
       to: toId,
+      toPort: tPort,
       color: connColor,
       label: label || '',
       visible: true
-    });
+    };
 
+    connections.push(conn);
     renderConnections();
+    rebuildTimelineAuto();
     updateUILists();
+    return conn;
   }
 
   function removeConnection(id) {
     connections = connections.filter(c => c.id !== id);
     renderConnections();
+    rebuildTimelineAuto();
     updateUILists();
   }
 
@@ -259,22 +359,19 @@
     nodesContainer.innerHTML = '';
 
     nodes.forEach(node => {
-      const screenPos = canvasToScreen(node.x, node.y);
-
       const el = document.createElement('div');
       el.className = 'diagram-node';
       el.id = 'node-el-' + node.id;
       el.dataset.nodeId = node.id;
       el.style.borderColor = node.color;
-      el.style.left = screenPos.x + 'px';
-      el.style.top = screenPos.y + 'px';
-      el.style.transform = `translate(-50%, -50%) scale(${blockScale})`;
+      el.style.left = node.x + 'px';
+      el.style.top = node.y + 'px';
 
       if (!node.visible) {
         el.style.display = 'none';
       }
 
-      // Cabecera con Badge y Título
+      // Header con Badge y Título
       const header = document.createElement('div');
       header.className = 'node-header';
 
@@ -284,40 +381,42 @@
       badgeEl.textContent = node.badge || node.title.charAt(0);
 
       const titleEl = document.createElement('div');
-      titleEl.className = 'node-title';
+      titleEl.className = 'node-title-display';
       titleEl.textContent = node.title;
+      titleEl.title = 'Doble clic para editar texto';
 
       header.appendChild(badgeEl);
       header.appendChild(titleEl);
 
       // Subtítulo
       const subEl = document.createElement('div');
-      subEl.className = 'node-subtitle';
+      subEl.className = 'node-sub-display';
       subEl.textContent = node.subtitle;
+      subEl.title = 'Doble clic para editar texto';
 
-      // Puertos de conexión punta a punta
-      const portOut = document.createElement('div');
-      portOut.className = 'node-port node-port-out';
-      portOut.title = 'Arrastra para conectar con otro bloque';
-      portOut.dataset.portType = 'out';
-      portOut.dataset.nodeId = node.id;
-
-      const portIn = document.createElement('div');
-      portIn.className = 'node-port node-port-in';
-      portIn.title = 'Punto de entrada';
-      portIn.dataset.portType = 'in';
-      portIn.dataset.nodeId = node.id;
+      // 4 Puertos de Conexión: Derecha, Izquierda, Arriba, Abajo
+      const portR = createPortElement(node.id, 'right');
+      const portL = createPortElement(node.id, 'left');
+      const portT = createPortElement(node.id, 'top');
+      const portB = createPortElement(node.id, 'bottom');
 
       el.appendChild(header);
       el.appendChild(subEl);
-      el.appendChild(portOut);
-      el.appendChild(portIn);
+      el.appendChild(portR);
+      el.appendChild(portL);
+      el.appendChild(portT);
+      el.appendChild(portB);
 
-      // Eventos Drag & Drop de Nodo
+      // Eventos Drag & Drop del nodo
       el.addEventListener('mousedown', onNodeMouseDown);
-      portOut.addEventListener('mousedown', onPortMouseDown);
 
-      // Evento de clic en modo unión
+      // Evento de doble clic para editar título y subtítulo inline
+      el.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        enableNodeInlineEdit(node, el, titleEl, subEl, badgeEl);
+      });
+
+      // Evento de clic en modo "Unir Nodos"
       el.addEventListener('click', (e) => {
         if (isConnectingMode) {
           e.stopPropagation();
@@ -331,63 +430,110 @@
     renderConnections();
   }
 
-  /* ========================================================
-     RENDERIZADO DE FLECHAS Y CONEXIONES (SVG BEZIER)
-     ======================================================== */
-  function getArrowMarkerUrl(color) {
-    if (color === '#38bdf8') return 'url(#arrowhead-sky)';
-    if (color === '#f59e0b') return 'url(#arrowhead-amber)';
-    if (color === '#10b981') return 'url(#arrowhead-emerald)';
-    if (color === '#ef4444') return 'url(#arrowhead-rose)';
-    if (color === '#a855f7') return 'url(#arrowhead-violet)';
-    return 'url(#arrowhead-white)';
+  function createPortElement(nodeId, portName) {
+    const p = document.createElement('div');
+    p.className = `node-port port-${portName}`;
+    p.title = `Conectar puerto ${portName.toUpperCase()}`;
+    p.dataset.nodeId = nodeId;
+    p.dataset.port = portName;
+    p.addEventListener('mousedown', onPortMouseDown);
+    return p;
   }
 
+  // Doble clic: edición directa de textos
+  function enableNodeInlineEdit(node, nodeEl, titleEl, subEl, badgeEl) {
+    const currentTitle = node.title;
+    const currentSub = node.subtitle;
+
+    const inputTitle = document.createElement('input');
+    inputTitle.type = 'text';
+    inputTitle.className = 'node-inline-input';
+    inputTitle.value = currentTitle;
+
+    const inputSub = document.createElement('input');
+    inputSub.type = 'text';
+    inputSub.className = 'node-inline-input';
+    inputSub.style.marginTop = '4px';
+    inputSub.style.fontSize = '11px';
+    inputSub.value = currentSub;
+
+    titleEl.replaceWith(inputTitle);
+    subEl.replaceWith(inputSub);
+    inputTitle.focus();
+    inputTitle.select();
+
+    function saveChanges() {
+      const newTitle = inputTitle.value.trim() || 'NODO';
+      const newSub = inputSub.value.trim() || 'PROCESO';
+
+      node.title = newTitle;
+      node.subtitle = newSub;
+      node.badge = newTitle.charAt(0).toUpperCase();
+
+      badgeEl.textContent = node.badge;
+      titleEl.textContent = newTitle;
+      subEl.textContent = newSub;
+
+      if (inputTitle.parentNode) inputTitle.replaceWith(titleEl);
+      if (inputSub.parentNode) inputSub.replaceWith(subEl);
+
+      rebuildTimelineAuto();
+      updateUILists();
+    }
+
+    inputTitle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') inputSub.focus();
+    });
+
+    inputSub.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveChanges();
+    });
+
+    // Guardar al perder el foco
+    let blurTimeout;
+    const onBlur = () => {
+      blurTimeout = setTimeout(saveChanges, 150);
+    };
+    inputTitle.addEventListener('blur', onBlur);
+    inputSub.addEventListener('blur', onBlur);
+  }
+
+  /* ========================================================
+     RENDERIZADO DE FLECHAS Y CONEXIONES (SVG)
+     ======================================================== */
   function renderConnections() {
     connectionsGroup.innerHTML = '';
 
     connections.forEach(conn => {
-      const source = nodes.find(n => n.id === conn.from);
-      const target = nodes.find(n => n.id === conn.to);
-      if (!source || !target) return;
-      if (!conn.visible || !source.visible || !target.visible) return;
+      const s = nodes.find(n => n.id === conn.from);
+      const t = nodes.find(n => n.id === conn.to);
+      if (!s || !t) return;
+      if (!conn.visible || !s.visible || !t.visible) return;
 
-      const sPos = canvasToScreen(source.x, source.y);
-      const tPos = canvasToScreen(target.x, target.y);
+      const p1 = getNodePortCoords(s, conn.fromPort || 'right');
+      const p2 = getNodePortCoords(t, conn.toPort || 'left');
 
-      // Conexión de derecha a izquierda del nodo
-      const halfW = (105) * (stage.clientWidth / CANVAS_WIDTH) * blockScale;
-      const startX = sPos.x + (sPos.x < tPos.x ? halfW : -halfW);
-      const startY = sPos.y;
-      const endX = tPos.x + (sPos.x < tPos.x ? -halfW : halfW);
-      const endY = tPos.y;
+      const d = getBezierPath(p1, conn.fromPort || 'right', p2, conn.toPort || 'left');
 
-      const dx = endX - startX;
-      const dy = endY - startY;
-      const curvature = Math.max(Math.abs(dx) * 0.45, 40);
-
-      const cp1X = startX + (dx >= 0 ? curvature : -curvature);
-      const cp1Y = startY;
-      const cp2X = endX - (dx >= 0 ? curvature : -curvature);
-      const cp2Y = endY;
-
-      const d = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
-
-      // Ruta SVG de la curva
+      // Flecha SVG
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', d);
       pathEl.setAttribute('class', 'connection-curve');
       pathEl.setAttribute('stroke', conn.color || '#38bdf8');
       pathEl.setAttribute('stroke-width', arrowWidth);
-      pathEl.setAttribute('marker-end', getArrowMarkerUrl(conn.color));
+      pathEl.setAttribute('marker-end', 'url(#arrowhead-dyn)');
       pathEl.id = 'conn-path-' + conn.id;
+
+      // Color de punta de flecha sincronizado
+      const markerDef = document.querySelector('#arrowhead-dyn path');
+      if (markerDef) markerDef.setAttribute('fill', conn.color || '#38bdf8');
 
       connectionsGroup.appendChild(pathEl);
 
       // Etiqueta en el centro de la flecha
       if (conn.label) {
-        const midX = (startX + endX) / 2;
-        const midY = (startY + endY) / 2 - 8;
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2 - 8;
 
         const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         textEl.setAttribute('x', midX);
@@ -401,11 +547,12 @@
   }
 
   /* ========================================================
-     INTERACCIÓN CON RATÓN (DRAG & DROP Y CONEXIONES PUNTA A PUNTA)
+     INTERACCIÓN CON RATÓN (DRAG NODOS Y PUERTOS PUNTA A PUNTA)
      ======================================================== */
   function onNodeMouseDown(e) {
     if (isConnectingMode || isDraggingPort) return;
     if (e.target.classList.contains('node-port')) return;
+    if (e.target.classList.contains('node-inline-input')) return;
 
     isDraggingNode = true;
     draggedNodeId = this.dataset.nodeId;
@@ -413,10 +560,9 @@
     const node = nodes.find(n => n.id === draggedNodeId);
     if (!node) return;
 
-    const canvasPos = screenToCanvas(e.clientX, e.clientY);
     dragOffset = {
-      x: canvasPos.x - node.x,
-      y: canvasPos.y - node.y
+      x: e.clientX - node.x,
+      y: e.clientY - node.y
     };
 
     this.classList.add('is-dragging');
@@ -430,15 +576,13 @@
     const node = nodes.find(n => n.id === draggedNodeId);
     if (!node) return;
 
-    const canvasPos = screenToCanvas(e.clientX, e.clientY);
-    node.x = Math.max(100, Math.min(CANVAS_WIDTH - 100, canvasPos.x - dragOffset.x));
-    node.y = Math.max(80, Math.min(CANVAS_HEIGHT - 80, canvasPos.y - dragOffset.y));
+    node.x = Math.max(110, Math.min(window.innerWidth - 110, e.clientX - dragOffset.x));
+    node.y = Math.max(50, Math.min(window.innerHeight - 50, e.clientY - dragOffset.y));
 
-    const screenPos = canvasToScreen(node.x, node.y);
     const nodeEl = document.getElementById('node-el-' + node.id);
     if (nodeEl) {
-      nodeEl.style.left = screenPos.x + 'px';
-      nodeEl.style.top = screenPos.y + 'px';
+      nodeEl.style.left = node.x + 'px';
+      nodeEl.style.top = node.y + 'px';
     }
 
     renderConnections();
@@ -447,9 +591,7 @@
   function onNodeMouseUp() {
     if (isDraggingNode && draggedNodeId) {
       const nodeEl = document.getElementById('node-el-' + draggedNodeId);
-      if (nodeEl) {
-        nodeEl.classList.remove('is-dragging');
-      }
+      if (nodeEl) nodeEl.classList.remove('is-dragging');
     }
     isDraggingNode = false;
     draggedNodeId = null;
@@ -457,11 +599,14 @@
     window.removeEventListener('mouseup', onNodeMouseUp);
   }
 
-  // Conectar arrastrando desde un puerto (punta a punta)
+  // Conexión arrastrando desde un puerto (punta a punta)
   function onPortMouseDown(e) {
     e.stopPropagation();
     isDraggingPort = true;
-    portSourceNodeId = this.dataset.nodeId;
+    portSource = {
+      nodeId: this.dataset.nodeId,
+      port: this.dataset.port
+    };
 
     dragConnectPath.style.display = 'block';
     window.addEventListener('mousemove', onPortMouseMove);
@@ -469,19 +614,19 @@
   }
 
   function onPortMouseMove(e) {
-    if (!isDraggingPort || !portSourceNodeId) return;
+    if (!isDraggingPort || !portSource.nodeId) return;
 
-    const sourceNode = nodes.find(n => n.id === portSourceNodeId);
+    const sourceNode = nodes.find(n => n.id === portSource.nodeId);
     if (!sourceNode) return;
 
-    const sPos = canvasToScreen(sourceNode.x, sourceNode.y);
-    const startX = sPos.x + (105 * (stage.clientWidth / CANVAS_WIDTH) * blockScale);
-    const startY = sPos.y;
+    const p1 = getNodePortCoords(sourceNode, portSource.port);
+    const p2 = { x: e.clientX, y: e.clientY };
 
-    const currentX = e.clientX;
-    const currentY = e.clientY;
+    // Buscar si el ratón sobrevuela un puerto destino
+    let targetPort = 'left';
+    if (p2.x < p1.x) targetPort = 'right';
 
-    const d = `M ${startX} ${startY} Q ${(startX + currentX) / 2} ${startY}, ${currentX} ${currentY}`;
+    const d = getBezierPath(p1, portSource.port, p2, targetPort);
     dragConnectPath.setAttribute('d', d);
   }
 
@@ -490,275 +635,188 @@
     window.removeEventListener('mousemove', onPortMouseMove);
     window.removeEventListener('mouseup', onPortMouseUp);
 
-    if (isDraggingPort && portSourceNodeId) {
-      // Buscar si el ratón cayó sobre otro nodo
+    if (isDraggingPort && portSource.nodeId) {
       const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
-      const targetNodeEl = elemBelow ? elemBelow.closest('.diagram-node') : null;
+      const portTargetEl = elemBelow ? elemBelow.closest('.node-port') : null;
+      const nodeTargetEl = elemBelow ? elemBelow.closest('.diagram-node') : null;
 
-      if (targetNodeEl) {
-        const targetId = targetNodeEl.dataset.nodeId;
-        if (targetId && targetId !== portSourceNodeId) {
-          addConnection(portSourceNodeId, targetId);
-          playPupSound('arrow');
-        }
+      if (portTargetEl && portTargetEl.dataset.nodeId !== portSource.nodeId) {
+        addConnection(portSource.nodeId, portTargetEl.dataset.nodeId, portSource.port, portTargetEl.dataset.port);
+        playPopSound('arrow');
+      } else if (nodeTargetEl && nodeTargetEl.dataset.nodeId !== portSource.nodeId) {
+        addConnection(portSource.nodeId, nodeTargetEl.dataset.nodeId, portSource.port, null);
+        playPopSound('arrow');
       }
     }
 
     isDraggingPort = false;
-    portSourceNodeId = null;
+    portSource = { nodeId: null, port: null };
   }
 
+  // Conectar haciendo clic de bloque a bloque
   function handleNodeClickConnect(nodeId) {
     if (!connectSourceNodeId) {
       connectSourceNodeId = nodeId;
       const el = document.getElementById('node-el-' + nodeId);
-      if (el) el.classList.add('is-active-pulse');
+      if (el) el.classList.add('is-connect-source');
     } else {
       if (connectSourceNodeId !== nodeId) {
         addConnection(connectSourceNodeId, nodeId);
-        playPupSound('arrow');
+        playPopSound('arrow');
       }
       const prevEl = document.getElementById('node-el-' + connectSourceNodeId);
-      if (prevEl) prevEl.classList.remove('is-active-pulse');
+      if (prevEl) prevEl.classList.remove('is-connect-source');
       connectSourceNodeId = null;
     }
   }
 
-  // Doble clic en lienzo para crear bloque
+  // Doble clic en espacio vacío para crear un bloque
   stage.addEventListener('dblclick', (e) => {
     if (e.target.closest('.diagram-node') || e.target.closest('.control-panel') || e.target.closest('.modal-overlay')) return;
-    const canvasPos = screenToCanvas(e.clientX, e.clientY);
     addNode({
-      title: 'PASO ' + (nodes.length + 1),
-      subtitle: 'PROCESO',
-      x: Math.round(canvasPos.x),
-      y: Math.round(canvasPos.y)
+      x: e.clientX,
+      y: e.clientY
     });
-    playPupSound('normal');
+    playPopSound('normal');
   });
 
   /* ========================================================
-     MODO MAZMORRA 5x5 PROCEDURAL
+     ORDEN Y SECUENCIA DE ANIMACIÓN (TIMELINE)
      ======================================================== */
-  function initDungeonGrid() {
-    dungeonCells = [];
-    dungeonGrid.innerHTML = '';
+  function rebuildTimelineAuto() {
+    sequence = [];
 
-    for (let r = 0; r < DUNGEON_SIZE; r++) {
-      for (let c = 0; c < DUNGEON_SIZE; c++) {
-        const index = r * DUNGEON_SIZE + c;
-        const cell = {
-          index,
-          row: r,
-          col: c,
-          type: 'empty', // 'empty' | 'start' | 'good' | 'bad' | 'goal'
-          elevated: false,
-          visible: true
-        };
-        dungeonCells.push(cell);
+    // Generar orden por defecto: cada nodo y luego sus flechas salientes
+    nodes.forEach(node => {
+      sequence.push({
+        id: 'step_node_' + node.id,
+        type: 'popup',
+        targetId: node.id,
+        label: `Aparece nodo: ${node.title}`
+      });
 
-        const cellEl = document.createElement('div');
-        cellEl.className = 'dungeon-cell';
-        cellEl.id = 'dungeon-cell-' + index;
-        cellEl.dataset.index = index;
-        cellEl.textContent = `${r},${c}`;
-
-        cellEl.addEventListener('click', () => {
-          toggleDungeonCell(index);
+      const outgoing = connections.filter(c => c.from === node.id);
+      outgoing.forEach(conn => {
+        const target = nodes.find(n => n.id === conn.to);
+        const tTitle = target ? target.title : conn.to;
+        sequence.push({
+          id: 'step_conn_' + conn.id,
+          type: 'arrow',
+          connId: conn.id,
+          label: `Flecha: ${node.title} → ${tTitle} ${conn.label ? '(' + conn.label + ')' : ''}`
         });
-
-        dungeonGrid.appendChild(cellEl);
-      }
-    }
-
-    generateProceduralDungeon();
-  }
-
-  function toggleDungeonCell(index) {
-    const cell = dungeonCells[index];
-    if (!cell) return;
-
-    if (cell.type === dungeonSelectedTool) {
-      cell.type = 'empty';
-    } else {
-      cell.type = dungeonSelectedTool;
-    }
-
-    updateDungeonCellUI(index);
-    playPupSound(cell.type === 'good' ? 'good' : (cell.type === 'bad' ? 'bad' : 'normal'));
-  }
-
-  function updateDungeonCellUI(index) {
-    const cell = dungeonCells[index];
-    const el = document.getElementById('dungeon-cell-' + index);
-    if (!el || !cell) return;
-
-    el.className = 'dungeon-cell';
-    if (cell.type === 'start') el.classList.add('cell-start');
-    if (cell.type === 'good') el.classList.add('cell-good');
-    if (cell.type === 'bad') el.classList.add('cell-bad');
-    if (cell.type === 'goal') el.classList.add('cell-goal');
-    if (cell.elevated) el.classList.add('is-elevated');
-  }
-
-  function generateProceduralDungeon() {
-    // Limpiar todas
-    dungeonCells.forEach((c, idx) => {
-      c.type = 'empty';
-      c.elevated = false;
-      updateDungeonCellUI(idx);
+      });
     });
 
-    // 1. Inicio en (0, 0)
-    dungeonCells[0].type = 'start';
-    updateDungeonCellUI(0);
-
-    // 2. Meta en (4, 4)
-    dungeonCells[24].type = 'goal';
-    updateDungeonCellUI(24);
-
-    // 3. Crear camino principal válido (verde)
-    let currR = 0, currC = 0;
-    const goodPath = [0];
-
-    while (currR < 4 || currC < 4) {
-      if (currR === 4) {
-        currC++;
-      } else if (currC === 4) {
-        currR++;
-      } else {
-        if (Math.random() > 0.5) {
-          currC++;
-        } else {
-          currR++;
-        }
-      }
-      const idx = currR * 5 + currC;
-      if (idx !== 24) {
-        dungeonCells[idx].type = 'good';
-        goodPath.push(idx);
-      }
-    }
-
-    // 4. Crear 3 a 5 trampas / caminos fallidos adyacentes (rojo)
-    let badCount = 0;
-    while (badCount < 4) {
-      const randIdx = Math.floor(Math.random() * 25);
-      if (dungeonCells[randIdx].type === 'empty') {
-        dungeonCells[randIdx].type = 'bad';
-        badCount++;
-      }
-    }
-
-    dungeonCells.forEach((_, idx) => updateDungeonCellUI(idx));
+    renderTimelineList();
   }
 
-  function playDungeonStepAnimation() {
-    if (dungeonCurrentStep >= 25) {
-      if (loopEnabled) {
-        resetDungeonAnimation();
-        dungeonAnimationTimer = setTimeout(playDungeonStepAnimation, stepSpeed * 1000);
-      } else {
-        stopPlayback();
-      }
+  function moveTimelineStep(index, direction) {
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= sequence.length) return;
+
+    const temp = sequence[index];
+    sequence[index] = sequence[targetIdx];
+    sequence[targetIdx] = temp;
+
+    renderTimelineList();
+  }
+
+  function renderTimelineList() {
+    timelineList.innerHTML = '';
+
+    if (sequence.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.fontSize = '11.5px';
+      empty.style.color = '#71717a';
+      empty.style.padding = '8px';
+      empty.style.textAlign = 'center';
+      empty.textContent = 'Añade bloques o flechas para ver la secuencia';
+      timelineList.appendChild(empty);
       return;
     }
 
-    const cell = dungeonCells[dungeonCurrentStep];
-    if (cell) {
-      cell.elevated = true;
-      updateDungeonCellUI(dungeonCurrentStep);
-
-      const soundType = cell.type === 'good' ? 'good' : (cell.type === 'bad' ? 'bad' : 'normal');
-      playPupSound(soundType);
-
-      const info = document.getElementById('dungeon-step-info');
-      if (info) {
-        info.textContent = `Paso ${dungeonCurrentStep + 1} / 25 (${cell.type.toUpperCase()})`;
+    sequence.forEach((step, idx) => {
+      const row = document.createElement('div');
+      row.className = 'timeline-step-row';
+      if (isPlaying && currentStepIndex === idx) {
+        row.classList.add('is-current');
       }
-    }
 
-    dungeonCurrentStep++;
-    dungeonAnimationTimer = setTimeout(playDungeonStepAnimation, stepSpeed * 1000);
-  }
+      const left = document.createElement('div');
+      left.className = 'step-row-left';
 
-  function resetDungeonAnimation() {
-    if (dungeonAnimationTimer) {
-      clearTimeout(dungeonAnimationTimer);
-      dungeonAnimationTimer = null;
-    }
-    dungeonCurrentStep = 0;
-    dungeonCells.forEach((c, idx) => {
-      c.elevated = false;
-      updateDungeonCellUI(idx);
+      const num = document.createElement('span');
+      num.className = 'step-num-badge';
+      num.textContent = `${idx + 1}.`;
+
+      const txt = document.createElement('span');
+      txt.className = 'step-label-text';
+      txt.textContent = step.label;
+
+      left.appendChild(num);
+      left.appendChild(txt);
+
+      const actions = document.createElement('div');
+      actions.className = 'step-row-actions';
+
+      const btnUp = document.createElement('button');
+      btnUp.type = 'button';
+      btnUp.className = 'btn-mini-icon';
+      btnUp.title = 'Mover arriba';
+      btnUp.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+      btnUp.addEventListener('click', () => moveTimelineStep(idx, -1));
+
+      const btnDown = document.createElement('button');
+      btnDown.type = 'button';
+      btnDown.className = 'btn-mini-icon';
+      btnDown.title = 'Mover abajo';
+      btnDown.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+      btnDown.addEventListener('click', () => moveTimelineStep(idx, 1));
+
+      actions.appendChild(btnUp);
+      actions.appendChild(btnDown);
+
+      row.appendChild(left);
+      row.appendChild(actions);
+      timelineList.appendChild(row);
     });
-    const info = document.getElementById('dungeon-step-info');
-    if (info) info.textContent = 'Paso 0 / 25';
   }
 
   /* ========================================================
-     MOTOR DE ANIMACIÓN DIAGRAMA PASO A PASO
+     REPRODUCCIÓN DE LA ANIMACIÓN
      ======================================================== */
-  function buildTimelineSequence() {
-    sequence = [];
-
-    // Si no hay secuencia definida por IA, crear secuencia automática lógica
-    nodes.forEach((node, idx) => {
-      sequence.push({
-        type: 'popup',
-        target: node.id,
-        duration: stepSpeed
-      });
-
-      // Flechas que parten de este nodo
-      const outgoing = connections.filter(c => c.from === node.id);
-      outgoing.forEach(conn => {
-        sequence.push({
-          type: 'arrow',
-          from: conn.from,
-          to: conn.to,
-          connId: conn.id,
-          duration: stepSpeed
-        });
-      });
-    });
-  }
-
-  function playNextStep() {
+  function executeCurrentStep() {
     if (!isPlaying) return;
 
-    if (currentMode === 'dungeon') {
-      playDungeonStepAnimation();
-      return;
-    }
-
-    if (animationStep >= sequence.length) {
+    if (currentStepIndex >= sequence.length) {
       if (loopEnabled) {
         resetAnimation();
-        playbackTimer = setTimeout(playNextStep, stepSpeed * 1000);
+        playbackTimer = setTimeout(executeCurrentStep, stepSpeed * 1000);
       } else {
         stopPlayback();
       }
       return;
     }
 
-    const step = sequence[animationStep];
+    renderTimelineList();
+    const step = sequence[currentStepIndex];
 
     if (step.type === 'popup') {
-      const node = nodes.find(n => n.id === step.target);
+      const node = nodes.find(n => n.id === step.targetId);
       if (node) {
         node.visible = true;
         const el = document.getElementById('node-el-' + node.id);
         if (el) {
           el.style.display = 'flex';
-          el.className = 'diagram-node ' + (animEffect ? 'anim-' + animEffect : 'anim-bounce');
+          el.className = 'diagram-node anim-' + animEffect;
           el.classList.add('is-active-pulse');
           setTimeout(() => el.classList.remove('is-active-pulse'), 500);
         }
-        playPupSound('normal');
+        playPopSound('normal');
       }
     } else if (step.type === 'arrow') {
-      const conn = connections.find(c => c.from === step.from && c.to === step.to);
+      const conn = connections.find(c => c.id === step.connId);
       if (conn) {
         conn.visible = true;
         renderConnections();
@@ -768,55 +826,47 @@
           pathEl.classList.add('animating');
           pathEl.style.animationDuration = stepSpeed + 's';
         }
-        playPupSound('arrow');
+        playPopSound('arrow');
       }
     }
 
-    animationStep++;
-    playbackTimer = setTimeout(playNextStep, stepSpeed * 1000);
+    currentStepIndex++;
+    playbackTimer = setTimeout(executeCurrentStep, stepSpeed * 1000);
   }
 
   function startPlayback() {
     isPlaying = true;
-    btnPlay.classList.add('is-playing');
+    btnPlay.classList.add('playing');
     playText.textContent = 'Pausar Animación';
 
-    if (welcomeHint) welcomeHint.classList.add('dismissed');
+    if (welcomeHint) welcomeHint.classList.add('hidden');
 
-    if (currentMode === 'dungeon') {
-      if (dungeonCurrentStep === 0) resetDungeonAnimation();
-      playDungeonStepAnimation();
-    } else {
-      if (animationStep === 0) {
-        // Ocultar todos los nodos y flechas para la revelación progresiva
-        nodes.forEach(n => {
-          n.visible = false;
-          const el = document.getElementById('node-el-' + n.id);
-          if (el) el.style.display = 'none';
-        });
-        connections.forEach(c => {
-          c.visible = false;
-        });
-        renderConnections();
-        buildTimelineSequence();
-      }
-      playNextStep();
+    if (currentStepIndex === 0) {
+      // Ocultar elementos para la revelación progresiva
+      nodes.forEach(n => {
+        n.visible = false;
+        const el = document.getElementById('node-el-' + n.id);
+        if (el) el.style.display = 'none';
+      });
+      connections.forEach(c => {
+        c.visible = false;
+      });
+      renderConnections();
     }
+
+    executeCurrentStep();
   }
 
   function stopPlayback() {
     isPlaying = false;
-    btnPlay.classList.remove('is-playing');
+    btnPlay.classList.remove('playing');
     playText.textContent = 'Iniciar Animación';
 
     if (playbackTimer) {
       clearTimeout(playbackTimer);
       playbackTimer = null;
     }
-    if (dungeonAnimationTimer) {
-      clearTimeout(dungeonAnimationTimer);
-      dungeonAnimationTimer = null;
-    }
+    renderTimelineList();
   }
 
   function togglePlayback() {
@@ -829,271 +879,112 @@
 
   function resetAnimation() {
     stopPlayback();
-    animationStep = 0;
+    currentStepIndex = 0;
 
-    if (currentMode === 'dungeon') {
-      resetDungeonAnimation();
-    } else {
-      // Restaurar visibilidad completa
-      nodes.forEach(n => {
-        n.visible = true;
-        const el = document.getElementById('node-el-' + n.id);
-        if (el) {
-          el.style.display = 'flex';
-          el.className = 'diagram-node';
-        }
-      });
-      connections.forEach(c => {
-        c.visible = true;
-      });
-      renderConnections();
-    }
+    // Restaurar visibilidad de todos los elementos
+    nodes.forEach(n => {
+      n.visible = true;
+      const el = document.getElementById('node-el-' + n.id);
+      if (el) {
+        el.style.display = 'flex';
+        el.className = 'diagram-node';
+      }
+    });
+
+    connections.forEach(c => {
+      c.visible = true;
+    });
+
+    renderConnections();
+    renderTimelineList();
   }
 
   /* ========================================================
-     PRESETS INSTANTÁNEOS
+     PARSER E IMPORTADOR DE CÓDIGO IA (JSON)
      ======================================================== */
-  function loadPresetCastleCat() {
-    setMode('diagram');
-    nodes = [];
-    connections = [];
-
-    addNode({ id: 'mapa', title: 'MAPA', subtitle: 'INICIO', color: '#38bdf8', x: 380, y: 540, badge: 'M' });
-    addNode({ id: 'tesoro', title: 'TESORO', subtitle: 'RECOMPENSA', color: '#f59e0b', x: 960, y: 290, badge: 'T' });
-    addNode({ id: 'enemigo', title: 'ENEMIGO', subtitle: 'COMBATE', color: '#ef4444', x: 960, y: 790, badge: 'E' });
-    addNode({ id: 'inventario', title: 'INVENTARIO', subtitle: 'GESTIÓN', color: '#10b981', x: 1540, y: 540, badge: 'I' });
-
-    addConnection('mapa', 'tesoro', '#f59e0b');
-    addConnection('tesoro', 'inventario', '#10b981');
-    addConnection('mapa', 'enemigo', '#ef4444');
-    addConnection('enemigo', 'inventario', '#10b981');
-    addConnection('inventario', 'mapa', '#38bdf8', 'REPETIR');
-
-    resetAnimation();
-  }
-
-  function loadPresetServer() {
-    setMode('diagram');
-    nodes = [];
-    connections = [];
-
-    addNode({ id: 'cliente', title: 'CLIENTE', subtitle: 'WEB / JUEGO', color: '#38bdf8', x: 360, y: 540, badge: 'C' });
-    addNode({ id: 'gateway', title: 'API GATEWAY', subtitle: 'PROXY & AUTH', color: '#a855f7', x: 760, y: 540, badge: 'G' });
-    addNode({ id: 'servidor', title: 'SERVIDOR NODE', subtitle: 'LÓGICA DEL JUEGO', color: '#10b981', x: 1160, y: 380, badge: 'S' });
-    addNode({ id: 'db', title: 'BASE DE DATOS', subtitle: 'POSTGRESQL', color: '#f59e0b', x: 1560, y: 380, badge: 'DB' });
-    addNode({ id: 'cache', title: 'REDIS CACHE', subtitle: 'ESTADO RÁPIDO', color: '#ef4444', x: 1160, y: 700, badge: 'R' });
-
-    addConnection('cliente', 'gateway', '#38bdf8', 'REQUEST');
-    addConnection('gateway', 'servidor', '#a855f7');
-    addConnection('servidor', 'db', '#f59e0b');
-    addConnection('servidor', 'cache', '#ef4444');
-    addConnection('gateway', 'cliente', '#10b981', 'RESPONSE');
-
-    resetAnimation();
-  }
-
-  function loadPresetDungeon() {
-    setMode('dungeon');
-    generateProceduralDungeon();
-    resetDungeonAnimation();
-  }
-
-  function loadPresetTree() {
-    setMode('diagram');
-    nodes = [];
-    connections = [];
-
-    addNode({ id: 'inicio', title: 'CLASE BASE', subtitle: 'NIVEL 1', color: '#38bdf8', x: 960, y: 220, badge: '1' });
-    addNode({ id: 'guerrero', title: 'GUERRERO', subtitle: 'CUERPO A CUERPO', color: '#ef4444', x: 520, y: 540, badge: 'G' });
-    addNode({ id: 'mago', title: 'MAGO', subtitle: 'CONJUROS', color: '#a855f7', x: 1400, y: 540, badge: 'M' });
-    addNode({ id: 'paladin', title: 'PALADÍN', subtitle: 'DEFENSA SAGRADA', color: '#f59e0b', x: 340, y: 860, badge: 'P' });
-    addNode({ id: 'barbaro', title: 'BÁRBARO', subtitle: 'FURIA TOTAL', color: '#ef4444', x: 700, y: 860, badge: 'B' });
-    addNode({ id: 'nigro', title: 'NIGROMANTE', subtitle: 'ALMAS', color: '#10b981', x: 1220, y: 860, badge: 'N' });
-    addNode({ id: 'archimago', title: 'ARCHIMAGO', subtitle: 'RAYO Y FUEGO', color: '#38bdf8', x: 1580, y: 860, badge: 'A' });
-
-    addConnection('inicio', 'guerrero', '#ef4444');
-    addConnection('inicio', 'mago', '#a855f7');
-    addConnection('guerrero', 'paladin', '#f59e0b');
-    addConnection('guerrero', 'barbaro', '#ef4444');
-    addConnection('mago', 'nigro', '#10b981');
-    addConnection('mago', 'archimago', '#38bdf8');
-
-    resetAnimation();
-  }
-
-  /* ========================================================
-     PARSER Y IMPORTADOR DE IA (JSON & FLOWSCRIPT)
-     ======================================================== */
-  function parseAndApplyAiCode(code) {
+  function parseAndApplyAiCode(codeStr) {
     try {
-      let cleaned = code.trim();
+      let cleaned = codeStr.trim();
       if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json/, '');
       if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```/, '');
       if (cleaned.endsWith('```')) cleaned = cleaned.replace(/```$/, '');
       cleaned = cleaned.trim();
 
-      // Intento 1: Parsear como JSON estándar
-      if (cleaned.startsWith('{')) {
-        const data = JSON.parse(cleaned);
+      const data = JSON.parse(cleaned);
 
-        if (data.nodes && Array.isArray(data.nodes)) {
-          setMode('diagram');
-          nodes = [];
-          connections = [];
-
-          // Auto-distribución si faltan x/y
-          const total = data.nodes.length;
-          data.nodes.forEach((n, idx) => {
-            const defaultX = Math.round(240 + (idx * ((CANVAS_WIDTH - 480) / Math.max(1, total - 1))));
-            const defaultY = 540 + ((idx % 2 === 0 ? -1 : 1) * 80);
-
-            addNode({
-              id: n.id,
-              title: n.title,
-              subtitle: n.subtitle || 'PROCESO',
-              color: n.color || '#38bdf8',
-              badge: n.badge || n.title.charAt(0),
-              x: typeof n.x === 'number' ? n.x : defaultX,
-              y: typeof n.y === 'number' ? n.y : defaultY
-            });
-          });
-
-          if (data.sequence && Array.isArray(data.sequence)) {
-            data.sequence.forEach(step => {
-              if (step.type === 'arrow' || step.type === 'loop') {
-                addConnection(step.from, step.to, step.color, step.label || '');
-              }
-            });
-            sequence = data.sequence;
-          }
-
-          resetAnimation();
-          modalAiCode.classList.add('hidden');
-          return true;
-        }
+      if (!data.nodes || !Array.isArray(data.nodes)) {
+        alert('El JSON debe incluir un array "nodes".');
+        return false;
       }
 
-      // Intento 2: Parsear como FlowScript (Mermaid-style DSL)
-      if (cleaned.includes('node ') || cleaned.includes('timeline:')) {
-        setMode('diagram');
-        nodes = [];
-        connections = [];
+      nodes = [];
+      connections = [];
 
-        const lines = cleaned.split('\n');
-        lines.forEach(line => {
-          const l = line.trim();
-          if (l.startsWith('node ')) {
-            // Ejemplo: node mapa "MAPA" [sub="INICIO", color="#38bdf8", x=380, y=540]
-            const match = l.match(/node\s+([a-zA-Z0-9_-]+)\s+"([^"]+)"(?:\s*\[(.*)\])?/);
-            if (match) {
-              const id = match[1];
-              const title = match[2];
-              const attrStr = match[3] || '';
-              const subMatch = attrStr.match(/sub="([^"]+)"/);
-              const colorMatch = attrStr.match(/color="([^"]+)"/);
-              const xMatch = attrStr.match(/x=([0-9.]+)/);
-              const yMatch = attrStr.match(/y=([0-9.]+)/);
+      // Escala de coordenadas (adaptar a pantalla)
+      const stageW = window.innerWidth;
+      const stageH = window.innerHeight;
 
-              addNode({
-                id,
-                title,
-                subtitle: subMatch ? subMatch[1] : 'PROCESO',
-                color: colorMatch ? colorMatch[1] : '#38bdf8',
-                x: xMatch ? parseFloat(xMatch[1]) : 960,
-                y: yMatch ? parseFloat(yMatch[1]) : 540
-              });
-            }
-          } else if (l.includes('->')) {
-            // Flechas en FlowScript
-            const arrowMatch = l.match(/([a-zA-Z0-9_-]+)\s*->\s*([a-zA-Z0-9_-]+)/);
-            if (arrowMatch) {
-              addConnection(arrowMatch[1], arrowMatch[2]);
-            }
+      data.nodes.forEach((n, idx) => {
+        let x = n.x;
+        let y = n.y;
+        if (typeof x !== 'number') x = 200 + (idx * 220);
+        if (typeof y !== 'number') y = stageH / 2;
+
+        addNode({
+          id: n.id || ('nodo_' + idx),
+          title: n.title || 'NODO',
+          subtitle: n.subtitle || 'PROCESO',
+          color: n.color || getNextColor(),
+          badge: n.badge || n.title.charAt(0),
+          x,
+          y
+        });
+      });
+
+      if (data.connections && Array.isArray(data.connections)) {
+        data.connections.forEach(c => {
+          addConnection(c.from, c.to, c.fromPort, c.toPort, c.color, c.label || '');
+        });
+      }
+
+      if (data.sequence && Array.isArray(data.sequence)) {
+        sequence = [];
+        data.sequence.forEach((st, idx) => {
+          if (st.type === 'popup') {
+            const nd = nodes.find(n => n.id === st.target);
+            sequence.push({
+              id: 'ai_step_' + idx,
+              type: 'popup',
+              targetId: st.target,
+              label: `Aparece nodo: ${nd ? nd.title : st.target}`
+            });
+          } else if (st.type === 'arrow') {
+            const conn = connections.find(c => c.from === st.from && c.to === st.to);
+            sequence.push({
+              id: 'ai_step_' + idx,
+              type: 'arrow',
+              connId: conn ? conn.id : null,
+              label: `Flecha: ${st.from} → ${st.to}`
+            });
           }
         });
-
-        resetAnimation();
-        modalAiCode.classList.add('hidden');
-        return true;
+        renderTimelineList();
+      } else {
+        rebuildTimelineAuto();
       }
 
-      alert('El formato no coincide con JSON o FlowScript válido. Carga el ejemplo para ver la sintaxis exacta.');
-      return false;
+      resetAnimation();
+      modalAiCode.classList.add('hidden');
+      return true;
     } catch (err) {
-      alert('Error al procesar el código: ' + err.message);
+      alert('Error en formato JSON: ' + err.message);
       return false;
-    }
-  }
-
-  /* ========================================================
-     MODOS DE VISUALIZACIÓN (DIAGRAMA VS MAZMORRA)
-     ======================================================== */
-  function setMode(mode) {
-    currentMode = mode;
-    stopPlayback();
-
-    const btnDiag = document.getElementById('mode-diagram');
-    const btnDung = document.getElementById('mode-dungeon');
-
-    if (mode === 'diagram') {
-      btnDiag.classList.add('active');
-      btnDung.classList.remove('active');
-      stageSvg.style.display = 'block';
-      nodesContainer.style.display = 'block';
-      dungeonContainer.style.display = 'none';
-      dungeonControls.style.display = 'none';
-      renderNodes();
-    } else {
-      btnDung.classList.add('active');
-      btnDiag.classList.remove('active');
-      stageSvg.style.display = 'none';
-      nodesContainer.style.display = 'none';
-      dungeonContainer.style.display = 'flex';
-      dungeonControls.style.display = 'flex';
-      resetDungeonAnimation();
     }
   }
 
   /* ========================================================
      EXPORTADOR DETERMINISTA A ZIP (SECUENCIA PNG)
      ======================================================== */
-  function drawDungeonToCanvas(ctx, width, height) {
-    const scale = width / CANVAS_WIDTH;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const cellSize = 72 * scale;
-    const gap = 12 * scale;
-    const totalSize = (DUNGEON_SIZE * cellSize) + ((DUNGEON_SIZE - 1) * gap);
-    const startX = centerX - totalSize / 2;
-    const startY = centerY - totalSize / 2;
-
-    dungeonCells.forEach(cell => {
-      const x = startX + (cell.col * (cellSize + gap));
-      let y = startY + (cell.row * (cellSize + gap));
-      if (cell.elevated) y -= 12 * scale;
-
-      let fill = '#27272a';
-      let stroke = '#3f3f46';
-
-      if (cell.type === 'start') { fill = '#0284c7'; stroke = '#38bdf8'; }
-      if (cell.type === 'good') { fill = '#059669'; stroke = '#10b981'; }
-      if (cell.type === 'bad') { fill = '#dc2626'; stroke = '#ef4444'; }
-      if (cell.type === 'goal') { fill = '#d97706'; stroke = '#f59e0b'; }
-
-      // Sombra si está elevado
-      if (cell.elevated) {
-        ctx.fillStyle = '#09090b';
-        ctx.fillRect(x, y + (12 * scale), cellSize, cellSize);
-      }
-
-      ctx.fillStyle = fill;
-      ctx.fillRect(x, y, cellSize, cellSize);
-      ctx.lineWidth = 2.5 * scale;
-      ctx.strokeStyle = stroke;
-      ctx.strokeRect(x, y, cellSize, cellSize);
-    });
-  }
-
   function drawStageToCanvas(ctx, width, height, isTransparent, bgColor) {
     ctx.clearRect(0, 0, width, height);
 
@@ -1102,57 +993,73 @@
       ctx.fillRect(0, 0, width, height);
     }
 
-    if (currentMode === 'dungeon') {
-      drawDungeonToCanvas(ctx, width, height);
-      return;
-    }
+    const scaleX = width / window.innerWidth;
+    const scaleY = height / window.innerHeight;
 
-    const scaleX = width / CANVAS_WIDTH;
-    const scaleY = height / CANVAS_HEIGHT;
-
-    // 1. Dibujar conexiones (Curvas Bezier y flechas)
+    // 1. Dibujar Flechas
     connections.forEach(conn => {
       if (!conn.visible) return;
       const s = nodes.find(n => n.id === conn.from);
       const t = nodes.find(n => n.id === conn.to);
       if (!s || !t || !s.visible || !t.visible) return;
 
-      const sx = s.x * scaleX;
-      const sy = s.y * scaleY;
-      const tx = t.x * scaleX;
-      const ty = t.y * scaleY;
+      const p1Raw = getNodePortCoords(s, conn.fromPort || 'right');
+      const p2Raw = getNodePortCoords(t, conn.toPort || 'left');
 
-      const halfW = 105 * scaleX * blockScale;
-      const startX = sx + (sx < tx ? halfW : -halfW);
-      const startY = sy;
-      const endX = tx + (sx < tx ? -halfW : halfW);
-      const endY = ty;
+      const p1 = { x: p1Raw.x * scaleX, y: p1Raw.y * scaleY };
+      const p2 = { x: p2Raw.x * scaleX, y: p2Raw.y * scaleY };
 
-      const dx = endX - startX;
-      const curvature = Math.max(Math.abs(dx) * 0.45, 40 * scaleX);
+      const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const offset = Math.max(dist * 0.4, 40 * scaleX);
+
+      let cp1x = p1.x, cp1y = p1.y;
+      let cp2x = p2.x, cp2y = p2.y;
+
+      switch (conn.fromPort) {
+        case 'right':  cp1x = p1.x + offset; break;
+        case 'left':   cp1x = p1.x - offset; break;
+        case 'bottom': cp1y = p1.y + offset; break;
+        case 'top':    cp1y = p1.y - offset; break;
+        default:       cp1x = p1.x + offset; break;
+      }
+
+      switch (conn.toPort) {
+        case 'left':   cp2x = p2.x - offset; break;
+        case 'right':  cp2x = p2.x + offset; break;
+        case 'top':    cp2y = p2.y - offset; break;
+        case 'bottom': cp2y = p2.y + offset; break;
+        default:       cp2x = p2.x - offset; break;
+      }
 
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.bezierCurveTo(
-        startX + (dx >= 0 ? curvature : -curvature), startY,
-        endX - (dx >= 0 ? curvature : -curvature), endY,
-        endX, endY
-      );
+      ctx.moveTo(p1.x, p1.y);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
       ctx.lineWidth = arrowWidth * scaleX;
       ctx.strokeStyle = conn.color || '#38bdf8';
       ctx.lineCap = 'round';
       ctx.stroke();
 
       // Flecha triangular
-      const angle = Math.atan2(endY - startY, endX - (endX - (dx >= 0 ? curvature : -curvature)));
+      const angle = Math.atan2(p2.y - cp2y, p2.x - cp2x);
       const headLen = 14 * scaleX;
       ctx.beginPath();
-      ctx.moveTo(endX, endY);
-      ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 7), endY - headLen * Math.sin(angle - Math.PI / 7));
-      ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 7), endY - headLen * Math.sin(angle + Math.PI / 7));
+      ctx.moveTo(p2.x, p2.y);
+      ctx.lineTo(p2.x - headLen * Math.cos(angle - Math.PI / 7), p2.y - headLen * Math.sin(angle - Math.PI / 7));
+      ctx.lineTo(p2.x - headLen * Math.cos(angle + Math.PI / 7), p2.y - headLen * Math.sin(angle + Math.PI / 7));
       ctx.closePath();
       ctx.fillStyle = conn.color || '#38bdf8';
       ctx.fill();
+
+      // Etiqueta
+      if (conn.label) {
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2 - (8 * scaleY);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `700 ${11 * scaleX}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(conn.label, midX, midY);
+      }
     });
 
     // 2. Dibujar Nodos
@@ -1161,8 +1068,8 @@
 
       const nx = node.x * scaleX;
       const ny = node.y * scaleY;
-      const nodeW = 210 * scaleX * blockScale;
-      const nodeH = 84 * scaleY * blockScale;
+      const nodeW = NODE_WIDTH * scaleX;
+      const nodeH = NODE_HEIGHT * scaleY;
       const x = nx - nodeW / 2;
       const y = ny - nodeH / 2;
       const r = 12 * scaleX;
@@ -1178,7 +1085,7 @@
       ctx.stroke();
 
       // Badge
-      const badgeSize = 28 * scaleX * blockScale;
+      const badgeSize = 28 * scaleX;
       const bx = x + (14 * scaleX);
       const by = y + (16 * scaleY);
       ctx.fillStyle = node.color || '#38bdf8';
@@ -1187,21 +1094,21 @@
       ctx.fill();
 
       ctx.fillStyle = '#000000';
-      ctx.font = `800 ${14 * scaleX * blockScale}px 'Outfit', sans-serif`;
+      ctx.font = `800 ${13 * scaleX}px 'Outfit', sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(node.badge || node.title.charAt(0), bx + badgeSize / 2, by + badgeSize / 2);
 
       // Título
       ctx.fillStyle = '#ffffff';
-      ctx.font = `800 ${15 * scaleX * blockScale}px 'Outfit', sans-serif`;
+      ctx.font = `800 ${15 * scaleX}px 'Outfit', sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(node.title, bx + badgeSize + (10 * scaleX), by + badgeSize / 2);
 
       // Subtítulo
       ctx.fillStyle = '#9ca3af';
-      ctx.font = `600 ${11 * scaleX * blockScale}px 'Roboto Mono', monospace`;
+      ctx.font = `600 ${11 * scaleX}px monospace`;
       ctx.fillText(node.subtitle, bx + badgeSize + (10 * scaleX), by + badgeSize + (12 * scaleY));
     });
   }
@@ -1242,18 +1149,13 @@
     const prevSound = soundEnabled;
     if (shouldMute) soundEnabled = false;
 
-    // Mostrar banner de progreso
     exportBanner.classList.remove('hidden');
-    exportStatusTitle.textContent = 'Iniciando renderizado de fotogramas...';
+    exportStatusTitle.textContent = 'Iniciando captura de fotogramas...';
     exportStatusSub.textContent = `Fotograma 0 / ${totalFrames} (0%)`;
     exportProgressFill.style.width = '0%';
 
-    if (shouldRestart) {
-      resetAnimation();
-    }
-    if (!isPlaying) {
-      startPlayback();
-    }
+    if (shouldRestart) resetAnimation();
+    if (!isPlaying) startPlayback();
 
     const frameInterval = 1000 / fps;
     let captured = 0;
@@ -1286,8 +1188,8 @@
       return;
     }
 
-    exportStatusTitle.textContent = 'Empaquetando archivo ZIP...';
-    exportStatusSub.textContent = 'Generando descarga...';
+    exportStatusTitle.textContent = 'Generando archivo ZIP...';
+    exportStatusSub.textContent = 'Empaquetando secuencia PNG...';
 
     try {
       const zipBlob = await exportZipInstance.generateAsync({
@@ -1326,85 +1228,149 @@
     nodesBadgeCount.textContent = nodes.length;
     connectionsBadgeCount.textContent = connections.length;
 
-    // Lista de Bloques
+    // 1. Lista de Bloques
     blocksList.innerHTML = '';
     nodes.forEach(node => {
       const row = document.createElement('div');
-      row.className = 'block-item-row';
+      row.className = 'block-row-card';
 
       const left = document.createElement('div');
-      left.className = 'block-item-left';
+      left.className = 'block-row-left';
 
-      const dot = document.createElement('div');
-      dot.className = 'block-color-dot';
-      dot.style.backgroundColor = node.color;
+      // Selector de color
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.className = 'block-color-picker-input';
+      colorInput.value = node.color;
+      colorInput.title = 'Cambiar color del bloque';
+      colorInput.addEventListener('input', (e) => {
+        node.color = e.target.value;
+        renderNodes();
+      });
 
-      const title = document.createElement('span');
-      title.className = 'block-item-title';
-      title.textContent = node.title;
+      // Entrada de nombre
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'block-name-input';
+      nameInput.value = node.title;
+      nameInput.title = 'Editar nombre del bloque';
+      nameInput.addEventListener('change', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+          node.title = val;
+          node.badge = val.charAt(0).toUpperCase();
+          renderNodes();
+          rebuildTimelineAuto();
+        }
+      });
 
-      left.appendChild(dot);
-      left.appendChild(title);
+      left.appendChild(colorInput);
+      left.appendChild(nameInput);
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn-item-del';
-      delBtn.title = 'Eliminar bloque';
-      delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-      delBtn.addEventListener('click', () => removeNode(node.id));
+      const actions = document.createElement('div');
+      actions.className = 'block-row-actions';
+
+      // Botón Duplicar
+      const btnDup = document.createElement('button');
+      btnDup.type = 'button';
+      btnDup.className = 'btn-mini-icon';
+      btnDup.title = 'Duplicar bloque';
+      btnDup.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+      btnDup.addEventListener('click', () => duplicateNode(node.id));
+
+      // Botón Eliminar
+      const btnDel = document.createElement('button');
+      btnDel.type = 'button';
+      btnDel.className = 'btn-mini-icon del';
+      btnDel.title = 'Eliminar bloque';
+      btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      btnDel.addEventListener('click', () => removeNode(node.id));
+
+      actions.appendChild(btnDup);
+      actions.appendChild(btnDel);
 
       row.appendChild(left);
-      row.appendChild(delBtn);
+      row.appendChild(actions);
       blocksList.appendChild(row);
     });
 
-    // Lista de Conexiones
+    // 2. Lista de Conexiones / Flechas
     connectionsList.innerHTML = '';
     connections.forEach(conn => {
-      const fromNode = nodes.find(n => n.id === conn.from);
-      const toNode = nodes.find(n => n.id === conn.to);
-      const fromTitle = fromNode ? fromNode.title : conn.from;
-      const toTitle = toNode ? toNode.title : conn.to;
+      const s = nodes.find(n => n.id === conn.from);
+      const t = nodes.find(n => n.id === conn.to);
+      const sTitle = s ? s.title : conn.from;
+      const tTitle = t ? t.title : conn.to;
 
       const row = document.createElement('div');
-      row.className = 'conn-item-row';
+      row.className = 'block-row-card';
 
       const left = document.createElement('div');
-      left.className = 'block-item-left';
+      left.className = 'block-row-left';
 
-      const text = document.createElement('span');
-      text.className = 'block-item-title';
-      text.textContent = `${fromTitle} → ${toTitle}`;
+      // Selector de color de flecha
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.className = 'block-color-picker-input';
+      colorInput.value = conn.color || '#38bdf8';
+      colorInput.title = 'Cambiar color de flecha';
+      colorInput.addEventListener('input', (e) => {
+        conn.color = e.target.value;
+        renderConnections();
+      });
 
-      left.appendChild(text);
+      // Input de etiqueta / descripción
+      const labelInput = document.createElement('input');
+      labelInput.type = 'text';
+      labelInput.className = 'block-name-input';
+      labelInput.placeholder = `${sTitle} → ${tTitle}`;
+      labelInput.value = conn.label || '';
+      labelInput.title = 'Descripción de la flecha';
+      labelInput.addEventListener('change', (e) => {
+        conn.label = e.target.value.trim();
+        renderConnections();
+        rebuildTimelineAuto();
+      });
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn-item-del';
-      delBtn.title = 'Eliminar flecha';
-      delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-      delBtn.addEventListener('click', () => removeConnection(conn.id));
+      left.appendChild(colorInput);
+      left.appendChild(labelInput);
+
+      const actions = document.createElement('div');
+      actions.className = 'block-row-actions';
+
+      const btnDel = document.createElement('button');
+      btnDel.type = 'button';
+      btnDel.className = 'btn-mini-icon del';
+      btnDel.title = 'Eliminar flecha';
+      btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      btnDel.addEventListener('click', () => removeConnection(conn.id));
+
+      actions.appendChild(btnDel);
 
       row.appendChild(left);
-      row.appendChild(delBtn);
+      row.appendChild(actions);
       connectionsList.appendChild(row);
     });
+
+    renderTimelineList();
   }
 
   /* ========================================================
-     INICIALIZACIÓN Y EVENT LISTENERS
+     INICIALIZACIÓN DE EVENTOS
      ======================================================== */
   function initEvents() {
-    // Menú flotante y bienvenida
+    // Abrir/Cerrar Panel
     menuBtn.addEventListener('click', () => {
       controlPanel.classList.toggle('hidden');
-      if (welcomeHint) welcomeHint.classList.add('dismissed');
+      if (welcomeHint) welcomeHint.classList.add('hidden');
     });
 
     welcomeHint.addEventListener('click', () => {
       controlPanel.classList.remove('hidden');
-      welcomeHint.classList.add('dismissed');
+      welcomeHint.classList.add('hidden');
     });
 
-    // Pestañas del Panel
+    // Pestañas
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1416,79 +1382,58 @@
       });
     });
 
-    // Modos
-    document.getElementById('mode-diagram').addEventListener('click', () => setMode('diagram'));
-    document.getElementById('mode-dungeon').addEventListener('click', () => setMode('dungeon'));
-
-    // Botones de acción principales
-    btnPlay.addEventListener('click', togglePlayback);
-    btnReset.addEventListener('click', resetAnimation);
-
+    // Añadir Bloque
     btnAddBlock.addEventListener('click', () => {
-      addNode({
-        title: 'NODO ' + (nodes.length + 1),
-        subtitle: 'PROCESO'
-      });
-      playPupSound('normal');
+      addNode();
+      playPopSound('normal');
     });
 
-    btnClearBlocks.addEventListener('click', () => {
-      nodes = [];
-      connections = [];
-      renderNodes();
-      updateUILists();
-    });
-
+    // Unir Nodos
     btnToggleConnectMode.addEventListener('click', () => {
       isConnectingMode = !isConnectingMode;
-      btnToggleConnectMode.classList.toggle('active-mode', isConnectingMode);
-      connectModeLabel.textContent = isConnectingMode ? 'Haz clic en 2 nodos' : 'Unir Nodos';
+      btnToggleConnectMode.classList.toggle('active', isConnectingMode);
+      connectModeLabel.textContent = isConnectingMode ? 'Selecciona 2 nodos' : 'Unir Nodos';
       if (!isConnectingMode && connectSourceNodeId) {
         const el = document.getElementById('node-el-' + connectSourceNodeId);
-        if (el) el.classList.remove('is-active-pulse');
+        if (el) el.classList.remove('is-connect-source');
         connectSourceNodeId = null;
       }
     });
 
-    // Presets
-    document.getElementById('btn-preset-castlecat').addEventListener('click', loadPresetCastleCat);
-    document.getElementById('btn-preset-server').addEventListener('click', loadPresetServer);
-    document.getElementById('btn-preset-dungeon').addEventListener('click', loadPresetDungeon);
-    document.getElementById('btn-preset-tree').addEventListener('click', loadPresetTree);
-
-    // Herramientas Mazmorra
-    document.querySelectorAll('#dungeon-tool-selector .pill-opt').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#dungeon-tool-selector .pill-opt').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        dungeonSelectedTool = btn.dataset.tool;
-      });
+    // Limpiar bloques / flechas
+    btnClearBlocks.addEventListener('click', () => {
+      nodes = [];
+      connections = [];
+      sequence = [];
+      renderNodes();
+      updateUILists();
     });
 
-    document.getElementById('btn-regen-dungeon').addEventListener('click', () => {
-      generateProceduralDungeon();
-      resetDungeonAnimation();
+    btnClearConnections.addEventListener('click', () => {
+      connections = [];
+      renderConnections();
+      rebuildTimelineAuto();
+      updateUILists();
     });
 
-    // Sliders y Parámetros
+    btnRebuildTimeline.addEventListener('click', () => {
+      rebuildTimelineAuto();
+    });
+
+    // Controles de Animación
+    btnPlay.addEventListener('click', togglePlayback);
+    btnReset.addEventListener('click', resetAnimation);
+
     const paramStepSpeed = document.getElementById('param-step-speed');
     const valStepSpeed = document.getElementById('val-step-speed');
     paramStepSpeed.addEventListener('input', (e) => {
       stepSpeed = parseFloat(e.target.value);
-      valStepSpeed.textContent = stepSpeed + ' seg';
+      valStepSpeed.textContent = stepSpeed.toFixed(2) + ' s';
     });
 
     const paramAnimEffect = document.getElementById('param-anim-effect');
     paramAnimEffect.addEventListener('change', (e) => {
       animEffect = e.target.value;
-    });
-
-    const paramBlockScale = document.getElementById('param-block-scale');
-    const valBlockScale = document.getElementById('val-block-scale');
-    paramBlockScale.addEventListener('input', (e) => {
-      blockScale = parseFloat(e.target.value);
-      valBlockScale.textContent = blockScale.toFixed(2) + 'x';
-      renderNodes();
     });
 
     const paramArrowWidth = document.getElementById('param-arrow-width');
@@ -1573,7 +1518,7 @@
     btnApplyAiCode.addEventListener('click', () => {
       const code = aiCodeInput.value;
       if (!code.trim()) {
-        alert('Pega primero el código JSON o FlowScript generado por la IA.');
+        alert('Pega primero el código JSON generado por la IA.');
         return;
       }
       parseAndApplyAiCode(code);
@@ -1582,16 +1527,22 @@
     btnFormatExample.addEventListener('click', () => {
       aiCodeInput.value = JSON.stringify({
         nodes: [
-          { id: "jugador", title: "JUGADOR", subtitle: "ENTRADA", color: "#38bdf8", x: 380, y: 540, badge: "J" },
-          { id: "servidor", title: "SERVIDOR", subtitle: "FÍSICAS", color: "#10b981", x: 960, y: 540, badge: "S" },
-          { id: "enemigos", title: "ENEMIGOS", subtitle: "IA BOT", color: "#ef4444", x: 1540, y: 540, badge: "E" }
+          { id: "cliente", title: "CLIENTE", subtitle: "NAVEGADOR", color: "#38bdf8", x: 380, y: 540 },
+          { id: "servidor", title: "SERVIDOR", subtitle: "API REST", color: "#10b981", x: 960, y: 540 },
+          { id: "db", title: "BASE DE DATOS", subtitle: "POSTGRESQL", color: "#f59e0b", x: 1540, y: 540 }
+        ],
+        connections: [
+          { from: "cliente", fromPort: "right", to: "servidor", toPort: "left", color: "#38bdf8", label: "REQUEST" },
+          { from: "servidor", fromPort: "right", to: "db", toPort: "left", color: "#10b981", label: "QUERY" },
+          { from: "servidor", fromPort: "bottom", to: "cliente", toPort: "bottom", color: "#38bdf8", label: "RESPONSE" }
         ],
         sequence: [
-          { type: "popup", target: "jugador" },
-          { type: "arrow", from: "jugador", to: "servidor", color: "#38bdf8" },
+          { type: "popup", target: "cliente" },
+          { type: "arrow", from: "cliente", to: "servidor" },
           { type: "popup", target: "servidor" },
-          { type: "arrow", from: "servidor", to: "enemigos", color: "#ef4444" },
-          { type: "popup", target: "enemigos" }
+          { type: "arrow", from: "servidor", to: "db" },
+          { type: "popup", target: "db" },
+          { type: "arrow", from: "servidor", to: "cliente" }
         ]
       }, null, 2);
     });
@@ -1610,7 +1561,7 @@
 
       if (e.key === 'h' || e.key === 'H') {
         controlPanel.classList.toggle('hidden');
-        if (welcomeHint) welcomeHint.classList.add('dismissed');
+        if (welcomeHint) welcomeHint.classList.add('hidden');
       } else if (e.code === 'Space') {
         e.preventDefault();
         togglePlayback();
@@ -1619,17 +1570,26 @@
       }
     });
 
-    // Redimensionamiento de ventana
     window.addEventListener('resize', () => {
-      renderNodes();
+      renderConnections();
     });
   }
 
-  // Inicio de la aplicación
+  // Carga inicial limpia con 3 bloques conectados como base lista para usar
   function initApp() {
     initEvents();
-    initDungeonGrid();
-    loadPresetCastleCat();
+
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+
+    const n1 = addNode({ id: 'inicio', title: 'INICIO', subtitle: 'ORIGEN', color: '#38bdf8', x: cx - 360, y: cy });
+    const n2 = addNode({ id: 'proceso', title: 'PROCESO', subtitle: 'LÓGICA', color: '#10b981', x: cx, y: cy });
+    const n3 = addNode({ id: 'salida', title: 'SALIDA', subtitle: 'RESULTADO', color: '#f59e0b', x: cx + 360, y: cy });
+
+    addConnection(n1.id, n2.id, 'right', 'left', '#38bdf8', 'PASO 1');
+    addConnection(n2.id, n3.id, 'right', 'left', '#10b981', 'PASO 2');
+
+    resetAnimation();
   }
 
   if (document.readyState === 'loading') {
