@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  // --- Paleta de colores planos para bloques nuevos ---
+  // --- Paleta de colores planos ---
   const FLAT_COLORS = [
     '#38bdf8', // Celeste / Sky
     '#10b981', // Verde esmeralda
@@ -81,12 +81,22 @@
   // --- Estado Global de Datos ---
   let nodes = [];
   let connections = [];
-  let sequence = []; // Lista ordenada de pasos de animación
+  let sequence = [];
   let isPlaying = false;
   let currentStepIndex = 0;
   let playbackTimer = null;
 
+  // Selección de elementos
+  let selectedNodeId = null;
+  let selectedConnId = null;
+  let clipboardNode = null;
+
+  // Pila de historial (Undo / Redo)
+  let historyStack = [];
+  let redoStack = [];
+
   // Modos de interacción
+  let selectedBlockType = 'process'; // 'process' | 'loop' | 'decision' | 'code'
   let isConnectingMode = false;
   let connectSourceNodeId = null;
   let isDraggingNode = false;
@@ -98,7 +108,7 @@
   let portSource = { nodeId: null, port: null };
 
   // Parámetros de animación
-  let stepSpeed = 0.5; // segundos por paso
+  let stepSpeed = 0.5;
   let animEffect = 'bounce';
   let arrowWidth = 3;
   let soundEnabled = true;
@@ -109,6 +119,46 @@
   let exportZipInstance = null;
   let selectedExportFps = 30;
   let selectedExportBgMode = 'transparent';
+
+  /* ========================================================
+     HISTORIAL (UNDO / REDO)
+     ======================================================== */
+  function pushHistory() {
+    const snapshot = JSON.stringify({ nodes, connections, sequence });
+    if (historyStack.length > 0 && historyStack[historyStack.length - 1] === snapshot) return;
+    historyStack.push(snapshot);
+    if (historyStack.length > 50) historyStack.shift();
+    redoStack = [];
+  }
+
+  function undo() {
+    if (historyStack.length <= 1) return;
+    const current = historyStack.pop();
+    redoStack.push(current);
+    const prevSnapshot = historyStack[historyStack.length - 1];
+    applySnapshot(JSON.parse(prevSnapshot));
+    playPopSound('normal');
+  }
+
+  function redo() {
+    if (redoStack.length === 0) return;
+    const nextSnapshot = redoStack.pop();
+    historyStack.push(nextSnapshot);
+    applySnapshot(JSON.parse(nextSnapshot));
+    playPopSound('normal');
+  }
+
+  function applySnapshot(snapshot) {
+    nodes = snapshot.nodes || [];
+    connections = snapshot.connections || [];
+    sequence = snapshot.sequence || [];
+    selectedNodeId = null;
+    selectedConnId = null;
+    renderNodes();
+    renderConnections();
+    renderTimelineList();
+    updateUILists();
+  }
 
   /* ========================================================
      SÍNTESIS DE SONIDO (WEB AUDIO API - "PUPUPUP")
@@ -179,20 +229,14 @@
     const halfH = NODE_HEIGHT / 2;
 
     switch (port) {
-      case 'left':
-        return { x: node.x - halfW, y: node.y };
-      case 'right':
-        return { x: node.x + halfW, y: node.y };
-      case 'top':
-        return { x: node.x, y: node.y - halfH };
-      case 'bottom':
-        return { x: node.x, y: node.y + halfH };
-      default:
-        return { x: node.x + halfW, y: node.y };
+      case 'left':   return { x: node.x - halfW, y: node.y };
+      case 'right':  return { x: node.x + halfW, y: node.y };
+      case 'top':    return { x: node.x, y: node.y - halfH };
+      case 'bottom': return { x: node.x, y: node.y + halfH };
+      default:       return { x: node.x + halfW, y: node.y };
     }
   }
 
-  // Si no se especifica puerto, elige el más natural entre dos nodos
   function getBestNaturalPorts(sourceNode, targetNode) {
     const dx = targetNode.x - sourceNode.x;
     const dy = targetNode.y - sourceNode.y;
@@ -210,14 +254,19 @@
     }
   }
 
+  function isPortConnected(nodeId, portName) {
+    return connections.some(c => 
+      (c.from === nodeId && (c.fromPort || 'right') === portName) ||
+      (c.to === nodeId && (c.toPort || 'left') === portName)
+    );
+  }
+
   /* ========================================================
-     CÁLCULO DE CURVAS BEZIER Y TANGENTES
+     CÁLCULO DE CURVAS BEZIER Y MARCADORES SVG
      ======================================================== */
   function getBezierPath(p1, fromPort, p2, toPort) {
-    const x1 = p1.x;
-    const y1 = p1.y;
-    const x2 = p2.x;
-    const y2 = p2.y;
+    const x1 = p1.x, y1 = p1.y;
+    const x2 = p2.x, y2 = p2.y;
 
     const dist = Math.hypot(x2 - x1, y2 - y1);
     const offset = Math.max(dist * 0.4, 40);
@@ -242,26 +291,73 @@
     return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
   }
 
+  // Generador dinámico de marcador de punta de flecha según color exacto
+  function getMarkerUrlForColor(color) {
+    const defs = stageSvg.querySelector('defs');
+    if (!defs) return '';
+
+    const safeId = 'arrowhead-' + color.replace(/[^a-zA-Z0-9]/g, '');
+    let marker = document.getElementById(safeId);
+
+    if (!marker) {
+      marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      marker.setAttribute('id', safeId);
+      marker.setAttribute('markerWidth', '10');
+      marker.setAttribute('markerHeight', '10');
+      marker.setAttribute('refX', '8');
+      marker.setAttribute('refY', '5');
+      marker.setAttribute('orient', 'auto');
+      marker.setAttribute('markerUnits', 'userSpaceOnUse');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M 0 1.5 L 8 5 L 0 8.5 z');
+      path.setAttribute('fill', color);
+
+      marker.appendChild(path);
+      defs.appendChild(marker);
+    }
+
+    return `url(#${safeId})`;
+  }
+
   /* ========================================================
      GESTIÓN DE NODOS / BLOQUES
      ======================================================== */
   function addNode(data = {}) {
-    const id = data.id || 'nodo_' + Math.random().toString(36).substring(2, 7);
-    const title = data.title || ('NODO ' + (nodes.length + 1));
-    const subtitle = data.subtitle || 'PROCESO';
-    const color = data.color || getNextColor();
-    const badge = data.badge || title.charAt(0).toUpperCase();
+    pushHistory();
 
-    // Posición centrada o aleatoria dispersa si no se especifica
+    const id = data.id || ('nodo_' + Math.random().toString(36).substring(2, 7));
+    const type = data.type || selectedBlockType || 'process';
+    let title = data.title;
+    let subtitle = data.subtitle;
+
+    // Valores iniciales según tipo
+    if (!title) {
+      if (type === 'loop') title = 'FOR I = 0..5';
+      else if (type === 'decision') title = '¿ES VÁLIDO?';
+      else if (type === 'code') title = 'EJECUTAR CÓDIGO';
+      else title = 'NODO ' + (nodes.length + 1);
+    }
+
+    if (!subtitle) {
+      if (type === 'loop') subtitle = 'BUCLE ITERATIVO';
+      else if (type === 'decision') subtitle = 'CONDICIONAL';
+      else if (type === 'code') subtitle = 'socket.emit()';
+      else subtitle = 'PROCESO';
+    }
+
+    const color = data.color || getNextColor();
+    const badge = data.badge || (type === 'loop' ? '↺' : (type === 'decision' ? '◇' : (type === 'code' ? '>' : title.charAt(0).toUpperCase())));
+
     let x = typeof data.x === 'number' ? data.x : (window.innerWidth / 2 + (Math.random() * 200 - 100));
     let y = typeof data.y === 'number' ? data.y : (window.innerHeight / 2 + (Math.random() * 160 - 80));
 
-    // Asegurar márgenes de pantalla
     x = Math.max(130, Math.min(window.innerWidth - 130, x));
     y = Math.max(60, Math.min(window.innerHeight - 60, y));
 
     const node = {
       id,
+      type,
       title,
       subtitle,
       color,
@@ -282,20 +378,27 @@
     const original = nodes.find(n => n.id === id);
     if (!original) return;
 
-    addNode({
+    pushHistory();
+    const newNode = addNode({
+      type: original.type,
       title: original.title + ' (COPIA)',
       subtitle: original.subtitle,
       color: original.color,
       badge: original.badge,
-      x: original.x + 40,
-      y: original.y + 40
+      x: original.x + 35,
+      y: original.y + 35
     });
+
+    selectNode(newNode.id);
     playPopSound('normal');
   }
 
   function removeNode(id) {
+    pushHistory();
     nodes = nodes.filter(n => n.id !== id);
     connections = connections.filter(c => c.from !== id && c.to !== id);
+    if (selectedNodeId === id) selectedNodeId = null;
+
     renderNodes();
     renderConnections();
     rebuildTimelineAuto();
@@ -312,7 +415,6 @@
     const target = nodes.find(n => n.id === toId);
     if (!source || !target) return;
 
-    // Determinar puertos si no vienen dados
     let fPort = fromPort;
     let tPort = toPort;
     if (!fPort || !tPort) {
@@ -321,10 +423,10 @@
       if (!tPort) tPort = best.toPort;
     }
 
-    // Comprobar si ya existe una conexión idéntica
     const exists = connections.some(c => c.from === fromId && c.to === toId && c.fromPort === fPort && c.toPort === tPort);
     if (exists) return;
 
+    pushHistory();
     const connColor = color || source.color || '#38bdf8';
 
     const conn = {
@@ -339,6 +441,7 @@
     };
 
     connections.push(conn);
+    renderNodes(); // Actualizar punchitos visibles
     renderConnections();
     rebuildTimelineAuto();
     updateUILists();
@@ -346,10 +449,96 @@
   }
 
   function removeConnection(id) {
+    pushHistory();
     connections = connections.filter(c => c.id !== id);
+    if (selectedConnId === id) selectedConnId = null;
+
+    renderNodes(); // Ocultar punchitos huérfanos
     renderConnections();
     rebuildTimelineAuto();
     updateUILists();
+  }
+
+  /* ========================================================
+     SELECCIÓN DE ELEMENTOS
+     ======================================================== */
+  function selectNode(nodeId) {
+    selectedNodeId = nodeId;
+    selectedConnId = null;
+
+    document.querySelectorAll('.diagram-node').forEach(el => {
+      el.classList.toggle('is-selected', el.dataset.nodeId === nodeId);
+    });
+
+    document.querySelectorAll('.connection-curve').forEach(el => {
+      el.classList.remove('is-selected');
+    });
+
+    const badge = document.getElementById('disconnect-badge');
+    if (badge) badge.remove();
+
+    updateUILists();
+  }
+
+  function selectConnection(connId) {
+    selectedConnId = connId;
+    selectedNodeId = null;
+
+    document.querySelectorAll('.diagram-node').forEach(el => {
+      el.classList.remove('is-selected');
+    });
+
+    document.querySelectorAll('.connection-curve').forEach(el => {
+      el.classList.toggle('is-selected', el.id === 'conn-path-' + connId);
+    });
+
+    updateUILists();
+    showDisconnectBadge(connId);
+  }
+
+  function clearSelection() {
+    selectedNodeId = null;
+    selectedConnId = null;
+
+    document.querySelectorAll('.diagram-node').forEach(el => el.classList.remove('is-selected'));
+    document.querySelectorAll('.connection-curve').forEach(el => el.classList.remove('is-selected'));
+
+    const badge = document.getElementById('disconnect-badge');
+    if (badge) badge.remove();
+
+    updateUILists();
+  }
+
+  function showDisconnectBadge(connId) {
+    const existing = document.getElementById('disconnect-badge');
+    if (existing) existing.remove();
+
+    const conn = connections.find(c => c.id === connId);
+    if (!conn) return;
+
+    const s = nodes.find(n => n.id === conn.from);
+    const t = nodes.find(n => n.id === conn.to);
+    if (!s || !t) return;
+
+    const p1 = getNodePortCoords(s, conn.fromPort || 'right');
+    const p2 = getNodePortCoords(t, conn.toPort || 'left');
+    const midX = (p1.x + p2.x) / 2;
+    const midY = (p1.y + p2.y) / 2;
+
+    const badge = document.createElement('div');
+    badge.id = 'disconnect-badge';
+    badge.className = 'conn-disconnect-badge';
+    badge.style.left = midX + 'px';
+    badge.style.top = (midY - 18) + 'px';
+    badge.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>Desconectar</span>';
+
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeConnection(connId);
+      playPopSound('normal');
+    });
+
+    stage.appendChild(badge);
   }
 
   /* ========================================================
@@ -360,12 +549,16 @@
 
     nodes.forEach(node => {
       const el = document.createElement('div');
-      el.className = 'diagram-node';
+      el.className = `diagram-node type-${node.type || 'process'}`;
       el.id = 'node-el-' + node.id;
       el.dataset.nodeId = node.id;
       el.style.borderColor = node.color;
       el.style.left = node.x + 'px';
       el.style.top = node.y + 'px';
+
+      if (selectedNodeId === node.id) {
+        el.classList.add('is-selected');
+      }
 
       if (!node.visible) {
         el.style.display = 'none';
@@ -378,7 +571,7 @@
       const badgeEl = document.createElement('div');
       badgeEl.className = 'node-badge';
       badgeEl.style.backgroundColor = node.color;
-      badgeEl.textContent = node.badge || node.title.charAt(0);
+      badgeEl.textContent = node.badge || (node.type === 'loop' ? '↺' : (node.type === 'decision' ? '◇' : node.title.charAt(0)));
 
       const titleEl = document.createElement('div');
       titleEl.className = 'node-title-display';
@@ -394,7 +587,7 @@
       subEl.textContent = node.subtitle;
       subEl.title = 'Doble clic para editar texto';
 
-      // 4 Puertos de Conexión: Derecha, Izquierda, Arriba, Abajo
+      // 4 Puertos de Conexión (Arriba, Abajo, Izquierda, Derecha)
       const portR = createPortElement(node.id, 'right');
       const portL = createPortElement(node.id, 'left');
       const portT = createPortElement(node.id, 'top');
@@ -407,21 +600,23 @@
       el.appendChild(portT);
       el.appendChild(portB);
 
-      // Eventos Drag & Drop del nodo
+      // Drag & Drop
       el.addEventListener('mousedown', onNodeMouseDown);
 
-      // Evento de doble clic para editar título y subtítulo inline
+      // Selección al hacer clic
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isConnectingMode) {
+          handleNodeClickConnect(node.id);
+        } else {
+          selectNode(node.id);
+        }
+      });
+
+      // Doble clic para edición inline
       el.addEventListener('dblclick', (e) => {
         e.stopPropagation();
         enableNodeInlineEdit(node, el, titleEl, subEl, badgeEl);
-      });
-
-      // Evento de clic en modo "Unir Nodos"
-      el.addEventListener('click', (e) => {
-        if (isConnectingMode) {
-          e.stopPropagation();
-          handleNodeClickConnect(node.id);
-        }
       });
 
       nodesContainer.appendChild(el);
@@ -433,14 +628,20 @@
   function createPortElement(nodeId, portName) {
     const p = document.createElement('div');
     p.className = `node-port port-${portName}`;
-    p.title = `Conectar puerto ${portName.toUpperCase()}`;
+    p.title = `Puerto ${portName.toUpperCase()}`;
     p.dataset.nodeId = nodeId;
     p.dataset.port = portName;
+
+    // Regla obligatoria: Solo se muestra si tiene una flecha conectada
+    if (isPortConnected(nodeId, portName)) {
+      p.classList.add('has-connection');
+    }
+
     p.addEventListener('mousedown', onPortMouseDown);
     return p;
   }
 
-  // Doble clic: edición directa de textos
+  // Doble clic: edición rápida en el propio nodo
   function enableNodeInlineEdit(node, nodeEl, titleEl, subEl, badgeEl) {
     const currentTitle = node.title;
     const currentSub = node.subtitle;
@@ -466,13 +667,18 @@
       const newTitle = inputTitle.value.trim() || 'NODO';
       const newSub = inputSub.value.trim() || 'PROCESO';
 
-      node.title = newTitle;
-      node.subtitle = newSub;
-      node.badge = newTitle.charAt(0).toUpperCase();
+      if (node.title !== newTitle || node.subtitle !== newSub) {
+        pushHistory();
+        node.title = newTitle;
+        node.subtitle = newSub;
+        if (node.type === 'process') {
+          node.badge = newTitle.charAt(0).toUpperCase();
+        }
+      }
 
       badgeEl.textContent = node.badge;
-      titleEl.textContent = newTitle;
-      subEl.textContent = newSub;
+      titleEl.textContent = node.title;
+      subEl.textContent = node.subtitle;
 
       if (inputTitle.parentNode) inputTitle.replaceWith(titleEl);
       if (inputSub.parentNode) inputSub.replaceWith(subEl);
@@ -483,13 +689,13 @@
 
     inputTitle.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') inputSub.focus();
+      if (e.key === 'Escape') saveChanges();
     });
 
     inputSub.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') saveChanges();
+      if (e.key === 'Enter' || e.key === 'Escape') saveChanges();
     });
 
-    // Guardar al perder el foco
     let blurTimeout;
     const onBlur = () => {
       blurTimeout = setTimeout(saveChanges, 150);
@@ -515,22 +721,23 @@
 
       const d = getBezierPath(p1, conn.fromPort || 'right', p2, conn.toPort || 'left');
 
-      // Flecha SVG
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', d);
-      pathEl.setAttribute('class', 'connection-curve');
+      pathEl.setAttribute('class', 'connection-curve' + (selectedConnId === conn.id ? ' is-selected' : ''));
       pathEl.setAttribute('stroke', conn.color || '#38bdf8');
       pathEl.setAttribute('stroke-width', arrowWidth);
-      pathEl.setAttribute('marker-end', 'url(#arrowhead-dyn)');
+      pathEl.setAttribute('marker-end', getMarkerUrlForColor(conn.color || '#38bdf8'));
       pathEl.id = 'conn-path-' + conn.id;
 
-      // Color de punta de flecha sincronizado
-      const markerDef = document.querySelector('#arrowhead-dyn path');
-      if (markerDef) markerDef.setAttribute('fill', conn.color || '#38bdf8');
+      // Clic para seleccionar o desconectar
+      pathEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectConnection(conn.id);
+      });
 
       connectionsGroup.appendChild(pathEl);
 
-      // Etiqueta en el centro de la flecha
+      // Etiqueta en el centro
       if (conn.label) {
         const midX = (p1.x + p2.x) / 2;
         const midY = (p1.y + p2.y) / 2 - 8;
@@ -541,9 +748,18 @@
         textEl.setAttribute('class', 'connection-label');
         textEl.textContent = conn.label;
 
+        textEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectConnection(conn.id);
+        });
+
         connectionsGroup.appendChild(textEl);
       }
     });
+
+    if (selectedConnId) {
+      showDisconnectBadge(selectedConnId);
+    }
   }
 
   /* ========================================================
@@ -565,6 +781,7 @@
       y: e.clientY - node.y
     };
 
+    selectNode(node.id);
     this.classList.add('is-dragging');
     window.addEventListener('mousemove', onNodeMouseMove);
     window.addEventListener('mouseup', onNodeMouseUp);
@@ -592,6 +809,7 @@
     if (isDraggingNode && draggedNodeId) {
       const nodeEl = document.getElementById('node-el-' + draggedNodeId);
       if (nodeEl) nodeEl.classList.remove('is-dragging');
+      pushHistory();
     }
     isDraggingNode = false;
     draggedNodeId = null;
@@ -603,6 +821,8 @@
   function onPortMouseDown(e) {
     e.stopPropagation();
     isDraggingPort = true;
+    document.body.classList.add('is-dragging-port');
+
     portSource = {
       nodeId: this.dataset.nodeId,
       port: this.dataset.port
@@ -622,7 +842,6 @@
     const p1 = getNodePortCoords(sourceNode, portSource.port);
     const p2 = { x: e.clientX, y: e.clientY };
 
-    // Buscar si el ratón sobrevuela un puerto destino
     let targetPort = 'left';
     if (p2.x < p1.x) targetPort = 'right';
 
@@ -632,6 +851,7 @@
 
   function onPortMouseUp(e) {
     dragConnectPath.style.display = 'none';
+    document.body.classList.remove('is-dragging-port');
     window.removeEventListener('mousemove', onPortMouseMove);
     window.removeEventListener('mouseup', onPortMouseUp);
 
@@ -653,7 +873,6 @@
     portSource = { nodeId: null, port: null };
   }
 
-  // Conectar haciendo clic de bloque a bloque
   function handleNodeClickConnect(nodeId) {
     if (!connectSourceNodeId) {
       connectSourceNodeId = nodeId;
@@ -670,10 +889,17 @@
     }
   }
 
+  // Clic en escenario deselecciona
+  stage.addEventListener('click', (e) => {
+    if (e.target.closest('.diagram-node') || e.target.closest('.connection-curve') || e.target.closest('.control-panel') || e.target.closest('.modal-overlay')) return;
+    clearSelection();
+  });
+
   // Doble clic en espacio vacío para crear un bloque
   stage.addEventListener('dblclick', (e) => {
     if (e.target.closest('.diagram-node') || e.target.closest('.control-panel') || e.target.closest('.modal-overlay')) return;
     addNode({
+      type: selectedBlockType,
       x: e.clientX,
       y: e.clientY
     });
@@ -686,13 +912,12 @@
   function rebuildTimelineAuto() {
     sequence = [];
 
-    // Generar orden por defecto: cada nodo y luego sus flechas salientes
     nodes.forEach(node => {
       sequence.push({
         id: 'step_node_' + node.id,
         type: 'popup',
         targetId: node.id,
-        label: `Aparece nodo: ${node.title}`
+        label: `Aparece: ${node.title}`
       });
 
       const outgoing = connections.filter(c => c.from === node.id);
@@ -715,6 +940,7 @@
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= sequence.length) return;
 
+    pushHistory();
     const temp = sequence[index];
     sequence[index] = sequence[targetIdx];
     sequence[targetIdx] = temp;
@@ -809,7 +1035,7 @@
         const el = document.getElementById('node-el-' + node.id);
         if (el) {
           el.style.display = 'flex';
-          el.className = 'diagram-node anim-' + animEffect;
+          el.className = `diagram-node type-${node.type || 'process'} anim-${animEffect}`;
           el.classList.add('is-active-pulse');
           setTimeout(() => el.classList.remove('is-active-pulse'), 500);
         }
@@ -842,7 +1068,6 @@
     if (welcomeHint) welcomeHint.classList.add('hidden');
 
     if (currentStepIndex === 0) {
-      // Ocultar elementos para la revelación progresiva
       nodes.forEach(n => {
         n.visible = false;
         const el = document.getElementById('node-el-' + n.id);
@@ -881,13 +1106,12 @@
     stopPlayback();
     currentStepIndex = 0;
 
-    // Restaurar visibilidad de todos los elementos
     nodes.forEach(n => {
       n.visible = true;
       const el = document.getElementById('node-el-' + n.id);
       if (el) {
         el.style.display = 'flex';
-        el.className = 'diagram-node';
+        el.className = `diagram-node type-${n.type || 'process'}` + (selectedNodeId === n.id ? ' is-selected' : '');
       }
     });
 
@@ -917,25 +1141,26 @@
         return false;
       }
 
+      pushHistory();
       nodes = [];
       connections = [];
 
-      // Escala de coordenadas (adaptar a pantalla)
       const stageW = window.innerWidth;
       const stageH = window.innerHeight;
 
       data.nodes.forEach((n, idx) => {
         let x = n.x;
         let y = n.y;
-        if (typeof x !== 'number') x = 200 + (idx * 220);
+        if (typeof x !== 'number') x = 200 + (idx * 240);
         if (typeof y !== 'number') y = stageH / 2;
 
         addNode({
           id: n.id || ('nodo_' + idx),
+          type: n.type || 'process',
           title: n.title || 'NODO',
           subtitle: n.subtitle || 'PROCESO',
           color: n.color || getNextColor(),
-          badge: n.badge || n.title.charAt(0),
+          badge: n.badge,
           x,
           y
         });
@@ -956,7 +1181,7 @@
               id: 'ai_step_' + idx,
               type: 'popup',
               targetId: st.target,
-              label: `Aparece nodo: ${nd ? nd.title : st.target}`
+              label: `Aparece: ${nd ? nd.title : st.target}`
             });
           } else if (st.type === 'arrow') {
             const conn = connections.find(c => c.from === st.from && c.to === st.to);
@@ -1039,7 +1264,7 @@
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // Flecha triangular
+      // Flecha triangular con su color exacto
       const angle = Math.atan2(p2.y - cp2y, p2.x - cp2x);
       const headLen = 14 * scaleX;
       ctx.beginPath();
@@ -1074,8 +1299,7 @@
       const y = ny - nodeH / 2;
       const r = 12 * scaleX;
 
-      // Caja del nodo
-      ctx.fillStyle = '#18181b';
+      ctx.fillStyle = node.type === 'code' ? '#0d1117' : '#18181b';
       ctx.strokeStyle = node.color || '#38bdf8';
       ctx.lineWidth = 2.5 * scaleX;
 
@@ -1083,6 +1307,14 @@
       ctx.roundRect(x, y, nodeW, nodeH, r);
       ctx.fill();
       ctx.stroke();
+
+      // Decoración de tipo de bloque en Canvas
+      if (node.type === 'code') {
+        ctx.fillStyle = '#52525b';
+        ctx.font = `800 ${8 * scaleX}px monospace`;
+        ctx.textAlign = 'left';
+        ctx.fillText('● ● ●', x + 12 * scaleX, y + 12 * scaleY);
+      }
 
       // Badge
       const badgeSize = 28 * scaleX;
@@ -1232,7 +1464,9 @@
     blocksList.innerHTML = '';
     nodes.forEach(node => {
       const row = document.createElement('div');
-      row.className = 'block-row-card';
+      row.className = 'block-row-card' + (selectedNodeId === node.id ? ' is-selected' : '');
+
+      row.addEventListener('click', () => selectNode(node.id));
 
       const left = document.createElement('div');
       left.className = 'block-row-left';
@@ -1243,28 +1477,52 @@
       colorInput.className = 'block-color-picker-input';
       colorInput.value = node.color;
       colorInput.title = 'Cambiar color del bloque';
+      colorInput.addEventListener('click', (e) => e.stopPropagation());
       colorInput.addEventListener('input', (e) => {
+        pushHistory();
         node.color = e.target.value;
         renderNodes();
       });
 
-      // Entrada de nombre
+      // Badge de tipo
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'block-type-mini-badge';
+      typeBadge.textContent = node.type || 'PROC';
+      typeBadge.title = 'Haz clic para cambiar tipo de bloque';
+      typeBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pushHistory();
+        const types = ['process', 'loop', 'decision', 'code'];
+        const nextIdx = (types.indexOf(node.type || 'process') + 1) % types.length;
+        node.type = types[nextIdx];
+        if (node.type === 'loop') node.badge = '↺';
+        else if (node.type === 'decision') node.badge = '◇';
+        else if (node.type === 'code') node.badge = '>';
+        else node.badge = node.title.charAt(0).toUpperCase();
+        renderNodes();
+        updateUILists();
+      });
+
+      // Input de nombre
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.className = 'block-name-input';
       nameInput.value = node.title;
       nameInput.title = 'Editar nombre del bloque';
+      nameInput.addEventListener('click', (e) => e.stopPropagation());
       nameInput.addEventListener('change', (e) => {
         const val = e.target.value.trim();
         if (val) {
+          pushHistory();
           node.title = val;
-          node.badge = val.charAt(0).toUpperCase();
+          if (node.type === 'process') node.badge = val.charAt(0).toUpperCase();
           renderNodes();
           rebuildTimelineAuto();
         }
       });
 
       left.appendChild(colorInput);
+      left.appendChild(typeBadge);
       left.appendChild(nameInput);
 
       const actions = document.createElement('div');
@@ -1274,17 +1532,23 @@
       const btnDup = document.createElement('button');
       btnDup.type = 'button';
       btnDup.className = 'btn-mini-icon';
-      btnDup.title = 'Duplicar bloque';
+      btnDup.title = 'Duplicar bloque (Ctrl+D)';
       btnDup.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
-      btnDup.addEventListener('click', () => duplicateNode(node.id));
+      btnDup.addEventListener('click', (e) => {
+        e.stopPropagation();
+        duplicateNode(node.id);
+      });
 
       // Botón Eliminar
       const btnDel = document.createElement('button');
       btnDel.type = 'button';
       btnDel.className = 'btn-mini-icon del';
-      btnDel.title = 'Eliminar bloque';
+      btnDel.title = 'Eliminar bloque (Supr)';
       btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-      btnDel.addEventListener('click', () => removeNode(node.id));
+      btnDel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeNode(node.id);
+      });
 
       actions.appendChild(btnDup);
       actions.appendChild(btnDel);
@@ -1303,18 +1567,21 @@
       const tTitle = t ? t.title : conn.to;
 
       const row = document.createElement('div');
-      row.className = 'block-row-card';
+      row.className = 'block-row-card' + (selectedConnId === conn.id ? ' is-selected' : '');
+      row.addEventListener('click', () => selectConnection(conn.id));
 
       const left = document.createElement('div');
       left.className = 'block-row-left';
 
-      // Selector de color de flecha
+      // Selector de color
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.className = 'block-color-picker-input';
       colorInput.value = conn.color || '#38bdf8';
       colorInput.title = 'Cambiar color de flecha';
+      colorInput.addEventListener('click', (e) => e.stopPropagation());
       colorInput.addEventListener('input', (e) => {
+        pushHistory();
         conn.color = e.target.value;
         renderConnections();
       });
@@ -1326,7 +1593,9 @@
       labelInput.placeholder = `${sTitle} → ${tTitle}`;
       labelInput.value = conn.label || '';
       labelInput.title = 'Descripción de la flecha';
+      labelInput.addEventListener('click', (e) => e.stopPropagation());
       labelInput.addEventListener('change', (e) => {
+        pushHistory();
         conn.label = e.target.value.trim();
         renderConnections();
         rebuildTimelineAuto();
@@ -1341,9 +1610,12 @@
       const btnDel = document.createElement('button');
       btnDel.type = 'button';
       btnDel.className = 'btn-mini-icon del';
-      btnDel.title = 'Eliminar flecha';
+      btnDel.title = 'Desconectar flecha (Supr)';
       btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-      btnDel.addEventListener('click', () => removeConnection(conn.id));
+      btnDel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeConnection(conn.id);
+      });
 
       actions.appendChild(btnDel);
 
@@ -1356,7 +1628,7 @@
   }
 
   /* ========================================================
-     INICIALIZACIÓN DE EVENTOS
+     INICIALIZACIÓN DE EVENTOS Y ATAJOS DE TECLADO
      ======================================================== */
   function initEvents() {
     // Abrir/Cerrar Panel
@@ -1382,15 +1654,26 @@
       });
     });
 
+    // Selector de Tipo de Bloque
+    document.querySelectorAll('#block-type-selector .pill-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#block-type-selector .pill-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedBlockType = btn.dataset.type;
+      });
+    });
+
     // Añadir Bloque
     btnAddBlock.addEventListener('click', () => {
-      addNode();
+      const n = addNode({ type: selectedBlockType });
+      selectNode(n.id);
       playPopSound('normal');
     });
 
     // Unir Nodos
     btnToggleConnectMode.addEventListener('click', () => {
       isConnectingMode = !isConnectingMode;
+      document.body.classList.toggle('is-connecting-mode', isConnectingMode);
       btnToggleConnectMode.classList.toggle('active', isConnectingMode);
       connectModeLabel.textContent = isConnectingMode ? 'Selecciona 2 nodos' : 'Unir Nodos';
       if (!isConnectingMode && connectSourceNodeId) {
@@ -1402,15 +1685,22 @@
 
     // Limpiar bloques / flechas
     btnClearBlocks.addEventListener('click', () => {
-      nodes = [];
-      connections = [];
-      sequence = [];
-      renderNodes();
-      updateUILists();
+      if (confirm('¿Eliminar todos los bloques?')) {
+        pushHistory();
+        nodes = [];
+        connections = [];
+        sequence = [];
+        clearSelection();
+        renderNodes();
+        updateUILists();
+      }
     });
 
     btnClearConnections.addEventListener('click', () => {
+      pushHistory();
       connections = [];
+      clearSelection();
+      renderNodes();
       renderConnections();
       rebuildTimelineAuto();
       updateUILists();
@@ -1527,22 +1817,25 @@
     btnFormatExample.addEventListener('click', () => {
       aiCodeInput.value = JSON.stringify({
         nodes: [
-          { id: "cliente", title: "CLIENTE", subtitle: "NAVEGADOR", color: "#38bdf8", x: 380, y: 540 },
-          { id: "servidor", title: "SERVIDOR", subtitle: "API REST", color: "#10b981", x: 960, y: 540 },
-          { id: "db", title: "BASE DE DATOS", subtitle: "POSTGRESQL", color: "#f59e0b", x: 1540, y: 540 }
+          { id: "inicio", type: "process", title: "INICIO", subtitle: "PROCESO", color: "#38bdf8", x: 380, y: 540 },
+          { id: "loop1", type: "loop", title: "FOR I = 0..5", subtitle: "BUCLE", color: "#a855f7", x: 780, y: 540 },
+          { id: "cond1", type: "decision", title: "¿ES VÁLIDO?", subtitle: "CONDICIÓN", color: "#f59e0b", x: 1180, y: 540 },
+          { id: "code1", type: "code", title: "EJECUTAR", subtitle: "socket.emit()", color: "#10b981", x: 1580, y: 540 }
         ],
         connections: [
-          { from: "cliente", fromPort: "right", to: "servidor", toPort: "left", color: "#38bdf8", label: "REQUEST" },
-          { from: "servidor", fromPort: "right", to: "db", toPort: "left", color: "#10b981", label: "QUERY" },
-          { from: "servidor", fromPort: "bottom", to: "cliente", toPort: "bottom", color: "#38bdf8", label: "RESPONSE" }
+          { from: "inicio", fromPort: "right", to: "loop1", toPort: "left", color: "#38bdf8", label: "START" },
+          { from: "loop1", fromPort: "right", to: "cond1", toPort: "left", color: "#a855f7", label: "TICK" },
+          { from: "cond1", fromPort: "right", to: "code1", toPort: "left", color: "#10b981", label: "SI" },
+          { from: "cond1", fromPort: "bottom", to: "loop1", toPort: "bottom", color: "#ef4444", label: "REINTENTAR" }
         ],
         sequence: [
-          { type: "popup", target: "cliente" },
-          { type: "arrow", from: "cliente", to: "servidor" },
-          { type: "popup", target: "servidor" },
-          { type: "arrow", from: "servidor", to: "db" },
-          { type: "popup", target: "db" },
-          { type: "arrow", from: "servidor", to: "cliente" }
+          { type: "popup", target: "inicio" },
+          { type: "arrow", from: "inicio", to: "loop1" },
+          { type: "popup", target: "loop1" },
+          { type: "arrow", from: "loop1", to: "cond1" },
+          { type: "popup", target: "cond1" },
+          { type: "arrow", from: "cond1", to: "code1" },
+          { type: "popup", target: "code1" }
         ]
       }, null, 2);
     });
@@ -1555,10 +1848,94 @@
       });
     });
 
-    // Atajos de Teclado
+    /* ========================================================
+       ATAJOS DE TECLADO COMPLETOS (CTRL+C, CTRL+V, CTRL+D, CTRL+Z, SUPR)
+       ======================================================== */
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      // Si está escribiendo en un input o textarea no interceptar caracteres normales
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
 
+      // Escape para cerrar o deseleccionar
+      if (e.key === 'Escape') {
+        if (isInput) e.target.blur();
+        clearSelection();
+        return;
+      }
+
+      if (isInput) return;
+
+      // 1. CTRL + C (Copiar)
+      if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        if (selectedNodeId) {
+          const node = nodes.find(n => n.id === selectedNodeId);
+          if (node) {
+            clipboardNode = JSON.parse(JSON.stringify(node));
+          }
+        }
+        return;
+      }
+
+      // 2. CTRL + V (Pegar)
+      if (e.ctrlKey && (e.key === 'v' || e.key === 'V')) {
+        e.preventDefault();
+        if (clipboardNode) {
+          const newNode = addNode({
+            type: clipboardNode.type,
+            title: clipboardNode.title + ' (COPIA)',
+            subtitle: clipboardNode.subtitle,
+            color: clipboardNode.color,
+            badge: clipboardNode.badge,
+            x: clipboardNode.x + 35,
+            y: clipboardNode.y + 35
+          });
+          selectNode(newNode.id);
+          playPopSound('normal');
+        }
+        return;
+      }
+
+      // 3. CTRL + D (Duplicar)
+      if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        if (selectedNodeId) {
+          duplicateNode(selectedNodeId);
+        }
+        return;
+      }
+
+      // 4. CTRL + Z (Deshacer)
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+
+      // 5. CTRL + Y (Rehacer)
+      if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      // 6. DELETE / BACKSPACE (Eliminar elemento seleccionado)
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        if (selectedNodeId) {
+          removeNode(selectedNodeId);
+          playPopSound('normal');
+        } else if (selectedConnId) {
+          removeConnection(selectedConnId);
+          playPopSound('normal');
+        }
+        return;
+      }
+
+      // 7. H / ESPACIO / R
       if (e.key === 'h' || e.key === 'H') {
         controlPanel.classList.toggle('hidden');
         if (welcomeHint) welcomeHint.classList.add('hidden');
@@ -1575,20 +1952,22 @@
     });
   }
 
-  // Carga inicial limpia con 3 bloques conectados como base lista para usar
+  // Carga inicial lista para usar
   function initApp() {
     initEvents();
 
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
 
-    const n1 = addNode({ id: 'inicio', title: 'INICIO', subtitle: 'ORIGEN', color: '#38bdf8', x: cx - 360, y: cy });
-    const n2 = addNode({ id: 'proceso', title: 'PROCESO', subtitle: 'LÓGICA', color: '#10b981', x: cx, y: cy });
-    const n3 = addNode({ id: 'salida', title: 'SALIDA', subtitle: 'RESULTADO', color: '#f59e0b', x: cx + 360, y: cy });
+    const n1 = addNode({ id: 'inicio', type: 'process', title: 'INICIO', subtitle: 'ORIGEN', color: '#38bdf8', x: cx - 380, y: cy });
+    const n2 = addNode({ id: 'loop1', type: 'loop', title: 'FOR I = 0..5', subtitle: 'BUCLE TICK', color: '#a855f7', x: cx, y: cy });
+    const n3 = addNode({ id: 'cond1', type: 'decision', title: '¿ES VÁLIDO?', subtitle: 'CONDICIÓN', color: '#f59e0b', x: cx + 380, y: cy });
 
-    addConnection(n1.id, n2.id, 'right', 'left', '#38bdf8', 'PASO 1');
-    addConnection(n2.id, n3.id, 'right', 'left', '#10b981', 'PASO 2');
+    addConnection(n1.id, n2.id, 'right', 'left', '#38bdf8', 'START');
+    addConnection(n2.id, n3.id, 'right', 'left', '#a855f7', 'TICK');
 
+    // Registrar estado inicial en el historial
+    pushHistory();
     resetAnimation();
   }
 

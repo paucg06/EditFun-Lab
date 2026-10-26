@@ -17,12 +17,12 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/flowmotion/style.css">
 </head>
 <body class="bg-transparent">
 
-  <!-- Mensaje de bienvenida inicial en el centro (Idéntico a PopFX) -->
+  <!-- Mensaje de bienvenida inicial en el centro -->
   <div id="welcome-hint" class="welcome-hint" title="Haz clic o pulsa H para abrir el panel">
     <div class="welcome-hint-title">Crea tu diagrama animado FlowMotion</div>
     <div class="welcome-hint-sub">
@@ -41,12 +41,7 @@
   <div id="stage">
     <!-- Capa SVG para conexiones y flechas -->
     <svg id="stage-connections-svg" class="stage-svg-layer">
-      <defs>
-        <!-- Marcador genérico dinámico -->
-        <marker id="arrowhead-dyn" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8"/>
-        </marker>
-      </defs>
+      <defs></defs>
       <g id="connections-group"></g>
       <!-- Línea temporal al arrastrar puerto punta a punta -->
       <path id="drag-connect-path" d="" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="6,6" style="display: none;"/>
@@ -59,7 +54,7 @@
   <!-- PANEL DE CONTROL FLOTANTE A LA DERECHA (ESTRUCTURA EXACTA DE POPFX) -->
   <aside class="control-panel hidden" id="control-panel">
     
-    <!-- Pestañas de Selección (Iconos vectoriales idénticos a PopFX) -->
+    <!-- Pestañas de Selección -->
     <div class="panel-tabs">
       <button class="tab-btn active" data-tab="tab-blocks">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -118,6 +113,17 @@
           </button>
         </div>
 
+        <!-- Selector de Tipo de Bloque (Código / Bucle / Decisión / Proceso) -->
+        <div class="setting-row">
+          <span class="setting-label">Tipo de Bloque</span>
+          <div class="pill-selector" id="block-type-selector">
+            <button type="button" class="pill-opt active" data-type="process" title="Bloque de proceso normal">Proceso</button>
+            <button type="button" class="pill-opt" data-type="loop" title="Bucle For / Repetición">Bucle For</button>
+            <button type="button" class="pill-opt" data-type="decision" title="Condición If / Else">Condición If</button>
+            <button type="button" class="pill-opt" data-type="code" title="Snippet de código / Terminal">Código</button>
+          </div>
+        </div>
+
         <!-- Herramientas Principales: Añadir Bloque y Unir Nodos -->
         <div class="block-tools-row">
           <button type="button" class="btn-tool-action" id="btn-add-block">
@@ -128,6 +134,15 @@
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             <span id="connect-mode-label">Unir Nodos</span>
           </button>
+        </div>
+
+        <!-- Atajos de Edición -->
+        <div class="shortcuts-legend-card">
+          <span><kbd class="keyboard-badge">Ctrl+C</kbd> Copiar</span>
+          <span><kbd class="keyboard-badge">Ctrl+V</kbd> Pegar</span>
+          <span><kbd class="keyboard-badge">Ctrl+D</kbd> Duplicar</span>
+          <span><kbd class="keyboard-badge">Ctrl+Z</kbd> Deshacer</span>
+          <span><kbd class="keyboard-badge">Supr</kbd> Eliminar</span>
         </div>
 
         <!-- Lista de Bloques Activos -->
@@ -168,7 +183,7 @@
             <button type="button" class="btn-clear-all" id="btn-rebuild-timeline" title="Regenerar secuencia lógica">Auto-ordenar</button>
           </div>
           <div class="timeline-list-container" id="timeline-list">
-            <!-- Se llena dinámicamente con los pasos de la animación -->
+            <!-- Se llena dinámicamente -->
           </div>
         </div>
 
@@ -201,7 +216,7 @@
           <input type="range" id="param-arrow-width" min="2" max="8" step="1" value="3">
         </div>
 
-        <!-- Sonido de Animación (Web Audio pupupup) -->
+        <!-- Sonido de Animación -->
         <div class="sound-control-wrap">
           <label class="custom-checkbox-row">
             <input type="checkbox" id="param-sound-enabled" class="custom-checkbox-input" checked>
@@ -229,7 +244,7 @@
 
       </div>
 
-      <!-- TAB 3: FONDO Y PANTALLA CROMA (IDÉNTICO A POPFX) -->
+      <!-- TAB 3: FONDO Y PANTALLA CROMA -->
       <div class="tab-content" id="tab-screen">
         <div class="setting-row">
           <span class="setting-label">Color de Fondo para Edición (Chroma Key)</span>
@@ -243,14 +258,16 @@
         </div>
 
         <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid #27272a; padding: 14px; border-radius: 10px; font-size: 12.5px; color: #d4d4d8; line-height: 1.6;">
-          <strong style="color: #ffffff; display: block; margin-bottom: 5px;">Tips de grabación:</strong>
-          Pulsa <kbd class="keyboard-badge">H</kbd> para ocultar el panel y <kbd class="keyboard-badge">F11</kbd> para pantalla completa.<br>
-          Pulsa <kbd class="keyboard-badge">Espacio</kbd> para iniciar o pausar y <kbd class="keyboard-badge">R</kbd> para reiniciar al principio.<br>
-          Doble clic sobre cualquier bloque en pantalla para renombrarlo al instante.
+          <strong style="color: #ffffff; display: block; margin-bottom: 5px;">Atajos de Edición y Grabación:</strong>
+          Haz <strong>clic</strong> en un bloque o flecha para seleccionarlo.<br>
+          Pulsa <kbd class="keyboard-badge">Ctrl+C</kbd> y <kbd class="keyboard-badge">Ctrl+V</kbd> para copiar y pegar.<br>
+          Pulsa <kbd class="keyboard-badge">Ctrl+D</kbd> para duplicar y <kbd class="keyboard-badge">Ctrl+Z</kbd> para deshacer.<br>
+          Pulsa <kbd class="keyboard-badge">Supr</kbd> para eliminar el bloque o flecha seleccionada.<br>
+          Pulsa <kbd class="keyboard-badge">H</kbd> para ocultar el panel y <kbd class="keyboard-badge">Espacio</kbd> para reproducir.
         </div>
       </div>
 
-      <!-- TAB 4: DESCARGAR SECUENCIA PNG (ZIP) (IDÉNTICO A POPFX) -->
+      <!-- TAB 4: DESCARGAR SECUENCIA PNG (ZIP) -->
       <div class="tab-content" id="tab-export">
         
         <!-- Duración -->
@@ -431,22 +448,25 @@
         </p>
         <textarea id="ai-code-input" class="ai-textarea" placeholder='{
   "nodes": [
-    { "id": "cliente", "title": "CLIENTE", "subtitle": "NAVEGADOR", "color": "#38bdf8", "x": 420, "y": 540 },
-    { "id": "servidor", "title": "SERVIDOR", "subtitle": "API REST", "color": "#10b981", "x": 960, "y": 540 },
-    { "id": "db", "title": "BASE DE DATOS", "subtitle": "POSTGRESQL", "color": "#f59e0b", "x": 1500, "y": 540 }
+    { "id": "inicio", "type": "process", "title": "INICIO", "subtitle": "PROCESO", "color": "#38bdf8", "x": 380, "y": 540 },
+    { "id": "loop1", "type": "loop", "title": "FOR I = 0..5", "subtitle": "BUCLE", "color": "#a855f7", "x": 780, "y": 540 },
+    { "id": "cond1", "type": "decision", "title": "¿ES VÁLIDO?", "subtitle": "CONDICIÓN", "color": "#f59e0b", "x": 1180, "y": 540 },
+    { "id": "code1", "type": "code", "title": "EJECUTAR", "subtitle": "socket.emit()", "color": "#10b981", "x": 1580, "y": 540 }
   ],
   "connections": [
-    { "from": "cliente", "fromPort": "right", "to": "servidor", "toPort": "left", "color": "#38bdf8", "label": "REQUEST" },
-    { "from": "servidor", "fromPort": "right", "to": "db", "toPort": "left", "color": "#10b981", "label": "QUERY" },
-    { "from": "servidor", "fromPort": "bottom", "to": "cliente", "toPort": "bottom", "color": "#38bdf8", "label": "RESPONSE" }
+    { "from": "inicio", "fromPort": "right", "to": "loop1", "toPort": "left", "color": "#38bdf8", "label": "START" },
+    { "from": "loop1", "fromPort": "right", "to": "cond1", "toPort": "left", "color": "#a855f7", "label": "TICK" },
+    { "from": "cond1", "fromPort": "right", "to": "code1", "toPort": "left", "color": "#10b981", "label": "SI" },
+    { "from": "cond1", "fromPort": "bottom", "to": "loop1", "toPort": "bottom", "color": "#ef4444", "label": "REINTENTAR" }
   ],
   "sequence": [
-    { "type": "popup", "target": "cliente" },
-    { "type": "arrow", "from": "cliente", "to": "servidor" },
-    { "type": "popup", "target": "servidor" },
-    { "type": "arrow", "from": "servidor", "to": "db" },
-    { "type": "popup", "target": "db" },
-    { "type": "arrow", "from": "servidor", "to": "cliente" }
+    { "type": "popup", "target": "inicio" },
+    { "type": "arrow", "from": "inicio", "to": "loop1" },
+    { "type": "popup", "target": "loop1" },
+    { "type": "arrow", "from": "loop1", "to": "cond1" },
+    { "type": "popup", "target": "cond1" },
+    { "type": "arrow", "from": "cond1", "to": "code1" },
+    { "type": "popup", "target": "code1" }
   ]
 }'></textarea>
       </div>
@@ -474,37 +494,36 @@
       </div>
       <div class="modal-body">
         <p class="modal-desc">
-          Copia y envía este prompt completo y exhaustivo a cualquier IA (ChatGPT, Claude, Gemini o Antigravity) para que genere el diagrama exacto:
+          Copia y envía este prompt a cualquier IA (ChatGPT, Claude, Gemini o Antigravity):
         </p>
-        <textarea id="master-prompt-text" class="ai-textarea" readonly>Actúa como un Diseñador y Desarrollador Experto de Diagramas de Flujo Animados para FlowMotion Studio.
-Tu objetivo es transformar la siguiente idea en un diagrama visual profesional estructurado en formato JSON:
+        <textarea id="master-prompt-text" class="ai-textarea" readonly>Actúa como Diseñador Experto de Diagramas y Arquitectura de Código para FlowMotion Studio.
+Genera un bloque de código JSON válido para representar el siguiente sistema:
 
 IDEA A REPRESENTAR:
-[ESCRIBE AQUÍ TU IDEA EN DETALLE. Ejemplos:
-- "Arquitectura de juego multijugador: Cliente envía input al servidor WebSocket, el servidor ejecuta la simulación de físicas a 60 ticks y sincroniza con Redis y la base de datos PostgreSQL."
-- "Ciclo de combate de un RPG: Iniciar combate -> Elegir habilidad (Ataque o Curación) -> Cálculo de daño -> Enemigo responde -> Repetir hasta victoria."]
+[ESCRIBE AQUÍ TU IDEA. Ejemplos:
+- "Algoritmo de generación procedural de mapa: Iniciar semilla -> Bucle for por cuadrícula 5x5 -> Condición if (es pared o camino) -> Generar habitación o trampa."
+- "Ciclo de red cliente-servidor: Cliente emite input -> Bucle tick de físicas en servidor a 60 FPS -> Si colisión == true guardar en base de datos."]
 
-REGLAS OBLIGATORIAS DE GENERACIÓN:
-1. Resolución base del lienzo: 1920x1080 píxeles.
-2. Cada nodo en la lista "nodes" debe incluir:
-   - "id": identificador único en minúsculas sin espacios (ej: "cliente", "servidor", "db").
-   - "title": título principal en mayúsculas breves (ej: "CLIENTE", "SERVIDOR", "MAPA").
-   - "subtitle": función o descripción corta en mayúsculas (ej: "INPUT", "API GATEWAY", "DATABASE").
-   - "color": color hexadecimal plano de alto contraste (ej: "#38bdf8", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#ec4899").
-   - "badge": 1 o 2 letras mayúsculas distintivas para el icono (ej: "C", "S", "DB").
-   - "x": coordenada X numérica (entre 200 y 1720) distribuidas espacialmente para que no se superpongan.
-   - "y": coordenada Y numérica (entre 180 y 900).
-3. Cada conexión en "connections" une dos nodos mediante puertos:
-   - "from": id del nodo origen.
-   - "fromPort": puerto de salida ("right", "left", "top", "bottom").
-   - "to": id del nodo destino.
-   - "toPort": puerto de llegada ("right", "left", "top", "bottom").
+ESPECIFICACIÓN JSON ESTRICTA:
+1. "nodes": lista de objetos con:
+   - "id": string único (ej: "loop_main", "check_hp").
+   - "type": "process" (proceso normal), "loop" (bucle for/while), "decision" (condición rombo if/else), o "code" (snippet de código/terminal).
+   - "title": título principal en mayúsculas (ej: "FOR I = 0..5", "¿COLISIÓN?", "CALCULAR FÍSICAS").
+   - "subtitle": subtítulo o comando breve (ej: "BUCLE 60 TICKS", "VERIFICAR", "socket.emit()").
+   - "color": color hexadecimal plano (#38bdf8, #10b981, #f59e0b, #ef4444, #a855f7, #ec4899).
+   - "x": coordenada horizontal (200 a 1700).
+   - "y": coordenada vertical (180 a 900).
+2. "connections": lista de flechas entre puertos:
+   - "from": id origen.
+   - "fromPort": "right", "left", "top" o "bottom".
+   - "to": id destino.
+   - "toPort": "right", "left", "top" o "bottom".
    - "color": color hexadecimal de la flecha.
-   - "label": texto descriptivo opcional centrado en la flecha (ej: "HTTP POST", "CALLBACK", "REPETIR").
-4. La lista "sequence" define el orden temporal paso a paso de la animación:
-   - Paso de nodo: { "type": "popup", "target": "id_del_nodo" }
-   - Paso de flecha: { "type": "arrow", "from": "id_origen", "to": "id_destino" }
-5. Responde ÚNICAMENTE con el bloque JSON dentro de ```json ... ``` sin ningún texto antes ni después.</textarea>
+   - "label": texto descriptivo opcional en el centro de la flecha (ej: "SI", "NO", "SIGUIENTE", "REPETIR").
+3. "sequence": lista del orden temporal paso a paso:
+   - { "type": "popup", "target": "id_del_nodo" }
+   - { "type": "arrow", "from": "id_origen", "to": "id_destino" }
+4. Devuelve EXCLUSIVAMENTE el JSON dentro de ```json ... ``` sin comentarios ni relleno.</textarea>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-modal-primary" id="btn-copy-prompt">Copiar Prompt al Portapapeles</button>
