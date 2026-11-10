@@ -947,69 +947,78 @@
       transform: translateY(0);
     }
 
-    /* Tarjeta 8: FlowMotion (Diagramas Animados y Mazmorras con IA) */
-    .card-flowmotion {
-      background-color: #0f172a;
-      border: 3px solid #38bdf8;
-      box-shadow: 0 4px 0 #0284c7;
+    /* Tarjeta 8: YouTube Fake */
+    .card-youtubefake {
+      background-color: #ff0000;
       color: #ffffff;
       text-align: center;
       align-items: center;
       justify-content: center;
-      gap: 14px;
-      padding: 22px 18px;
       position: relative;
       overflow: hidden;
+      border: 3px solid #111111;
+      box-shadow: 0 4px 0 #111111;
       border-radius: 22px;
       min-height: 160px;
+      display: flex;
+      padding: 0 20px;
     }
 
-    .flowmotion-card-title {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: clamp(34px, 4.2vw, 44px) !important;
-      font-weight: 900;
-      letter-spacing: -1.2px;
-      display: inline-flex;
-      align-items: baseline;
-      justify-content: center;
-      gap: 0px;
-      line-height: 1;
-      margin: 0;
-      color: #ffffff;
-      -webkit-text-stroke: 3px #000000;
-      paint-order: stroke fill;
-      filter: drop-shadow(0 3px 0 #000000) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.45));
-    }
-
-    .flowmotion-card-title .flow-word {
-      color: #38bdf8;
-    }
-
-    .flowmotion-card-title .motion-word {
-      color: #ffffff;
-    }
-
-    .flowmotion-preview-box {
+    .card-yt-center-content {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
       width: 100%;
-      max-width: 380px;
-      margin-top: 2px;
-      flex-wrap: wrap;
+      margin: 0;
+      padding: 0;
+      transform: translateY(-2px);
     }
 
-    .flowmotion-mini-badge {
-      font-size: 13px;
-      font-weight: 700;
-      padding: 7px 16px;
-      border-radius: 99px;
+    .youtubefake-card-title {
+      font-family: 'YouTube Sans', 'Roboto Condensed', 'Roboto', 'Arial Black', sans-serif;
+      font-size: clamp(42px, 5.7vw, 53px) !important;
+      font-weight: 900;
+      letter-spacing: -1.6px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: #1e293b;
+      justify-content: center;
+      gap: 8px;
+      line-height: 1;
+      margin: 0;
       color: #ffffff;
-      border: 1.5px solid #38bdf8;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    }
+
+    .yt-brand-text {
+      color: #ffffff;
+      font-weight: 900;
+    }
+
+    .yt-fake-text {
+      color: #ff0000;
+      background: #ffffff;
+      padding: 3px 10px;
+      border-radius: 9px;
+      font-weight: 900;
+      display: inline-block;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    .card-yt-duration-badge {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      background: #0f0f0f;
+      color: #ffffff;
+      font-family: 'Roboto', 'YouTube Sans', -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      line-height: 1.1;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
